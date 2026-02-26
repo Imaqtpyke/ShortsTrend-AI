@@ -36,6 +36,8 @@ export interface ContentIdea {
   hashtags: string[];
   coachingTips: string;
   editingEffects: string[];
+  fontStyle: string; // Recommended font style for text overlays
+  editingEffectsContext: string; // Contextual explanation for editing effects
 }
 
 export interface ProductionWorkflow {
@@ -76,7 +78,8 @@ export interface ScriptCritique {
   viralityScore: number;
   hookSuggestions: string[];
   overallFeedback: string;
-  improvedScript: ScriptSegment[];
+  improvedScript?: ScriptSegment[];
+  improvedImagePrompts?: { frame: string; prompt: string }[];
 }
 
 export interface AppState {
@@ -88,6 +91,9 @@ export interface AppState {
   error: string | null;
   selectedVisualStyle: string;
   visualGenerationType: 'image' | 'video';
+  temperature: number; // For AI creativity
+  targetAudience: string; // e.g., 'Gen Z gamers', 'Small business owners'
+  tone: string; // e.g., 'Sarcastic', 'Inspirational', 'Technical'
   history: HistoryItem[];
   searchQuery: string;
   isDarkMode: boolean;

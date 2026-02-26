@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
-import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique } from "../types";
+import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique, ScriptSegment } from "../types";
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
@@ -18,7 +18,7 @@ export async function critiqueScript(script: string, hook: string): Promise<Scri
   return withRetry(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `Analyze this YouTube Shorts script and hook for virality.
       
       Hook: "${hook}"
@@ -28,8 +28,7 @@ export async function critiqueScript(script: string, hook: string): Promise<Scri
       1. Retention Leaks: Identify specific timestamps (0-60 seconds) where the audience might get bored or scroll away.
       2. Virality Score: Rate the potential virality from 0 to 100 based on current trends and psychology.
       3. Hook Suggestions: Suggest 3 specific, punchier alternatives to the current hook.
-      4. Overall Feedback: General advice to improve the script's performance.
-      5. Improved Script: Rewrite the script incorporating all the feedback and improvements.`,
+      4. Overall Feedback: General advice to improve the script's performance.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -54,6 +53,38 @@ export async function critiqueScript(script: string, hook: string): Promise<Scri
               description: "3 punchier hook alternatives"
             },
             overallFeedback: { type: Type.STRING },
+          },
+          required: ["retentionLeaks", "viralityScore", "hookSuggestions", "overallFeedback"],
+        },
+      },
+    });
+
+    if (!response.text) throw new Error("No response text from Gemini API");
+    return JSON.parse(response.text);
+  });
+}
+
+export async function generateImprovement(script: string, critique: string): Promise<{ improvedScript: ScriptSegment[], improvedImagePrompts: { frame: string; prompt: string }[] }> {
+  return withRetry(async () => {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Based on the following script and its critique, generate a highly optimized, viral version of the script.
+      
+      Original Script: "${script}"
+      Critique: "${critique}"
+
+      Requirements for the Improved Script:
+      1. EXTREME GRANULARITY: Break the script down into very small segments. Every sentence, major comma, significant event, or change in mood/climate must have its own timestamp.
+      2. TIMESTAMPS: Use precise timestamps (e.g., 00:00, 00:02, 00:05).
+      3. PACING: Ensure the pacing is fast and engaging for YouTube Shorts.
+      4. VISUAL PROMPTS: For every single script segment, provide a matching high-quality visual prompt for AI generation. The prompts must reflect the specific "climate" or "event" mentioned in that segment.
+      5. DURATION: The total duration of the script must be at least 60 seconds (1 minute). Ensure there is enough content to fill this time.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
             improvedScript: { 
               type: Type.ARRAY, 
               items: {
@@ -63,15 +94,26 @@ export async function critiqueScript(script: string, hook: string): Promise<Scri
                   text: { type: Type.STRING, description: "Spoken text or action description" }
                 },
                 required: ["timestamp", "text"]
-              },
-              description: "The full rewritten script with improvements applied, broken into segments with timestamps" 
+              }
+            },
+            improvedImagePrompts: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  frame: { type: Type.STRING, description: "Timestamp (e.g. 00:00)" },
+                  prompt: { type: Type.STRING, description: "Detailed visual prompt" }
+                },
+                required: ["frame", "prompt"]
+              }
             }
           },
-          required: ["retentionLeaks", "viralityScore", "hookSuggestions", "overallFeedback", "improvedScript"],
+          required: ["improvedScript", "improvedImagePrompts"],
         },
       },
     });
 
+    if (!response.text) throw new Error("No response text from Gemini API");
     return JSON.parse(response.text);
   });
 }
@@ -84,7 +126,7 @@ export async function analyzeTrends(niche?: string): Promise<TrendAnalysis> {
       : "Search for and analyze the current top YouTube Shorts trends for this week. Focus on trending topics, viral formats, hooks, structures, music, and hashtags.";
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -127,17 +169,21 @@ export async function analyzeTrends(niche?: string): Promise<TrendAnalysis> {
       },
     });
 
+    if (!response.text) throw new Error("No response text from Gemini API");
     return JSON.parse(response.text);
   });
 }
 
-export async function generateContentIdea(trend: string, visualStyle: string, visualGenerationType: 'image' | 'video'): Promise<ContentIdea> {
+export async function generateContentIdea(trend: string, visualStyle: string, visualGenerationType: 'image' | 'video', temperature: number, targetAudience: string, tone: string): Promise<ContentIdea> {
   return withRetry(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `Generate a complete YouTube Shorts content idea based on this trend: "${trend}".
       
+      Target Audience: "${targetAudience}"
+      Tone: "${tone}"
+
       CRITICAL INSTRUCTIONS FOR VISUAL PROMPTS:
       1. The visual prompts MUST be extremely granular. Provide a new prompt for EVERY SINGLE sentence, comma, pause, or change in scenario/climate/emotion.
       2. A 60-second script should have at least 15-25 distinct visual prompts to match the fast-paced nature of Shorts.
@@ -145,10 +191,14 @@ export async function generateContentIdea(trend: string, visualStyle: string, vi
       4. The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g. Veo, Runway, Pika)' : 'IMAGE generation (e.g. Midjourney, Flux)'}. Adjust the description accordingly (e.g. "Cinematic tracking shot of..." for video vs "High resolution photo of..." for image).
 
       CRITICAL INSTRUCTIONS FOR EDITING EFFECTS:
-      Provide specific recommendations for visual effects, transitions, and post-production techniques (e.g., "Ken Burns effect on static images", "Glitch transitions during beat drops", "Dynamic text overlays for key phrases") that will make the video dynamic and engaging.
+      Provide specific recommendations for visual effects, transitions, and post-production techniques (e.g., "Ken Burns effect on static images", "Glitch transitions during beat drops", "Dynamic text overlays for key phrases") that will make the video dynamic and engaging. Also, provide a short contextual explanation for why these effects are suitable for the story.
 
-      The script must be exactly 1 minute long when read at a normal pace. Break the script down into segments with timestamps.`,
+      CRITICAL INSTRUCTIONS FOR FONT STYLE:
+      Recommend a specific font style (e.g., "Bold Sans-serif", "Handwritten Script", "Futuristic Display") that is suitable for the story and visual style, and explain why.
+
+      The script must be exactly 1 minute long when read at a normal pace. Break the script down into segments with timestamps.`, 
       config: {
+        temperature: temperature,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -189,12 +239,15 @@ export async function generateContentIdea(trend: string, visualStyle: string, vi
               items: { type: Type.STRING },
               description: "Recommended visual effects and transitions for editing"
             },
+            fontStyle: { type: Type.STRING, description: "Recommended font style for text overlays" },
+            editingEffectsContext: { type: Type.STRING, description: "Contextual explanation for editing effects" }
           },
-          required: ["title", "script", "imagePrompts", "musicStyle", "soundEffects", "visualStyle", "hook", "caption", "hashtags", "coachingTips", "editingEffects"],
+          required: ["title", "script", "imagePrompts", "musicStyle", "soundEffects", "visualStyle", "hook", "caption", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"],
         },
       },
     });
 
+    if (!response.text) throw new Error("No response text from Gemini API");
     return JSON.parse(response.text);
   });
 }
@@ -203,7 +256,7 @@ export async function getWorkflow(): Promise<ProductionWorkflow> {
   return withRetry(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: "Provide a step-by-step workflow for creating high-quality YouTube Shorts, including recommended software and optimization tips.",
       config: {
         responseMimeType: "application/json",
@@ -228,6 +281,7 @@ export async function getWorkflow(): Promise<ProductionWorkflow> {
       },
     });
 
+    if (!response.text) throw new Error("No response text from Gemini API");
     return JSON.parse(response.text);
   });
 }
