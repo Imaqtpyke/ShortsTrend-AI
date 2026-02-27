@@ -75,8 +75,8 @@ export function WorkflowView() {
                 </motion.div>
             </Section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
-                <Section title="Step-by-Step Process" isDarkMode={isDarkMode}>
+            <div className="space-y-6 md:space-y-12">
+                <Section title="Step-by-Step Process" isDarkMode={isDarkMode} collapsible defaultCollapsed>
                     <motion.div
                         variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
                         initial="hidden" animate="show"
@@ -130,7 +130,7 @@ export function WorkflowView() {
                         ))}
                     </motion.div>
                 </Section>
-                <Section title="Optimization Tips" isDarkMode={isDarkMode}>
+                <Section title="Optimization Tips" isDarkMode={isDarkMode} collapsible defaultCollapsed>
                     <motion.ul
                         variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
                         initial="hidden" animate="show"

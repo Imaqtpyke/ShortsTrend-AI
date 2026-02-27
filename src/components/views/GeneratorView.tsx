@@ -124,10 +124,10 @@ export function GeneratorView() {
             className="space-y-6 md:space-y-12"
         >
             <div className={cn(
-                "z-30 backdrop-blur-md border-b -mx-4 md:-mx-8 px-4 md:px-8 py-3 mb-8 flex flex-wrap items-center justify-between gap-4 transition-colors",
+                "z-30 backdrop-blur-md border-b -mx-4 md:-mx-8 px-4 md:px-8 pt-3 pb-0 mb-8 flex flex-wrap items-center justify-between gap-4 transition-colors",
                 isDarkMode ? "bg-[#0a0a0a]/90 border-white/10" : "bg-white/90 border-[#141414]"
             )}>
-                <div className="w-full space-y-3 sm:space-y-4">
+                <div className="w-full space-y-3 sm:space-y-4 pb-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                         <div className="space-y-1">
                             <label className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
@@ -151,66 +151,69 @@ export function GeneratorView() {
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
-                                <Video className="w-2.5 h-2.5" />
-                                Type
-                            </label>
-                            <div className="flex gap-2">
-                                {(['image', 'video'] as const).map(type => (
-                                    <button
-                                        key={type}
-                                        onClick={() => setVisualGenerationType(type)}
-                                        className={cn(
-                                            "px-3 py-2 text-[10px] sm:text-xs font-mono uppercase border transition-all flex items-center gap-2 whitespace-nowrap w-full justify-center min-h-[44px]",
-                                            visualGenerationType === type
-                                                ? (isDarkMode ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500" : "bg-[#141414] text-[#E4E3E0] border-[#141414]")
-                                                : (isDarkMode ? "bg-[#1a1a1a] text-white border-white/10 hover:border-emerald-500" : "bg-white text-[#141414] border-gray-200 hover:border-[#141414]")
-                                        )}
-                                    >
-                                        {type === 'image' ? <ImageIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-                                        {type}
-                                    </button>
-                                ))}
+                        {/* Right Column: Type, Audience, Tone */}
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
+                                    <Video className="w-2.5 h-2.5" />
+                                    Type
+                                </label>
+                                <div className="flex gap-2">
+                                    {(['image', 'video'] as const).map(type => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setVisualGenerationType(type)}
+                                            className={cn(
+                                                "px-3 py-2 text-[10px] sm:text-xs font-mono uppercase border transition-all flex items-center gap-2 whitespace-nowrap w-full justify-center min-h-[44px]",
+                                                visualGenerationType === type
+                                                    ? (isDarkMode ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500" : "bg-[#141414] text-[#E4E3E0] border-[#141414]")
+                                                    : (isDarkMode ? "bg-[#1a1a1a] text-white border-white/10 hover:border-emerald-500" : "bg-white text-[#141414] border-gray-200 hover:border-[#141414]")
+                                            )}
+                                        >
+                                            {type === 'image' ? <ImageIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label htmlFor="target-audience-input" className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
-                                <Layers className="w-2.5 h-2.5" />
-                                Audience
-                            </label>
-                            <input
-                                id="target-audience-input"
-                                type="text"
-                                value={targetAudience}
-                                onChange={(e) => setTargetAudience(e.target.value)}
-                                placeholder="e.g., Gen Z gamers"
-                                className={cn(
-                                    "w-full px-3 py-3 text-xs font-mono uppercase border transition-all min-h-[44px]",
-                                    isDarkMode
-                                        ? "bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
-                                        : "bg-white text-[#141414] border-gray-200 focus:border-[#141414]"
-                                )}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label htmlFor="tone-input" className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
-                                <MessageSquare className="w-2.5 h-2.5" />
-                                Tone
-                            </label>
-                            <input
-                                id="tone-input"
-                                type="text"
-                                value={tone}
-                                onChange={(e) => setTone(e.target.value)}
-                                placeholder="e.g., Sarcastic, Informative"
-                                className={cn(
-                                    "w-full px-3 py-3 text-xs font-mono uppercase border transition-all min-h-[44px]",
-                                    isDarkMode
-                                        ? "bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
-                                        : "bg-white text-[#141414] border-gray-200 focus:border-[#141414]"
-                                )}
-                            />
+                            <div className="space-y-1">
+                                <label htmlFor="target-audience-input" className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
+                                    <Layers className="w-2.5 h-2.5" />
+                                    Audience
+                                </label>
+                                <input
+                                    id="target-audience-input"
+                                    type="text"
+                                    value={targetAudience}
+                                    onChange={(e) => setTargetAudience(e.target.value)}
+                                    placeholder="e.g., Gen Z gamers"
+                                    className={cn(
+                                        "w-full px-3 py-3 text-xs font-mono uppercase border transition-all min-h-[44px]",
+                                        isDarkMode
+                                            ? "bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
+                                            : "bg-white text-[#141414] border-gray-200 focus:border-[#141414]"
+                                    )}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label htmlFor="tone-input" className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5">
+                                    <MessageSquare className="w-2.5 h-2.5" />
+                                    Tone
+                                </label>
+                                <input
+                                    id="tone-input"
+                                    type="text"
+                                    value={tone}
+                                    onChange={(e) => setTone(e.target.value)}
+                                    placeholder="e.g., Sarcastic, Informative"
+                                    className={cn(
+                                        "w-full px-3 py-3 text-xs font-mono uppercase border transition-all min-h-[44px]",
+                                        isDarkMode
+                                            ? "bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
+                                            : "bg-white text-[#141414] border-gray-200 focus:border-[#141414]"
+                                    )}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -234,17 +237,19 @@ export function GeneratorView() {
                         />
                     </div>
 
-                    <button
-                        onClick={() => handleGenerate(selectedTrend || '')}
-                        disabled={isLoading}
-                        className={cn(
-                            "w-full px-3 py-2 font-mono text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 border shadow-sm active:translate-y-0.5 active:shadow-none",
-                            isDarkMode ? `${theme.bg} text-[#0a0a0a] ${theme.border} ${theme.hoverBg}` : "bg-red-600 text-white border-red-700 hover:bg-red-700"
-                        )}
-                    >
-                        <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
-                        <span>Regenerate</span>
-                    </button>
+                    <div className="pt-2">
+                        <button
+                            onClick={() => handleGenerate(selectedTrend || '')}
+                            disabled={isLoading}
+                            className={cn(
+                                "w-full px-3 py-3 font-mono text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 border shadow-sm active:translate-y-0.5 active:shadow-none",
+                                isDarkMode ? `${theme.bg} text-[#0a0a0a] ${theme.border} ${theme.hoverBg}` : "bg-red-600 text-white border-red-700 hover:bg-red-700"
+                            )}
+                        >
+                            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
+                            <span>Regenerate</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -272,7 +277,7 @@ export function GeneratorView() {
                 {/* Left Column: Script (Bento Box) */}
                 <div className="lg:col-span-7 space-y-8 flex flex-col">
                     <Section title="Production Timeline" icon={<Clock className="w-5 h-5" />} isDarkMode={isDarkMode}>
-                        <div className="relative max-h-[600px] overflow-y-auto pr-2 sm:pr-4 custom-scrollbar max-w-3xl mx-auto w-full">
+                        <div className="relative max-h-[600px] overflow-y-auto pr-2 sm:pr-4 max-w-3xl mx-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                             <div className="relative space-y-4 pl-8">
                                 {/* Vertical Timeline Line */}
                                 <div className={cn(
@@ -306,7 +311,7 @@ export function GeneratorView() {
                                                 isDarkMode ? "border-white/10" : "border-[#141414]"
                                             )}>
                                                 <div className="flex justify-between items-start mb-2">
-                                                    <span className="text-[10px] font-mono uppercase opacity-60">Editable Script Segment</span>
+                                                    <span className="text-[10px] font-mono uppercase opacity-60">Script Segment</span>
                                                     <button
                                                         onClick={() => copyToClipboard(segment.text, `script-${i}`)}
                                                         aria-label="Copy script segment"
@@ -318,14 +323,14 @@ export function GeneratorView() {
                                                         {copiedId === `script-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                                                     </button>
                                                 </div>
-                                                <textarea
-                                                    value={segment.text}
-                                                    onChange={(e) => updateScriptSegment(i, e.target.value)}
+                                                <div
                                                     className={cn(
-                                                        "text-sm leading-relaxed w-full min-h-[80px] bg-transparent border-0 focus:ring-1 p-2 rounded resize-y",
-                                                        isDarkMode ? "focus:ring-emerald-500/50 hover:bg-white/5" : "focus:ring-[#141414]/50 hover:bg-black/5"
+                                                        "text-sm leading-relaxed w-full min-h-[80px] bg-transparent border-0 p-2 select-text",
+                                                        isDarkMode ? "text-white" : "text-[#141414]"
                                                     )}
-                                                />
+                                                >
+                                                    {segment.text}
+                                                </div>
                                             </div>
                                             <div className={cn(
                                                 "flex-1 p-4 min-w-0",
@@ -360,7 +365,7 @@ export function GeneratorView() {
                 </div>
 
                 {/* Right Column: Details (Bento Box) */}
-                <div className="lg:col-span-5 space-y-6 sm:space-y-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto custom-scrollbar pr-0 lg:pr-2 pb-2">
+                <div className="lg:col-span-5 space-y-6 sm:space-y-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto custom-scrollbar pr-0 lg:pr-2 pb-0">
                     <Section title="Hook (0-3s)" icon={<Zap className="w-5 h-5" />} isDarkMode={isDarkMode}>
                         <div className="relative group">
                             <p className="text-xl font-bold italic pr-8">"{contentIdea.hook}"</p>
@@ -445,20 +450,20 @@ export function GeneratorView() {
                         </div>
                     </Section>
 
-                    <Section title="Recommended Font Style" icon={<ImageIcon className="w-5 h-5 text-blue-600" />} isDarkMode={isDarkMode} collapsible defaultCollapsed>
+                    <Section title="Recommended Font Style" icon={<ImageIcon className="w-5 h-5" />} isDarkMode={isDarkMode} collapsible defaultCollapsed>
                         <p className={cn("text-sm leading-relaxed", isDarkMode ? "text-white/80" : "text-[#141414]")}>
                             <span className="font-bold">{contentIdea.fontStyle}</span>
                         </p>
                     </Section>
 
-                    <Section title="Editing Effects Context" icon={<Video className="w-5 h-5 text-purple-600" />} isDarkMode={isDarkMode} collapsible defaultCollapsed>
+                    <Section title="Editing Effects Context" icon={<Video className="w-5 h-5" />} isDarkMode={isDarkMode} collapsible defaultCollapsed>
                         <p className={cn("text-sm leading-relaxed", isDarkMode ? "text-white/80" : "text-[#141414]")}>
                             {contentIdea.editingEffectsContext}
                         </p>
                     </Section>
 
                     <div className={cn(
-                        "pt-6 border-t border-dashed sticky bottom-0 z-20 transition-colors",
+                        "pt-6 pb-6 -mb-6 md:pb-8 md:-mb-8 border-t border-dashed sticky bottom-0 z-20 transition-colors",
                         isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-[#141414]/10"
                     )}>
                         <button

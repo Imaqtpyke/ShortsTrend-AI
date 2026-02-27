@@ -209,14 +209,16 @@ export function CritiqueView() {
                     </motion.ul>
                 </Section>
 
-                <Section title="Overall Feedback" icon={<ThumbsUp className="w-5 h-5 text-blue-600" />} isDarkMode={isDarkMode}>
-                    <div className={cn(
-                        "p-6 border text-sm leading-relaxed transition-colors",
-                        isDarkMode ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-blue-50 border-blue-200 text-blue-900"
-                    )}>
-                        {critique.overallFeedback}
-                    </div>
-                </Section>
+                <div className="md:col-span-2">
+                    <Section title="Overall Feedback" icon={<ThumbsUp className="w-5 h-5 text-blue-600" />} isDarkMode={isDarkMode}>
+                        <div className={cn(
+                            "p-6 border text-sm leading-relaxed transition-colors",
+                            isDarkMode ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-blue-50 border-blue-200 text-blue-900"
+                        )}>
+                            {critique.overallFeedback}
+                        </div>
+                    </Section>
+                </div>
             </div>
 
             {!critique.improvedScript ? (
@@ -277,8 +279,8 @@ export function CritiqueView() {
                         </div>
                     </Section>
 
-                    <Section title="Improved Visual Prompts" isDarkMode={isDarkMode}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Section title="Improved Visual Prompts" icon={<ImageIcon className="w-5 h-5 text-emerald-500" />} isDarkMode={isDarkMode} collapsible defaultCollapsed>
+                        <div className="space-y-4">
                             {critique.improvedImagePrompts && critique.improvedImagePrompts.length > 0 ? (
                                 critique.improvedImagePrompts.map((p, i) => (
                                     <div

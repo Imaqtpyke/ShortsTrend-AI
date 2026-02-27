@@ -59,6 +59,11 @@ export const VISUAL_STYLES = [
   "Dark Fantasy",
   "Minimalist Vector Art",
   "Vintage 90s VHS",
+  "Vaporwave / Retro",
+  "Watercolor Art",
+  "Claymation / Stop Motion",
+  "Comic Book / Pop Art",
+  "Low Poly 3D",
 ];
 
 export interface HistoryItem {
