@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import { ArrowUpRight, ArrowDownRight, Minus, ArrowRight } from 'lucide-react';
 
-export function TrendCard({ title, velocity, growth, featured, onAction, isDarkMode }: { title: string, velocity?: number, growth?: string, featured?: boolean, onAction: () => void, isDarkMode: boolean }) {
+export const TrendCard = React.memo(({ title, velocity, growth, featured, onAction, isDarkMode }: { title: string, velocity?: number, growth?: string, featured?: boolean, onAction: () => void, isDarkMode: boolean }) => {
     const cardTheme = (() => {
         switch (growth) {
             case 'exploding': return { primary: 'red-500', glow: 'shadow-red-500/20', text: 'text-red-400', bg: 'bg-red-500/10' };
@@ -102,4 +102,4 @@ export function TrendCard({ title, velocity, growth, featured, onAction, isDarkM
             </div>
         </div>
     );
-}
+});

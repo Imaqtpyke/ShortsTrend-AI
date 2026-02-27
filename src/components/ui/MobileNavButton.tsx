@@ -13,7 +13,7 @@ export function MobileNavButton({ active, onClick, icon, label, disabled = false
                 active
                     ? (isDarkMode ? theme.text : "text-[#141414]")
                     : (isDarkMode ? "text-white/70" : "text-[#141414]/70"),
-                disabled && "opacity-10 cursor-not-allowed"
+                disabled && "opacity-20 cursor-not-allowed"
             )}
         >
             {active && (

@@ -7,14 +7,91 @@ dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '16kb' })); // Prevent oversized payloads
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+// ─── Input Sanitization ────────────────────────────────────────────────────────
+// Strips prompt injection attempts before injecting user content into prompts.
+const MAX_INPUT_LENGTH = 500;
+function sanitizeInput(raw) {
+    if (typeof raw !== 'string') return '';
+    return raw
+        .slice(0, MAX_INPUT_LENGTH)               // Hard length cap
+        .replace(/[<>]/g, '')                      // Strip HTML tags
+        .replace(/```[\s\S]*?```/g, '')            // Remove code blocks
+        .replace(/\bignore\b.{0,80}\bprevious\b/gi, '[FILTERED]')  // Prompt injection
+        .replace(/\bsystem\s*prompt\b/gi, '[FILTERED]')
+        .replace(/\bpretend\b.{0,60}\byou are\b/gi, '[FILTERED]')
+        .replace(/\bforget\b.{0,60}\binstructions\b/gi, '[FILTERED]')
+        .trim();
+}
+
+// ─── Analysis Cache ────────────────────────────────────────────────────────────
+// Cache analyze results for 2 hours to reduce API calls and latency.
+const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+const analyzeCache = new Map(); // key -> { data, expiresAt }
+
+function getCachedAnalysis(key) {
+    const entry = analyzeCache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+        analyzeCache.delete(key);
+        return null;
+    }
+    return entry.data;
+}
+
+function setCachedAnalysis(key, data) {
+    analyzeCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+// ─── Multi-Model Fallback Strategy ────────────────────────────────────────────
+// If the primary model is rate-limited or unavailable, automatically fallback
+// through the cascade until a model succeeds.
+const MODEL_CASCADE = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+];
+
+// Retryable HTTP status codes
+const RETRYABLE_CODES = new Set([429, 500, 502, 503, 504]);
+
+async function generateWithFallback(requestConfig) {
+    let lastError = null;
+
+    for (const model of MODEL_CASCADE) {
+        try {
+            console.log(`[Model] Trying ${model}...`);
+            const response = await generateWithFallback({ ...requestConfig, model });
+            console.log(`[Model] Success with ${model}`);
+            return response;
+        } catch (err) {
+            const status = err?.status ?? err?.code ?? 0;
+            if (RETRYABLE_CODES.has(status)) {
+                console.warn(`[Model] ${model} failed (${status}). Trying next model...`);
+                lastError = err;
+                continue;
+            }
+            // Non-retryable error — propagate immediately
+            throw err;
+        }
+    }
+
+    // All models exhausted
+    console.error('[Model] All models in cascade failed.');
+    throw lastError;
+}
+
+
+
 app.post('/api/critique', async (req, res) => {
     try {
-        const { script, hook } = req.body;
-        const response = await ai.models.generateContent({
+        const script = sanitizeInput(req.body.script);
+        const hook = sanitizeInput(req.body.hook);
+        if (!script) return res.status(400).json({ error: 'Script is required.' });
+        const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: `Analyze this YouTube Shorts script and hook for virality.
       
@@ -66,8 +143,10 @@ app.post('/api/critique', async (req, res) => {
 
 app.post('/api/improve', async (req, res) => {
     try {
-        const { script, critique } = req.body;
-        const response = await ai.models.generateContent({
+        const script = sanitizeInput(req.body.script);
+        const critique = sanitizeInput(req.body.critique);
+        if (!script) return res.status(400).json({ error: 'Script is required.' });
+        const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: `Based on the following script and its critique, generate a highly optimized, viral version of the script.
       
@@ -123,12 +202,22 @@ app.post('/api/improve', async (req, res) => {
 
 app.post('/api/analyze', async (req, res) => {
     try {
-        const { niche } = req.body;
+        const niche = sanitizeInput(req.body.niche);
+        const cacheKey = niche ? niche.toLowerCase() : '__general__';
+
+        // Serve from cache if available
+        const cached = getCachedAnalysis(cacheKey);
+        if (cached) {
+            console.log(`[Cache HIT] /api/analyze for: "${cacheKey}"`);
+            return res.json({ ...cached, _cached: true });
+        }
+
+        console.log(`[Cache MISS] /api/analyze for: "${cacheKey}"`);
         const prompt = niche
             ? `Search for and analyze the current top YouTube Shorts trends specifically within the niche: "${niche}". Focus on trending topics, viral formats, hooks, structures, music, and hashtags relevant to this niche.`
             : "Search for and analyze the current top YouTube Shorts trends for this week. Focus on trending topics, viral formats, hooks, structures, music, and hashtags.";
 
-        const response = await ai.models.generateContent({
+        const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: prompt,
             config: {
@@ -172,7 +261,9 @@ app.post('/api/analyze', async (req, res) => {
         });
 
         if (!response.text) throw new Error("No response text from Gemini API");
-        res.json(JSON.parse(response.text));
+        const result = JSON.parse(response.text);
+        setCachedAnalysis(cacheKey, result);
+        res.json(result);
     } catch (error) {
         console.error("Analyze error:", error);
         res.status(error.status || 500).json({ error: error.message || "Unknown error" });
@@ -181,8 +272,13 @@ app.post('/api/analyze', async (req, res) => {
 
 app.post('/api/generate', async (req, res) => {
     try {
-        const { trend, visualStyle, visualGenerationType, temperature, targetAudience, tone } = req.body;
-        const response = await ai.models.generateContent({
+        const trend = sanitizeInput(req.body.trend);
+        const visualStyle = sanitizeInput(req.body.visualStyle);
+        const targetAudience = sanitizeInput(req.body.targetAudience);
+        const tone = sanitizeInput(req.body.tone);
+        const { visualGenerationType, temperature } = req.body;
+        if (!trend) return res.status(400).json({ error: 'Trend is required.' });
+        const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: `Generate a complete YouTube Shorts content idea based on this trend: "${trend}".
       
@@ -262,7 +358,7 @@ app.post('/api/generate', async (req, res) => {
 
 app.post('/api/workflow', async (req, res) => {
     try {
-        const response = await ai.models.generateContent({
+        const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: "Provide a step-by-step workflow for creating high-quality YouTube Shorts, including recommended software and optimization tips.",
             config: {
