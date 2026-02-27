@@ -51,8 +51,6 @@ function setCachedAnalysis(key, data) {
 // through the cascade until a model succeeds.
 const MODEL_CASCADE = [
     'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
 ];
 
 // Retryable HTTP status codes
@@ -64,7 +62,7 @@ async function generateWithFallback(requestConfig) {
     for (const model of MODEL_CASCADE) {
         try {
             console.log(`[Model] Trying ${model}...`);
-            const response = await generateWithFallback({ ...requestConfig, model });
+            const response = await ai.models.generateContent({ ...requestConfig, model });
             console.log(`[Model] Success with ${model}`);
             return response;
         } catch (err) {

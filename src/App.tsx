@@ -609,12 +609,14 @@ export default function App() {
       </div>
 
       <footer className={cn(
-        "mt-12 md:mt-24 border-t py-8 md:py-12 transition-colors duration-300",
+        "mt-12 md:mt-24 border-t pt-8 pb-28 lg:py-12 transition-colors duration-300",
         isDarkMode ? "bg-[#0a0a0a] border-white/10 text-white/40" : "bg-[#141414] border-[#141414] text-[#141414]/60"
       )}>
-        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] opacity-80">Powered by Gemini 3 Flash & Google Search</p>
-          <div className="flex gap-6 text-xs uppercase tracking-wider font-mono opacity-60">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center gap-4 text-center">
+          <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] opacity-80 text-center leading-relaxed">
+            Powered by Gemini 2.5 Flash & Google Search
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-[10px] sm:text-xs uppercase tracking-wider font-mono opacity-60">
             <a href="#" className="hover:opacity-100 transition-opacity">v1.2.0</a>
             <a href="#" className="hover:opacity-100 transition-opacity">GitHub</a>
             <a href="#" className="hover:opacity-100 transition-opacity">About</a>

@@ -131,7 +131,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     tone: 'Informative',
     history: getInitialHistory(),
     searchQuery: '',
-    isDarkMode: false,
+    isDarkMode: true,
 
     // Initial UI/Feature State
     activeTab: 'trends',
