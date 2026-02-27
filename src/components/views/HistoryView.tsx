@@ -9,7 +9,6 @@ import { useDebounce } from '../../hooks/useDebounce';
 
 export function HistoryView() {
     const {
-        isDarkMode,
         isLoading,
         contentIdea,
         critique,
@@ -44,10 +43,7 @@ export function HistoryView() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
         >
-            <div className={cn(
-                "flex flex-col md:flex-row items-center justify-between border-b pb-6 gap-4",
-                isDarkMode ? "border-white/10" : "border-[#141414]"
-            )}>
+            <div className="flex flex-col md:flex-row items-center justify-between border-b pb-6 gap-4 border-white/10">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Search History</h2>
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="relative flex-grow md:w-64">
@@ -59,7 +55,7 @@ export function HistoryView() {
                             onChange={(e) => setHistorySearch(e.target.value)}
                             className={cn(
                                 "w-full pl-10 pr-4 py-3 font-mono text-xs focus:outline-none border min-h-[44px]",
-                                isDarkMode ? `bg-[#0a0a0a] border-white/10 text-white ${theme.focusBorder}` : "bg-gray-50 border-[#141414] text-[#141414]"
+                                `bg-[#0a0a0a] border-white/10 text-white ${theme.focusBorder}`
                             )}
                         />
                     </div>
@@ -112,7 +108,7 @@ export function HistoryView() {
                                 onClick={() => loadFromHistory(item)}
                                 className={cn(
                                     "p-4 md:p-6 border transition-all cursor-pointer group flex items-center justify-between",
-                                    isDarkMode ? "bg-[#1a1a1a] border-white/10 hover:bg-white/5" : "bg-white border-[#141414] hover:bg-gray-50"
+                                    "bg-[#1a1a1a] border-white/10 hover:bg-white/5"
                                 )}
                             >
                                 <div className="space-y-1">

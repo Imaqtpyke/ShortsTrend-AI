@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils';
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line, ReferenceLine } from 'recharts';
 import { RetentionLeak } from '../../types';
 
-export function RetentionGraph({ leaks, isDarkMode }: { leaks: RetentionLeak[], isDarkMode: boolean }) {
+export function RetentionGraph({ leaks }: { leaks: RetentionLeak[] }) {
     const data = Array.from({ length: 61 }, (_, i) => {
         // Base decay: starts at 100, decays to ~40% over 60s
         let original = 100 * Math.pow(0.985, i);
@@ -34,17 +34,17 @@ export function RetentionGraph({ leaks, isDarkMode }: { leaks: RetentionLeak[], 
         <div className="h-64 w-full" style={{ minHeight: '250px' }}>
             <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <LineChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis
                         dataKey="time"
-                        stroke={isDarkMode ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                        stroke="rgba(255,255,255,0.4)"
                         fontSize={10}
                         tickFormatter={(val) => `${val}s`}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
-                        stroke={isDarkMode ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}
+                        stroke="rgba(255,255,255,0.4)"
                         fontSize={10}
                         tickFormatter={(val) => `${val}%`}
                         domain={[0, 100]}
@@ -55,8 +55,8 @@ export function RetentionGraph({ leaks, isDarkMode }: { leaks: RetentionLeak[], 
                         wrapperStyle={{ zIndex: 50 }}
                         allowEscapeViewBox={{ x: false, y: true }}
                         contentStyle={{
-                            backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
-                            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                            backgroundColor: '#1a1a1a',
+                            border: `1px solid rgba(255,255,255,0.1)`,
                             fontSize: '10px',
                             fontFamily: 'monospace',
                             borderRadius: '0px'
@@ -75,7 +75,7 @@ export function RetentionGraph({ leaks, isDarkMode }: { leaks: RetentionLeak[], 
                     <Line
                         type="monotone"
                         dataKey="improved"
-                        stroke={isDarkMode ? "#10b981" : "#9333ea"}
+                        stroke="#10b981"
                         strokeWidth={2}
                         strokeDasharray="5 5"
                         dot={false}

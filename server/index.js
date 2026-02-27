@@ -143,6 +143,8 @@ app.post('/api/improve', async (req, res) => {
     try {
         const script = sanitizeInput(req.body.script);
         const critique = sanitizeInput(req.body.critique);
+        const visualStyle = sanitizeInput(req.body.visualStyle) || 'Default';
+        const { visualGenerationType } = req.body;
         if (!script) return res.status(400).json({ error: 'Script is required.' });
         const response = await generateWithFallback({
             model: "gemini-2.5-flash",
@@ -152,11 +154,22 @@ app.post('/api/improve', async (req, res) => {
       Critique: "${critique}"
 
       Requirements for the Improved Script:
-      1. EXTREME GRANULARITY: Break the script down into very small segments. Every sentence, major comma, significant event, or change in mood/climate must have its own timestamp.
-      2. TIMESTAMPS: Use precise timestamps (e.g., 00:00, 00:02, 00:05).
-      3. PACING: Ensure the pacing is fast and engaging for YouTube Shorts.
-      4. VISUAL PROMPTS: For every single script segment, provide a matching high-quality visual prompt for AI generation. The prompts must reflect the specific "climate" or "event" mentioned in that segment.
-      5. DURATION: The total duration of the script must be at least 60 seconds (1 minute). Ensure there is enough content to fill this time.`,
+      1. Shorten the Hook: Ensure the opening hook is punchy, high-energy, and strictly 1 line or extremely brief so it finishes well before the 5-second mark.
+      2. Enhance Segments: Improve pacing to match the fast-energy hook. Remove "fluff" and slow transitions. Do not artificially extend the script. Keep the total duration concise and realistic for short-form content like TikTok or Reels (typically 30-45 seconds).
+      3. Precise Timestamps: Break the script down into very small segments. Every sentence, major comma, significant event, or change in mood must have its own timestamp (e.g., 00:00, 00:02, 00:05).
+
+      Additionally, you must re-generate updated metadata that fits this newly improved script, including:
+      - A shortened, punchy hook (1 line max).
+      - A catchy caption and hashtags.
+      - Updated audio design (music style and sound effects).
+      - Editing and post-production advice (editing effects, font style, and context).
+
+      CRITICAL INSTRUCTIONS FOR VISUAL PROMPTS:
+      1. Extremely Granular: Provide a new prompt for EVERY SINGLE script segment.
+      2. Strict Visual Style: Every single prompt MUST strictly match the "${visualStyle}" style. Do not default to generic styles.
+      3. Prompt Type: The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g., Veo, Runway)' : 'IMAGE generation (e.g., Midjourney, Flux)'}. Format the description strictly for this medium (e.g., "Cinematic tracking shot..." for video).
+      4. 9:16 Aspect Ratio: Explicitly add exactly "--ar 9:16" at the very end of EVERY distinct visual prompt. Descriptions must be optimized for a vertical, mobile-first composition.
+      5. Visual Direction: Include specific lighting and camera movement instructions formatted to match the vertical 9:16 frame.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -183,15 +196,36 @@ app.post('/api/improve', async (req, res) => {
                                 },
                                 required: ["frame", "prompt"]
                             }
-                        }
+                        },
+                        improvedHook: { type: Type.STRING, description: "First 1 line maximum" },
+                        improvedCaption: { type: Type.STRING },
+                        improvedHashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        improvedMusicStyle: { type: Type.STRING },
+                        improvedSoundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        improvedEditingEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        improvedFontStyle: { type: Type.STRING },
+                        improvedEditingEffectsContext: { type: Type.STRING }
                     },
-                    required: ["improvedScript", "improvedImagePrompts"],
+                    required: ["improvedScript", "improvedImagePrompts", "improvedHook", "improvedCaption", "improvedHashtags", "improvedMusicStyle", "improvedSoundEffects", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"],
                 },
             },
         });
 
         if (!response.text) throw new Error("No response text from Gemini API");
-        res.json(JSON.parse(response.text));
+        const result = JSON.parse(response.text);
+
+        // Enforce --ar 9:16 suffix on all improved visual prompts
+        if (result.improvedImagePrompts) {
+            result.improvedImagePrompts = result.improvedImagePrompts.map(p => {
+                let prompt = p.prompt.trim();
+                if (!prompt.includes('--ar 9:16')) {
+                    prompt = `${prompt} --ar 9:16`;
+                }
+                return { ...p, prompt };
+            });
+        }
+
+        res.json(result);
     } catch (error) {
         console.error("Improve error:", error);
         res.status(error.status || 500).json({ error: error.message || "Unknown error" });
@@ -272,32 +306,31 @@ app.post('/api/generate', async (req, res) => {
     try {
         const trend = sanitizeInput(req.body.trend);
         const visualStyle = sanitizeInput(req.body.visualStyle);
-        const targetAudience = sanitizeInput(req.body.targetAudience);
-        const tone = sanitizeInput(req.body.tone);
-        const { visualGenerationType, temperature } = req.body;
+        const { visualGenerationType } = req.body;
         if (!trend) return res.status(400).json({ error: 'Trend is required.' });
+
         const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: `Generate a complete YouTube Shorts content idea based on this trend: "${trend}".
-      
-      Target Audience: "${targetAudience}"
-      Tone: "${tone}"
+
+      CRITICAL INSTRUCTIONS FOR SCRIPT WRITING:
+      1. Shorten the Hook: Ensure the opening hook is punchy, high-energy, and under 3 seconds of spoken time so the intro finishes well before the 5-second mark.
+      2. Enhance Segments: Improve pacing to match the fast-energy hook. Remove "fluff" and slow transitions.
+      3. The script must be exactly 1 minute long when read at a normal pace. Break the script down into segments with precise timestamps.
 
       CRITICAL INSTRUCTIONS FOR VISUAL PROMPTS:
-      1. The visual prompts MUST be extremely granular. Provide a new prompt for EVERY SINGLE sentence, comma, pause, or change in scenario/climate/emotion.
-      2. A 60-second script should have at least 15-25 distinct visual prompts to match the fast-paced nature of Shorts.
-      3. The visual style for ALL prompts must strictly follow: "${visualStyle}". Describe the lighting, camera angle, and atmosphere in each prompt to match this style.
-      4. The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g. Veo, Runway, Pika)' : 'IMAGE generation (e.g. Midjourney, Flux)'}. Adjust the description accordingly (e.g. "Cinematic tracking shot of..." for video vs "High resolution photo of..." for image).
+      1. Extremely Granular: Provide a new prompt for EVERY SINGLE sentence, comma, pause, or change in scenario.
+      2. Strict Visual Style: Every single prompt MUST strictly match the "${visualStyle}" style. Do not default to generic styles.
+      3. Prompt Type: The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g., Veo, Runway)' : 'IMAGE generation (e.g., Midjourney, Flux)'}. Format the description strictly for this medium (e.g., "Cinematic tracking shot..." for video).
+      4. 9:16 Aspect Ratio: Explicitly add exactly "--ar 9:16" at the very end of EVERY distinct visual prompt. Descriptions must be optimized for a vertical, mobile-first composition.
+      5. Visual Direction: Include specific lighting and camera movement instructions formatted to match the vertical 9:16 frame.
 
       CRITICAL INSTRUCTIONS FOR EDITING EFFECTS:
-      Provide specific recommendations for visual effects, transitions, and post-production techniques (e.g., "Ken Burns effect on static images", "Glitch transitions during beat drops", "Dynamic text overlays for key phrases") that will make the video dynamic and engaging. Also, provide a short contextual explanation for why these effects are suitable for the story.
+      Provide specific recommendations for visual effects, transitions, and post-production techniques. Provide a short contextual explanation for why they suit the story.
 
       CRITICAL INSTRUCTIONS FOR FONT STYLE:
-      Recommend a specific font style (e.g., "Bold Sans-serif", "Handwritten Script", "Futuristic Display") that is suitable for the story and visual style, and explain why.
-
-      The script must be exactly 1 minute long when read at a normal pace. Break the script down into segments with timestamps.`,
+      Recommend a specific font style suitable for the story, and explain why.`,
             config: {
-                temperature: temperature,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
@@ -321,7 +354,7 @@ app.post('/api/generate', async (req, res) => {
                                 type: Type.OBJECT,
                                 properties: {
                                     frame: { type: Type.STRING, description: "Timestamp matching the script segment" },
-                                    prompt: { type: Type.STRING, description: `9:16 vertical ${visualGenerationType} prompt` },
+                                    prompt: { type: Type.STRING, description: `9: 16 vertical ${visualGenerationType} prompt` },
                                 },
                                 required: ["frame", "prompt"],
                             },
@@ -347,7 +380,20 @@ app.post('/api/generate', async (req, res) => {
         });
 
         if (!response.text) throw new Error("No response text from Gemini API");
-        res.json(JSON.parse(response.text));
+        const result = JSON.parse(response.text);
+
+        // Enforce --ar 9:16 suffix on all generated visual prompts
+        if (result.imagePrompts) {
+            result.imagePrompts = result.imagePrompts.map(p => {
+                let prompt = p.prompt.trim();
+                if (!prompt.includes('--ar 9:16')) {
+                    prompt = `${prompt} --ar 9:16`;
+                }
+                return { ...p, prompt };
+            });
+        }
+
+        res.json(result);
     } catch (error) {
         console.error("Generate error:", error);
         res.status(error.status || 500).json({ error: error.message || "Unknown error" });

@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import { ArrowUpRight, ArrowDownRight, Minus, ArrowRight } from 'lucide-react';
 
-export const TrendCard = React.memo(({ title, velocity, growth, featured, onAction, isDarkMode }: { title: string, velocity?: number, growth?: string, featured?: boolean, onAction: () => void, isDarkMode: boolean }) => {
+export const TrendCard = React.memo(({ title, velocity, growth, featured, onAction }: { title: string, velocity?: number, growth?: string, featured?: boolean, onAction: () => void }) => {
     const cardTheme = (() => {
         switch (growth) {
             case 'exploding': return { primary: 'red-500', glow: 'shadow-red-500/20', text: 'text-red-400', bg: 'bg-red-500/10' };
@@ -24,16 +24,16 @@ export const TrendCard = React.memo(({ title, velocity, growth, featured, onActi
             }}
             className={cn(
                 "group relative p-4 border transition-all cursor-pointer flex flex-col justify-between gap-4 focus:outline-none focus:ring-2 overflow-hidden h-full min-h-[160px]",
-                isDarkMode ? `focus:ring-${cardTheme.primary}` : "focus:ring-[#141414]",
-                isDarkMode ? "border-white/10" : "border-[#141414]",
+                `focus:ring-${cardTheme.primary}`,
+                "border-white/10",
                 featured
-                    ? (isDarkMode ? `bg-[#1a1a1a] shadow-2xl ${cardTheme.glow} border-${cardTheme.primary}/30` : "bg-[#141414] text-[#E4E3E0] shadow-2xl")
-                    : (isDarkMode ? `bg-[#0a0a0a] hover:border-${cardTheme.primary}/50` : "bg-white hover:border-[#141414]")
+                    ? `bg-[#1a1a1a] shadow-2xl ${cardTheme.glow} border-${cardTheme.primary}/30`
+                    : `bg-[#0a0a0a] hover:border-${cardTheme.primary}/50`
             )}
             onClick={onAction}
         >
             {/* Background Accent for Featured */}
-            {featured && isDarkMode && (
+            {featured && (
                 <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 blur-3xl opacity-20 rounded-full transition-opacity group-hover:opacity-40", `bg-${cardTheme.primary}`)} />
             )}
 
@@ -41,7 +41,7 @@ export const TrendCard = React.memo(({ title, velocity, growth, featured, onActi
                 <div className={cn(
                     "flex items-center justify-center w-9 h-9 border border-current flex-shrink-0 transition-all group-hover:scale-110 group-hover:rotate-3",
                     featured ? "opacity-100" : "opacity-40 group-hover:opacity-100",
-                    featured && !isDarkMode ? "text-white" : (isDarkMode ? cardTheme.text : "")
+                    cardTheme.text
                 )}>
                     {growth === 'exploding' ? <ArrowUpRight className="w-4 h-4" /> :
                         growth === 'declining' ? <ArrowDownRight className="w-4 h-4" /> :
@@ -51,7 +51,7 @@ export const TrendCard = React.memo(({ title, velocity, growth, featured, onActi
                 {featured && (
                     <span className={cn(
                         "px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.2em] font-bold",
-                        isDarkMode ? `bg-${cardTheme.primary} text-[#0a0a0a]` : "bg-red-600 text-white"
+                        `bg-${cardTheme.primary} text-[#0a0a0a]`
                     )}>Featured</span>
                 )}
             </div>
@@ -60,31 +60,22 @@ export const TrendCard = React.memo(({ title, velocity, growth, featured, onActi
                 <h4 className={cn(
                     "font-bold leading-[1.2] tracking-tight break-words line-clamp-2",
                     featured ? "text-base md:text-lg" : "text-xs md:text-sm",
-                    featured && !isDarkMode ? "text-white" : (isDarkMode ? "text-white" : "text-[#141414]")
+                    "text-white"
                 )}>
                     {title}
                 </h4>
 
                 <div className="flex items-end justify-between gap-2 pt-2 border-t border-current/10">
                     <div className="flex flex-col">
-                        <span className={cn(
-                            "text-[8px] font-mono uppercase opacity-50 mb-0.5",
-                            featured && !isDarkMode ? "text-white/60" : ""
-                        )}>Velocity</span>
-                        <span className={cn(
-                            "text-xs font-mono font-bold",
-                            featured && !isDarkMode ? "text-white" : ""
-                        )}>{velocity}%</span>
+                        <span className="text-[8px] font-mono uppercase opacity-50 mb-0.5">Velocity</span>
+                        <span className="text-xs font-mono font-bold">{velocity}%</span>
                     </div>
 
                     <div className="flex flex-col text-right">
-                        <span className={cn(
-                            "text-[8px] font-mono uppercase opacity-50 mb-0.5",
-                            featured && !isDarkMode ? "text-white/60" : ""
-                        )}>Growth</span>
+                        <span className="text-[8px] font-mono uppercase opacity-50 mb-0.5">Growth</span>
                         <span className={cn(
                             "text-[10px] font-mono font-bold uppercase tracking-wider",
-                            isDarkMode ? cardTheme.text : (featured ? "text-red-400" : cardTheme.text)
+                            cardTheme.text
                         )}>{growth}</span>
                     </div>
                 </div>
@@ -93,9 +84,7 @@ export const TrendCard = React.memo(({ title, velocity, growth, featured, onActi
             {/* Hover Action Button */}
             <div className={cn(
                 "absolute bottom-3 right-3 transition-all translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 flex items-center gap-2 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest border shadow-lg",
-                featured && !isDarkMode
-                    ? "bg-white text-[#141414] border-white"
-                    : (isDarkMode ? `bg-${cardTheme.primary} text-[#0a0a0a] border-${cardTheme.primary}` : "bg-[#141414] text-[#E4E3E0] border-[#141414]")
+                `bg-${cardTheme.primary} text-[#0a0a0a] border-${cardTheme.primary}`
             )}>
                 <span>Generate Script</span>
                 <ArrowRight className="w-3 h-3" />

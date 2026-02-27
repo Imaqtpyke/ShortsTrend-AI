@@ -10,7 +10,6 @@ import { useAppStore, useTheme } from '../../store/useAppStore';
 
 export function WorkflowView() {
     const {
-        isDarkMode,
         workflow,
         setActiveTab,
         completedSteps,
@@ -21,10 +20,7 @@ export function WorkflowView() {
     if (!workflow) {
         return (
             <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
-                <div className={cn(
-                    "w-20 h-20 border flex items-center justify-center rounded-full mb-4",
-                    isDarkMode ? "border-white/10 text-white/20" : "border-[#141414]/10 text-[#141414]/20"
-                )}>
+                <div className="w-20 h-20 border flex items-center justify-center rounded-full mb-4 border-white/10 text-white/20">
                     <Settings className="w-10 h-10" />
                 </div>
                 <div className="max-w-md space-y-2">
@@ -37,7 +33,7 @@ export function WorkflowView() {
                     onClick={() => setActiveTab('trends')}
                     className={cn(
                         "w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-all shadow-lg active:translate-y-1 active:shadow-none focus-ring",
-                        isDarkMode ? `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}` : "bg-[#141414] text-[#E4E3E0] hover:bg-[#2a2a2a]"
+                        `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
                     )}
                 >
                     <ArrowLeft className="w-5 h-5" />
@@ -54,29 +50,29 @@ export function WorkflowView() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6 md:space-y-12"
         >
-            <Section title="Recommended Software Stack" isDarkMode={isDarkMode}>
+            <Section title="Recommended Software Stack">
                 <motion.div
                     variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
                     initial="hidden" animate="show"
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
                 >
                     <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}>
-                        <SoftwareCard label="Voice Generation" name={workflow.software.voiceGen} isDarkMode={isDarkMode} />
+                        <SoftwareCard label="Voice Generation" name={workflow.software.voiceGen} />
                     </motion.div>
                     <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}>
-                        <SoftwareCard label="Image Generation" name={workflow.software.imageGen} isDarkMode={isDarkMode} />
+                        <SoftwareCard label="Image Generation" name={workflow.software.imageGen} />
                     </motion.div>
                     <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}>
-                        <SoftwareCard label="Video Generation" name={workflow.software.videoGen} isDarkMode={isDarkMode} />
+                        <SoftwareCard label="Video Generation" name={workflow.software.videoGen} />
                     </motion.div>
                     <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}>
-                        <SoftwareCard label="Editing" name={workflow.software.editing} isDarkMode={isDarkMode} />
+                        <SoftwareCard label="Editing" name={workflow.software.editing} />
                     </motion.div>
                 </motion.div>
             </Section>
 
             <div className="space-y-6 md:space-y-12">
-                <Section title="Step-by-Step Process" isDarkMode={isDarkMode} collapsible defaultCollapsed>
+                <Section title="Step-by-Step Process" collapsible defaultCollapsed>
                     <motion.div
                         variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
                         initial="hidden" animate="show"
@@ -104,18 +100,17 @@ export function WorkflowView() {
                                 className={cn(
                                     "flex gap-4 p-4 border cursor-pointer transition-all group focus:outline-none focus:ring-2",
                                     theme.ring,
-                                    isDarkMode ? "border-white/10" : "border-[#141414]",
+                                    "border-white/10",
                                     completedSteps.includes(i)
-                                        ? (isDarkMode ? `${theme.bgAccent} opacity-60` : "bg-emerald-50/50 opacity-60")
-                                        : (isDarkMode ? `bg-[#0a0a0a] ${theme.hoverBorder}` : "bg-white hover:border-emerald-500")
+                                        ? `${theme.bgAccent} opacity-60`
+                                        : `bg-[#0a0a0a] ${theme.hoverBorder}`
                                 )}
                             >
                                 <div className={cn(
-                                    "w-6 h-6 border flex items-center justify-center flex-shrink-0 transition-colors",
-                                    isDarkMode ? "border-white/20" : "border-[#141414]",
+                                    "w-6 h-6 border flex items-center justify-center flex-shrink-0 transition-colors border-white/20",
                                     completedSteps.includes(i)
-                                        ? (isDarkMode ? `${theme.bg} ${theme.border} text-[#0a0a0a]` : "bg-[#141414] text-white")
-                                        : (isDarkMode ? `bg-[#0a0a0a] group-hover:${theme.border}` : "bg-white group-hover:border-emerald-500")
+                                        ? `${theme.bg} ${theme.border} text-[#0a0a0a]`
+                                        : `bg-[#0a0a0a] group-hover:${theme.border}`
                                 )}>
                                     {completedSteps.includes(i) && <Check className="w-4 h-4" />}
                                 </div>
@@ -130,17 +125,14 @@ export function WorkflowView() {
                         ))}
                     </motion.div>
                 </Section>
-                <Section title="Optimization Tips" isDarkMode={isDarkMode} collapsible defaultCollapsed>
+                <Section title="Optimization Tips" collapsible defaultCollapsed>
                     <motion.ul
                         variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
                         initial="hidden" animate="show"
                         className="space-y-4"
                     >
                         {workflow.optimizationTips.map((tip, i) => (
-                            <motion.li key={i} variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} className={cn(
-                                "flex items-start gap-3 p-4 border text-sm transition-colors",
-                                isDarkMode ? "bg-[#0a0a0a] border-white/10" : "bg-gray-50 border-gray-200"
-                            )}>
+                            <motion.li key={i} variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} className="flex items-start gap-3 p-4 border text-sm transition-colors bg-[#0a0a0a] border-white/10">
                                 <Zap className="w-4 h-4 mt-0.5 text-yellow-600 flex-shrink-0" />
                                 <span>{tip}</span>
                             </motion.li>

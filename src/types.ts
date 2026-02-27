@@ -64,6 +64,12 @@ export const VISUAL_STYLES = [
   "Claymation / Stop Motion",
   "Comic Book / Pop Art",
   "Low Poly 3D",
+  "3D Render",
+  "Oil Painting",
+  "Sketch",
+  "Pixel Art",
+  "Glitch",
+  "Surrealism",
 ];
 
 export interface HistoryItem {
@@ -85,6 +91,14 @@ export interface ScriptCritique {
   overallFeedback: string;
   improvedScript?: ScriptSegment[];
   improvedImagePrompts?: { frame: string; prompt: string }[];
+  improvedHook?: string;
+  improvedCaption?: string;
+  improvedHashtags?: string[];
+  improvedMusicStyle?: string;
+  improvedSoundEffects?: string[];
+  improvedEditingEffects?: string[];
+  improvedFontStyle?: string;
+  improvedEditingEffectsContext?: string;
 }
 
 export interface AppState {
@@ -96,12 +110,8 @@ export interface AppState {
   error: string | null;
   selectedVisualStyle: string;
   visualGenerationType: 'image' | 'video';
-  temperature: number; // For AI creativity
-  targetAudience: string; // e.g., 'Gen Z gamers', 'Small business owners'
-  tone: string; // e.g., 'Sarcastic', 'Inspirational', 'Technical'
   history: HistoryItem[];
   searchQuery: string;
-  isDarkMode: boolean;
 }
 
 export type ToastType = 'success' | 'error' | 'info';

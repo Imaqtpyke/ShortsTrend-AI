@@ -29,9 +29,7 @@ import {
   TrendingUp as TrendingIcon,
   ArrowUpRight,
   ArrowDownRight,
-  Minus,
-  Sun,
-  Moon
+  Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -52,8 +50,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis
 } from 'recharts';
-import { analyzeTrends, generateContentIdea, getWorkflow, critiqueScript, generateImprovement } from './services/geminiService';
-import { AppState, VISUAL_STYLES, HistoryItem, Toast, RetentionLeak } from './types';
+import { VISUAL_STYLES, HistoryItem, Toast, RetentionLeak } from './types';
 import { cn } from './lib/utils';
 import { TabButton } from './components/ui/TabButton';
 import { MobileNavButton } from './components/ui/MobileNavButton';
@@ -73,30 +70,23 @@ const CritiqueView = lazy(() => import('./components/views/CritiqueView').then(m
 const WorkflowView = lazy(() => import('./components/views/WorkflowView').then(m => ({ default: m.WorkflowView })));
 const HistoryView = lazy(() => import('./components/views/HistoryView').then(m => ({ default: m.HistoryView })));
 
-function StarBorder({ children, isDarkMode, className }: { children: React.ReactNode, isDarkMode: boolean, className?: string }) {
+function StarBorder({ children, className }: { children: React.ReactNode, className?: string }) {
   return (
     <div className={cn("relative p-[1px] rounded-sm overflow-hidden group", className)}>
       <div
         className="absolute inset-[-100%] origin-center animate-[spin_4s_linear_infinite]"
-        style={{
-          background: isDarkMode
-            ? `conic-gradient(from 0deg, transparent 70%, rgba(16, 185, 129, 0.8) 100%)`
-            : `conic-gradient(from 0deg, transparent 70%, rgba(20, 20, 20, 0.3) 100%)`
-        }}
+        style={{ background: `conic-gradient(from 0deg, transparent 70%, rgba(16, 185, 129, 0.8) 100%)` }}
       />
-      <div className={cn(
-        "relative w-full h-full rounded-sm",
-        isDarkMode ? "bg-[#1a1a1a]" : "bg-white"
-      )}>
+      <div className="relative w-full h-full rounded-sm bg-[#1a1a1a]">
         {children}
       </div>
     </div>
   );
 }
 
-function AnimatedGrid({ isDarkMode, theme }: { isDarkMode: boolean, theme: any }) {
-  const lineColor = isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
-  const beamColor = isDarkMode ? "rgba(16,185,129,0.4)" : "rgba(20,20,20,0.15)";
+function AnimatedGrid({ theme }: { theme: any }) {
+  const lineColor = "rgba(255,255,255,0.04)";
+  const beamColor = "rgba(16,185,129,0.4)";
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -141,20 +131,14 @@ function AnimatedGrid({ isDarkMode, theme }: { isDarkMode: boolean, theme: any }
       </div>
 
       {/* Subtle Ambient Glows */}
-      {isDarkMode ? (
-        <>
-          <div className={cn("absolute top-[-10%] left-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full", `${theme.bg}`)} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500 blur-[120px] opacity-10 rounded-full" />
-        </>
-      ) : (
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-white/60 blur-[100px] rounded-full" />
-      )}
+      <div className={cn("absolute top-[-10%] left-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full -z-10 pointer-events-none", `${theme.bg}`)} />
+      <div className={cn("absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full -z-10 pointer-events-none", `${theme.bg}`)} />
     </div>
   );
 }
 
-const HeroAnimation = React.memo(({ isDarkMode }: { isDarkMode: boolean }) => {
-  const color = isDarkMode ? "#ffffff" : "#141414";
+const HeroAnimation = React.memo(() => {
+  const color = "#ffffff";
   const accent = "#10b981"; // emerald-500
 
   return (
@@ -231,9 +215,9 @@ const HeroAnimation = React.memo(({ isDarkMode }: { isDarkMode: boolean }) => {
 
 export default function App() {
   const {
-    analysis, contentIdea, workflow, critique, isLoading, error, isDarkMode, history, searchQuery,
+    analysis, contentIdea, workflow, critique, isLoading, error, history, searchQuery,
     activeTab, setActiveTab, selectedTrend, toasts, historySearch, handleAnalyze, resetApp,
-    toggleDarkMode, loadingMessage
+    loadingMessage
   } = useAppStore();
 
   const theme = (() => {
@@ -291,50 +275,28 @@ export default function App() {
   }, [activeTab, isLoading, analysis]);
 
   return (
-    <div className={cn(
-      "min-h-screen font-sans transition-colors duration-500 relative overflow-x-hidden",
-      isDarkMode
-        ? "bg-[#0a0a0a] text-[#f5f5f5] selection:bg-[#f5f5f5] selection:text-[#0a0a0a]"
-        : "bg-gradient-to-b from-[#F5F3F0] via-[#E4E3E0] to-[#DDD8D2] text-[#141414] selection:bg-[#141414] selection:text-[#E4E3E0]"
-    )}>
+    <div className="min-h-screen font-sans transition-colors duration-500 relative overflow-x-hidden bg-[#0a0a0a] text-[#f5f5f5] selection:bg-[#f5f5f5] selection:text-[#0a0a0a]">
       {/* Visual Enhancements: Background Pattern & Glows */}
-      <AnimatedGrid isDarkMode={isDarkMode} theme={theme} />
+      <AnimatedGrid theme={theme} />
 
       {/* Navigation */}
-      <nav className={cn(
-        "border-b sticky top-0 z-50 transition-colors duration-300",
-        isDarkMode ? "bg-[#0a0a0a]/80 border-white/10 backdrop-blur-md" : "bg-[#E4E3E0]/80 border-[#141414] backdrop-blur-md"
-      )}>
+      <nav className="border-b sticky top-0 z-50 transition-colors duration-300 bg-[#0a0a0a]/80 border-white/10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2 cursor-pointer" onClick={resetApp}>
               <div className={cn(
                 "w-8 h-8 rounded-sm flex items-center justify-center transition-colors",
-                isDarkMode ? `${theme.bg}` : "bg-[#141414]"
+                `${theme.bg}`
               )}>
-                <TrendingUp className={cn("w-5 h-5", isDarkMode ? "text-[#0a0a0a]" : "text-[#E4E3E0]")} />
+                <TrendingUp className="w-5 h-5 text-[#0a0a0a]" />
               </div>
               <span className="font-mono font-bold tracking-tighter text-xl uppercase">ShortsTrend AI</span>
             </div>
             <div className="flex items-center gap-4">
-              <button
-                onClick={toggleDarkMode}
-                title="Toggle Theme"
-                aria-label="Toggle Theme"
-                className={cn(
-                  "p-2 rounded-sm transition-colors focus-ring",
-                  isDarkMode ? `bg-white/10 ${theme.textAccent} hover:bg-white/20` : "bg-black/5 text-black hover:bg-black/10"
-                )}
-              >
-                {isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </button>
               {analysis && (
                 <button
                   onClick={resetApp}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 sm:px-4 rounded-sm font-mono text-xs uppercase tracking-widest transition-colors min-h-[44px] focus-ring",
-                    isDarkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"
-                  )}
+                  className="flex items-center gap-2 px-3 py-2 sm:px-4 rounded-sm font-mono text-xs uppercase tracking-widest transition-colors min-h-[44px] focus-ring bg-white/10 text-white hover:bg-white/20"
                 >
                   <Search className="w-4 h-4" />
                   <span className="hidden sm:inline">New Search</span>
@@ -344,8 +306,8 @@ export default function App() {
                 onClick={() => handleAnalyze()}
                 disabled={isLoading}
                 className={cn(
-                  "hidden sm:flex items-center gap-2 px-4 py-2 rounded-sm font-mono text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] focus-ring",
-                  isDarkMode ? `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}` : "bg-[#141414] text-[#E4E3E0] hover:bg-[#2a2a2a]"
+                  "hidden sm:flex items-center gap-2 px-4 py-2 rounded-sm font-mono text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] focus-ring text-[#0a0a0a]",
+                  `${theme.bg} ${theme.hoverBg}`
                 )}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
@@ -370,18 +332,15 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               className="w-full max-w-3xl"
             >
-              <HeroAnimation isDarkMode={isDarkMode} />
-              <h1 className={cn(
-                "text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-bold tracking-tight mb-4",
-                isDarkMode ? "text-white" : "text-[#141414]"
-              )}>
+              <HeroAnimation />
+              <h1 className="text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-bold tracking-tight mb-4 text-white">
                 Turn Viral Trends into Viral Content
               </h1>
               <p className="text-base md:text-lg xl:text-xl opacity-60 mb-6 md:mb-12">
                 AI-powered trend analysis and content generation for YouTube Shorts creators.
               </p>
 
-              <StarBorder isDarkMode={isDarkMode} className="mb-8 shadow-lg">
+              <StarBorder className="mb-8 shadow-lg">
                 <div className="flex flex-col sm:flex-row relative gap-2 sm:gap-0 p-1">
                   <div className="relative w-full flex-grow">
                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
@@ -393,19 +352,14 @@ export default function App() {
                       value={searchQuery}
                       onChange={(e) => useAppStore.getState().setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                      className={cn(
-                        "w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10",
-                        isDarkMode
-                          ? "text-white"
-                          : "text-[#141414]"
-                      )}
+                      className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-white"
                     />
                   </div>
                   <button
                     onClick={() => handleAnalyze()}
                     className={cn(
                       "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring",
-                      isDarkMode ? `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}` : "bg-[#141414] text-[#E4E3E0] hover:bg-[#2a2a2a]"
+                      `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
                     )}
                   >
                     Search Niche
@@ -437,13 +391,12 @@ export default function App() {
         {(analysis || isLoading || activeTab === 'history') && (
           <div ref={mainContentRef} className="flex flex-col gap-6 items-start scroll-mt-24 w-full">
             {/* Sidebar Navigation - Sticky Desktop */}
-            <div className={cn("hidden lg:flex w-full flex-wrap gap-2 pb-2 sticky top-16 z-40 transition-colors pt-4 -mt-4", isDarkMode ? "bg-[#0a0a0a]" : "bg-[#E4E3E0]")}>
+            <div className="hidden lg:flex w-full flex-wrap gap-2 pb-2 sticky top-16 z-40 transition-colors pt-4 -mt-4 bg-[#0a0a0a]">
               <TabButton
                 active={activeTab === 'trends'}
                 onClick={() => setActiveTab('trends')}
                 icon={<TrendingUp className="w-4 h-4" />}
-                label="Trend Analysis"
-                isDarkMode={isDarkMode}
+                label="Trends Analysis"
                 theme={theme}
               />
               <TabButton
@@ -452,7 +405,6 @@ export default function App() {
                 disabled={!contentIdea}
                 icon={<Wand2 className="w-4 h-4" />}
                 label="Content Generator"
-                isDarkMode={isDarkMode}
                 theme={theme}
               />
               <TabButton
@@ -461,7 +413,6 @@ export default function App() {
                 disabled={!contentIdea}
                 icon={<BarChart className="w-4 h-4" />}
                 label="Roast My Script"
-                isDarkMode={isDarkMode}
                 theme={theme}
               />
               <TabButton
@@ -470,7 +421,6 @@ export default function App() {
                 disabled={!workflow}
                 icon={<Settings className="w-4 h-4" />}
                 label="Production Workflow"
-                isDarkMode={isDarkMode}
                 theme={theme}
               />
               <TabButton
@@ -478,23 +428,14 @@ export default function App() {
                 onClick={() => setActiveTab('history')}
                 icon={<History className="w-4 h-4" />}
                 label="Search History"
-                isDarkMode={isDarkMode}
                 theme={theme}
               />
             </div>
 
             {/* Main Content Area */}
-            <div className={cn(
-              "w-full border transition-all duration-300 p-3 sm:p-4 md:p-8 min-h-0 md:min-h-[600px]",
-              isDarkMode
-                ? `bg-[#1a1a1a] border-white/10 shadow-lg ${theme.shadowAccent}`
-                : "bg-white border-[#141414] shadow-lg"
-            )}>
+            <div className={`w-full border transition-all duration-300 p-3 sm:p-4 md:p-8 min-h-0 md:min-h-[600px] bg-[#1a1a1a] border-white/10 shadow-lg ${theme.shadowAccent}`}>
               <Suspense fallback={
-                <div className={cn(
-                  "flex items-center justify-center py-24 gap-3",
-                  isDarkMode ? "text-white/40" : "text-[#141414]/40"
-                )}>
+                <div className="flex items-center justify-center py-24 gap-3 text-white/40">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span className="font-mono text-xs uppercase tracking-widest">Loading module...</span>
                 </div>
@@ -512,29 +453,26 @@ export default function App() {
                       }}
                       className="space-y-8"
                     >
-                      <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className={cn(
-                        "flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6",
-                        isDarkMode ? "border-white/10" : "border-[#141414]"
-                      )}>
+                      <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6 border-white/10">
                         <div className="space-y-2 w-full max-w-md">
                           <div className="flex items-center gap-3 mb-2">
                             <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
                             <span className="font-mono text-sm tracking-widest text-emerald-500 uppercase">{loadingMessage || 'Loading...'}</span>
                           </div>
-                          <Skeleton className="h-10 w-full" isDarkMode={isDarkMode} />
+                          <Skeleton className="h-10 w-full" />
                         </div>
                       </motion.div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
-                          <Skeleton className="h-6 w-32" isDarkMode={isDarkMode} />
+                          <Skeleton className="h-6 w-32" />
                           <div className="grid grid-cols-1 gap-4">
-                            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full" isDarkMode={isDarkMode} />)}
+                            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full" />)}
                           </div>
                         </motion.div>
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
-                          <Skeleton className="h-6 w-32" isDarkMode={isDarkMode} />
-                          <Skeleton className="h-64 w-full" isDarkMode={isDarkMode} />
+                          <Skeleton className="h-6 w-32" />
+                          <Skeleton className="h-64 w-full" />
                         </motion.div>
                       </div>
                     </motion.div>
@@ -557,17 +495,13 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className={cn(
-        "lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t transition-colors duration-300 pb-safe",
-        isDarkMode ? "bg-[#0a0a0a] border-white/10" : "bg-[#E4E3E0] border-[#141414]"
-      )}>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t transition-colors duration-300 pb-safe bg-[#0a0a0a] border-white/10">
         <div className="grid grid-cols-5 h-16">
           <MobileNavButton
             active={activeTab === 'trends'}
             onClick={() => setActiveTab('trends')}
             icon={<TrendingUp className="w-5 h-5" />}
             label="Trends"
-            isDarkMode={isDarkMode}
             theme={theme}
           />
           <MobileNavButton
@@ -576,7 +510,6 @@ export default function App() {
             disabled={!contentIdea}
             icon={<Wand2 className="w-5 h-5" />}
             label="Gen"
-            isDarkMode={isDarkMode}
             theme={theme}
           />
           <MobileNavButton
@@ -585,7 +518,6 @@ export default function App() {
             disabled={!contentIdea}
             icon={<BarChart className="w-5 h-5" />}
             label="Roast"
-            isDarkMode={isDarkMode}
             theme={theme}
           />
           <MobileNavButton
@@ -594,7 +526,6 @@ export default function App() {
             disabled={!workflow}
             icon={<Settings className="w-5 h-5" />}
             label="Work"
-            isDarkMode={isDarkMode}
             theme={theme}
           />
           <MobileNavButton
@@ -602,16 +533,12 @@ export default function App() {
             onClick={() => setActiveTab('history')}
             icon={<History className="w-5 h-5" />}
             label="Hist"
-            isDarkMode={isDarkMode}
             theme={theme}
           />
         </div>
       </div>
 
-      <footer className={cn(
-        "mt-12 md:mt-24 border-t pt-8 pb-28 lg:py-12 transition-colors duration-300",
-        isDarkMode ? "bg-[#0a0a0a] border-white/10 text-white/40" : "bg-[#141414] border-[#141414] text-[#141414]/60"
-      )}>
+      <footer className="mt-12 md:mt-24 border-t pt-8 pb-28 lg:py-12 transition-colors duration-300 bg-[#0a0a0a] border-white/10 text-white/40">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center gap-4 text-center">
           <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] opacity-80 text-center leading-relaxed">
             Powered by Gemini 2.5 Flash & Google Search

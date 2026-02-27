@@ -25,7 +25,6 @@ interface AppStore extends AppState {
     toasts: Toast[];
     addToast: (message: string, type?: Toast['type']) => void;
     removeToast: (id: string) => void;
-    toggleDarkMode: () => void;
     copiedId: string | null;
     copyToClipboard: (text: string, id: string) => void;
     copyAllForProduction: () => void;
@@ -34,9 +33,6 @@ interface AppStore extends AppState {
     setSearchQuery: (query: string) => void;
     setVisualStyle: (style: string) => void;
     setVisualGenerationType: (type: 'image' | 'video') => void;
-    setTemperature: (temp: number) => void;
-    setTargetAudience: (audience: string) => void;
-    setTone: (tone: string) => void;
 
     // Phase 5: UX Improvements
     loadingMessage: string;
@@ -126,12 +122,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     error: null,
     selectedVisualStyle: VISUAL_STYLES[0],
     visualGenerationType: 'image',
-    temperature: 0.7,
-    targetAudience: 'General Audience',
-    tone: 'Informative',
     history: getInitialHistory(),
     searchQuery: '',
-    isDarkMode: true,
 
     // Initial UI/Feature State
     activeTab: 'trends',
@@ -158,8 +150,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
     removeToast: (id) => set(state => ({ toasts: state.toasts.filter(t => t.id !== id) })),
 
-    // Theme
-    toggleDarkMode: () => set(state => ({ isDarkMode: !state.isDarkMode })),
     copiedId: null,
     copyToClipboard: (text, id) => {
         navigator.clipboard.writeText(text);
@@ -181,9 +171,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setSearchQuery: (query) => set({ searchQuery: query }),
     setVisualStyle: (style) => set({ selectedVisualStyle: style }),
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
-    setTemperature: (temp) => set({ temperature: temp }),
-    setTargetAudience: (audience) => set({ targetAudience: audience }),
-    setTone: (tone) => set({ tone: tone }),
 
     // Phase 5: Progressive Loading & Interactive UI
     loadingMessage: '',
@@ -255,7 +242,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             }, 6000));
 
             const [idea, workflow] = await Promise.all([
-                generateContentIdea(trend, state.selectedVisualStyle, state.visualGenerationType, state.temperature, state.targetAudience, state.tone),
+                generateContentIdea(trend, state.selectedVisualStyle, state.visualGenerationType),
                 getWorkflow()
             ]);
 
@@ -308,15 +295,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
             const scriptText = state.contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
             const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
-            const improvement = await generateImprovement(scriptText, critiqueText);
+            const improvement = await generateImprovement(scriptText, critiqueText, state.selectedVisualStyle, state.visualGenerationType);
 
-            const improvedScriptText = improvement.improvedScript.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
-            const newCritique = await critiqueScript(improvedScriptText, state.contentIdea.hook);
+            const improvedScriptText = improvement.improvedScript!.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
+            const newCritique = await critiqueScript(improvedScriptText, improvement.improvedHook || state.contentIdea.hook);
 
             const finalCritique = {
                 ...newCritique,
-                improvedScript: improvement.improvedScript,
-                improvedImagePrompts: improvement.improvedImagePrompts
+                ...improvement
             };
             set({ isLoading: false, critique: finalCritique });
             persistSession({ critique: finalCritique });
@@ -336,7 +322,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const updated = {
             ...state.contentIdea,
             script: state.critique.improvedScript,
-            imagePrompts: state.critique.improvedImagePrompts || state.contentIdea.imagePrompts
+            imagePrompts: state.critique.improvedImagePrompts || state.contentIdea.imagePrompts,
+            hook: state.critique.improvedHook || state.contentIdea.hook,
+            caption: state.critique.improvedCaption || state.contentIdea.caption,
+            hashtags: state.critique.improvedHashtags || state.contentIdea.hashtags,
+            musicStyle: state.critique.improvedMusicStyle || state.contentIdea.musicStyle,
+            soundEffects: state.critique.improvedSoundEffects || state.contentIdea.soundEffects,
+            editingEffects: state.critique.improvedEditingEffects || state.contentIdea.editingEffects,
+            fontStyle: state.critique.improvedFontStyle || state.contentIdea.fontStyle,
+            editingEffectsContext: state.critique.improvedEditingEffectsContext || state.contentIdea.editingEffectsContext
         };
         set({ contentIdea: updated, activeTab: 'generator' });
         persistSession({ contentIdea: updated });

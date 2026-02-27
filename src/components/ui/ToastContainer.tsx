@@ -12,7 +12,7 @@ const ICON_MAP = {
 };
 
 export function ToastContainer() {
-    const { toasts, removeToast, isDarkMode } = useAppStore();
+    const { toasts, removeToast } = useAppStore();
 
     return (
         <div
@@ -30,10 +30,7 @@ export function ToastContainer() {
                         exit={{ opacity: 0, scale: 0.9, y: 10 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                         className={cn(
-                            "pointer-events-auto flex items-start gap-3 px-4 py-3 border shadow-xl max-w-[280px] sm:max-w-[320px] font-mono text-xs",
-                            isDarkMode
-                                ? "bg-[#1a1a1a] border-white/10 text-white"
-                                : "bg-white border-[#141414] text-[#141414]"
+                            "pointer-events-auto flex items-start gap-3 px-4 py-3 border shadow-xl max-w-[280px] sm:max-w-[320px] font-mono text-xs bg-[#1a1a1a] border-white/10 text-white"
                         )}
                     >
                         {ICON_MAP[toast.type ?? 'info']}

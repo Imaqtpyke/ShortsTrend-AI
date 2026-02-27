@@ -30,16 +30,16 @@ export async function critiqueScript(script: string, hook: string): Promise<Scri
   return fetchFromBackend<ScriptCritique>("/critique", { script, hook });
 }
 
-export async function generateImprovement(script: string, critique: string): Promise<{ improvedScript: ScriptSegment[], improvedImagePrompts: { frame: string; prompt: string }[] }> {
-  return fetchFromBackend("/improve", { script, critique });
+export async function generateImprovement(script: string, critique: string, visualStyle: string, visualGenerationType: 'image' | 'video'): Promise<Partial<ScriptCritique>> {
+  return fetchFromBackend<Partial<ScriptCritique>>("/improve", { script, critique, visualStyle, visualGenerationType });
 }
 
 export async function analyzeTrends(niche?: string): Promise<TrendAnalysis> {
   return fetchFromBackend<TrendAnalysis>("/analyze", { niche });
 }
 
-export async function generateContentIdea(trend: string, visualStyle: string, visualGenerationType: 'image' | 'video', temperature: number, targetAudience: string, tone: string): Promise<ContentIdea> {
-  return fetchFromBackend<ContentIdea>("/generate", { trend, visualStyle, visualGenerationType, temperature, targetAudience, tone });
+export async function generateContentIdea(trend: string, visualStyle: string, visualGenerationType: 'image' | 'video'): Promise<ContentIdea> {
+  return fetchFromBackend<ContentIdea>("/generate", { trend, visualStyle, visualGenerationType });
 }
 
 export async function getWorkflow(): Promise<ProductionWorkflow> {

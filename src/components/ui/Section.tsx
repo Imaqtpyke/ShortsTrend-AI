@@ -7,22 +7,18 @@ interface SectionProps {
     title: string;
     children: React.ReactNode;
     icon?: React.ReactNode;
-    isDarkMode?: boolean;
     /** If true, the section can be collapsed by clicking the header */
     collapsible?: boolean;
     /** Initial collapsed state when collapsible=true (default: false = expanded) */
     defaultCollapsed?: boolean;
 }
 
-export function Section({ title, children, icon, isDarkMode, collapsible = false, defaultCollapsed = false }: SectionProps) {
+export function Section({ title, children, icon, collapsible = false, defaultCollapsed = false }: SectionProps) {
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
     return (
         <div className={cn(
-            "border transition-all duration-300",
-            isDarkMode
-                ? "bg-white/[0.02] border-white/10 backdrop-blur-sm hover:bg-white/[0.04]"
-                : "bg-white/50 border-[#141414]/10 backdrop-blur-sm hover:bg-white/80"
+            "border transition-all duration-300 bg-white/[0.02] border-white/10 backdrop-blur-sm hover:bg-white/[0.04]"
         )}>
             {/* Header — always visible, clickable when collapsible */}
             <div
@@ -37,8 +33,7 @@ export function Section({ title, children, icon, isDarkMode, collapsible = false
                     }
                 } : undefined}
                 className={cn(
-                    "flex items-center gap-2 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b transition-colors",
-                    isDarkMode ? "border-white/10" : "border-[#141414]/10",
+                    "flex items-center gap-2 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b transition-colors border-white/10",
                     collapsible && "cursor-pointer select-none"
                 )}
             >
