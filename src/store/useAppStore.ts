@@ -43,6 +43,8 @@ interface AppStore extends AppState {
     setVisualGenerationType: (type: 'image' | 'video') => void;
     setVideoDuration: (duration: number) => void;
     setCustomVideoDuration: (duration: number | null) => void;
+    segmentMode: 'adjustable' | 'fixed';
+    setSegmentMode: (mode: 'adjustable' | 'fixed') => void;
 
     // Phase 5: UX Improvements
     loadingMessage: string;
@@ -51,7 +53,7 @@ interface AppStore extends AppState {
 
     // Actions
     resetApp: () => void;
-    handleAnalyze: (queryOverride?: string) => Promise<void>;
+    handleAnalyze: (queryOverride?: string, bypassCache?: boolean) => Promise<void>;
     handleGenerate: (trend: string) => Promise<void>;
     handleCritique: () => Promise<void>;
     handleImprove: () => Promise<void>;
@@ -107,6 +109,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     visualGenerationType: 'image',
     videoDuration: 6,
     customVideoDuration: null,
+    segmentMode: 'adjustable',
     history: [],
     searchQuery: '',
 
@@ -131,16 +134,28 @@ export const useAppStore = create<AppStore>((set, get) => ({
     addToast: (message, type = 'success') => {
         const id = Math.random().toString(36).substr(2, 9);
         set(state => ({ toasts: [...state.toasts, { id, message, type }] }));
-        setTimeout(() => get().removeToast(id), 3000);
+        // BUG FIX #1: Store the timer ID so it can be cleared if the toast is manually
+        // removed before the timeout fires, preventing a setState-after-unmount leak.
+        const timerId = setTimeout(() => get().removeToast(id), 3000);
+        // Attach timer to the toast so removeToast can cancel it
+        set(state => ({ toasts: state.toasts.map(t => t.id === id ? { ...t, _timerId: timerId } : t) }));
     },
-    removeToast: (id) => set(state => ({ toasts: state.toasts.filter(t => t.id !== id) })),
+    removeToast: (id) => {
+        const toast = get().toasts.find(t => t.id === id) as any;
+        if (toast?._timerId) clearTimeout(toast._timerId);
+        set(state => ({ toasts: state.toasts.filter(t => t.id !== id) }));
+    },
 
     copiedId: null,
     copyToClipboard: (text, id) => {
-        navigator.clipboard.writeText(text);
-        set({ copiedId: id });
-        get().addToast('Copied to clipboard!', 'success');
-        setTimeout(() => set({ copiedId: null }), 2000);
+        // BUG FIX #2: Handle clipboard permission denial gracefully instead of silently failing.
+        navigator.clipboard.writeText(text).then(() => {
+            set({ copiedId: id });
+            get().addToast('Copied to clipboard!', 'success');
+            setTimeout(() => set({ copiedId: null }), 2000);
+        }).catch(() => {
+            get().addToast('Copy failed — clipboard permission denied.', 'error');
+        });
     },
     copyAllForProduction: () => {
         const { contentIdea, copyToClipboard } = get();
@@ -158,6 +173,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
     setVideoDuration: (duration) => set({ videoDuration: duration }),
     setCustomVideoDuration: (duration) => set({ customVideoDuration: duration }),
+    setSegmentMode: (mode) => set({ segmentMode: mode }),
 
     // Phase 5: Progressive Loading & Interactive UI
     loadingMessage: '',
@@ -214,13 +230,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
         });
     },
 
-    handleAnalyze: async (queryOverride?: string) => {
+    handleAnalyze: async (queryOverride?: string, bypassCache = false) => {
         const state = get();
         const query = queryOverride !== undefined ? queryOverride : state.searchQuery;
         set({ isLoading: true, error: null, loadingMessage: "Analyzing niche topics... This might take a few moments." });
 
         try {
-            const analysis = await analyzeTrends(query || undefined);
+            const analysis = await analyzeTrends(query || undefined, bypassCache);
             const newHistoryItem: HistoryItem = {
                 id: Math.random().toString(36).substr(2, 9),
                 query: query || 'General Trends',
@@ -238,9 +254,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 activeTab: 'trends'
             });
             persistSession({ analysis, searchQuery: query || '' });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            set({ isLoading: false, error: 'Failed to analyze trends. Please try again.' });
+            // BUG FIX #3: Surface the actual API error message instead of a generic string.
+            set({ isLoading: false, error: err?.message || 'Failed to analyze trends. Please try again.' });
         }
     },
 
@@ -258,7 +275,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 if (get().isLoading) set({ loadingMessage: "Writing the script segments..." });
             }, 6000));
 
-            const finalVideoDuration = state.customVideoDuration || state.videoDuration;
+            const finalVideoDuration = state.segmentMode === 'fixed'
+                ? undefined
+                : (state.customVideoDuration || state.videoDuration);
 
             let startedStreaming = false;
 
@@ -319,9 +338,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
             set({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null, isLoading: false, completedSteps: [], activeTab: 'generator' });
             persistSession({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            set({ isLoading: false, error: 'Failed to generate content. Please try again.' });
+            set({ isLoading: false, error: err?.message || 'Failed to generate content. Please try again.' });
         } finally {
             timers.forEach(clearTimeout);
         }
@@ -343,9 +362,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
             const critique = await critiqueScript(scriptText, state.contentIdea.hookVariations[0]?.text || '');
             set({ critique, isLoading: false, activeTab: 'critique' });
             persistSession({ critique });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            set({ isLoading: false, error: 'Failed to critique script. Please try again.' });
+            set({ isLoading: false, error: err?.message || 'Failed to critique script. Please try again.' });
         } finally {
             timers.forEach(clearTimeout);
         }
@@ -366,7 +385,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
             const scriptText = state.contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
             const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
-            const builtVideoDuration = state.contentIdea.videoDuration || state.videoDuration;
+            const builtVideoDuration = state.segmentMode === 'fixed'
+                ? undefined
+                : (state.contentIdea.videoDuration || state.videoDuration);
             const improvement = await generateImprovement(scriptText, critiqueText, state.selectedVisualStyle, state.visualGenerationType, builtVideoDuration);
 
             const improvedScriptText = improvement.improvedScript!.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
@@ -379,9 +400,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
             set({ isLoading: false, critique: finalCritique });
             persistSession({ critique: finalCritique });
             get().addToast('AI has generated and critiqued an improved version of your script!', 'success');
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            set({ isLoading: false, error: 'Failed to generate improvement. Please try again.' });
+            set({ isLoading: false, error: err?.message || 'Failed to generate improvement. Please try again.' });
         } finally {
             timers.forEach(clearTimeout);
         }

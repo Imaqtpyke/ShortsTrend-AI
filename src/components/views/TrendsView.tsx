@@ -31,7 +31,9 @@ export function TrendsView() {
         videoDuration,
         setVideoDuration,
         customVideoDuration,
-        setCustomVideoDuration
+        setCustomVideoDuration,
+        segmentMode,
+        setSegmentMode
     } = useAppStore();
     const theme = useTheme();
     const [selectedTrendForModal, setSelectedTrendForModal] = React.useState<string | null>(null);
@@ -141,7 +143,7 @@ export function TrendsView() {
                         <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 opacity-40" />
                     </div>
                     <button
-                        onClick={() => handleAnalyze()}
+                        onClick={() => handleAnalyze(undefined, true)}
                         disabled={isLoading}
                         title="Regenerate Trends for this Niche"
                         className="px-4 border min-h-[44px] transition-colors bg-[#1a1a1a] border-white/10 hover:border-emerald-500 text-white/80 hover:text-emerald-400 disabled:opacity-50 flex items-center justify-center focus-visible:ring-2 focus-visible:outline-none focus:ring-emerald-500"
@@ -429,83 +431,119 @@ export function TrendsView() {
                                 </div>
 
                                 <div className="space-y-3 pt-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
-                                        {visualGenerationType === 'video' ? <Video className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
-                                        {visualGenerationType === 'video' ? 'Clip Length (per scene)' : 'Segment Length'}
-                                    </label>
-                                    <div className="flex flex-col space-y-2">
-                                        <select
-                                            className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
-                                            value={customVideoDuration !== null ? 'custom' : videoDuration}
-                                            onChange={(e) => {
-                                                if (e.target.value === 'custom') {
-                                                    setCustomVideoDuration(10);
-                                                } else {
-                                                    setCustomVideoDuration(null);
-                                                    setVideoDuration(Number(e.target.value));
-                                                }
-                                            }}
-                                        >
-                                            <option value="6">6 seconds (Minimum)</option>
-                                            <option value="8">8 seconds (Medium)</option>
-                                            <option value="15">15 seconds (Maximum)</option>
-                                            <option value="custom">Customize Your Duration...</option>
-                                        </select>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
+                                            {visualGenerationType === 'video' ? <Video className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
+                                            {visualGenerationType === 'video' ? 'Clip Length (per scene)' : 'Segment Length'}
+                                        </label>
 
-                                        {customVideoDuration !== null && (
-                                            <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                className="flex flex-col space-y-2 pt-2"
+                                        <div className="flex bg-[#1a1a1a] border border-white/10 p-0.5 rounded-sm">
+                                            <button
+                                                onClick={() => setSegmentMode('fixed')}
+                                                className={cn(
+                                                    "px-2 py-1 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest transition-colors rounded-sm",
+                                                    segmentMode === 'fixed'
+                                                        ? "bg-emerald-500 text-black font-bold"
+                                                        : "text-white/50 hover:text-white"
+                                                )}
                                             >
-                                                <input
-                                                    type="number"
-                                                    min="2"
-                                                    max="120"
-                                                    value={customVideoDuration}
+                                                Fixed mode
+                                            </button>
+                                            <button
+                                                onClick={() => setSegmentMode('adjustable')}
+                                                className={cn(
+                                                    "px-2 py-1 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest transition-colors rounded-sm",
+                                                    segmentMode === 'adjustable'
+                                                        ? "bg-emerald-500 text-black font-bold"
+                                                        : "text-white/50 hover:text-white"
+                                                )}
+                                            >
+                                                Adjustable
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col space-y-2">
+                                        {segmentMode === 'fixed' ? (
+                                            <div className="p-4 border border-white/10 bg-[#1a1a1a] text-white/70 text-xs font-mono leading-relaxed">
+                                                AI will dynamically determine optimal scene lengths to pace the story, perfectly locked to 60s total runtime.
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <select
+                                                    className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
+                                                    value={customVideoDuration !== null ? 'custom' : videoDuration}
                                                     onChange={(e) => {
-                                                        const val = parseInt(e.target.value);
-                                                        setCustomVideoDuration(isNaN(val) ? 6 : Math.max(2, Math.min(120, val)));
+                                                        if (e.target.value === 'custom') {
+                                                            setCustomVideoDuration(10);
+                                                        } else {
+                                                            setCustomVideoDuration(null);
+                                                            setVideoDuration(Number(e.target.value));
+                                                        }
                                                     }}
-                                                    placeholder="Enter custom duration (s)"
-                                                    className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-emerald-500/50 focus:border-emerald-500 outline-none min-h-[48px]"
-                                                />
-                                            </motion.div>
+                                                >
+                                                    <option value="6">6 seconds (Minimum)</option>
+                                                    <option value="8">8 seconds (Medium)</option>
+                                                    <option value="15">15 seconds (Maximum)</option>
+                                                    <option value="custom">Customize Your Duration...</option>
+                                                </select>
+
+                                                {customVideoDuration !== null && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        className="flex flex-col space-y-2 pt-2"
+                                                    >
+                                                        <input
+                                                            type="number"
+                                                            min="2"
+                                                            max="120"
+                                                            value={customVideoDuration}
+                                                            onChange={(e) => {
+                                                                const val = parseInt(e.target.value);
+                                                                setCustomVideoDuration(isNaN(val) ? 6 : Math.max(2, Math.min(120, val)));
+                                                            }}
+                                                            placeholder="Enter custom duration (s)"
+                                                            className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-emerald-500/50 focus:border-emerald-500 outline-none min-h-[48px]"
+                                                        />
+                                                    </motion.div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="space-y-3">
-                                    <label htmlFor="modal-custom-style-input" className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
-                                        <ImageIcon className="w-3 h-3" /> Custom Style Prompt
-                                    </label>
-                                    <input
-                                        id="modal-custom-style-input"
-                                        type="text"
-                                        value={VISUAL_STYLES.includes(selectedVisualStyle) ? '' : selectedVisualStyle}
-                                        onChange={(e) => setVisualStyle(e.target.value)}
-                                        placeholder="Enter your own style (e.g., Neon Noir)..."
-                                        className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[48px] bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
-                                    />
-                                </div>
+                            <div className="space-y-3">
+                                <label htmlFor="modal-custom-style-input" className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
+                                    <ImageIcon className="w-3 h-3" /> Custom Style Prompt
+                                </label>
+                                <input
+                                    id="modal-custom-style-input"
+                                    type="text"
+                                    value={VISUAL_STYLES.includes(selectedVisualStyle) ? '' : selectedVisualStyle}
+                                    onChange={(e) => setVisualStyle(e.target.value)}
+                                    placeholder="Enter your own style (e.g., Neon Noir)..."
+                                    className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[48px] bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
+                                />
+                            </div>
 
-                                <div className="pt-2 mt-auto">
-                                    <button
-                                        onClick={() => {
-                                            handleGenerate(selectedTrendForModal);
-                                            setSelectedTrendForModal(null);
-                                        }}
-                                        disabled={isLoading}
-                                        className="w-full px-4 py-4 font-mono text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:translate-y-0.5 active:shadow-none min-h-[56px] bg-emerald-500 text-[#0a0a0a] border-emerald-500 hover:bg-emerald-400"
-                                    >
-                                        {isLoading ? (
-                                            <RefreshCw className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                            <Zap className="w-4 h-4" />
-                                        )}
-                                        <span>{isLoading ? 'Generating...' : 'Generate Content'}</span>
-                                    </button>
-                                </div>
+                            <div className="pt-2 mt-auto">
+                                <button
+                                    onClick={() => {
+                                        handleGenerate(selectedTrendForModal);
+                                        setSelectedTrendForModal(null);
+                                    }}
+                                    disabled={isLoading}
+                                    className="w-full px-4 py-4 font-mono text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:translate-y-0.5 active:shadow-none min-h-[56px] bg-emerald-500 text-[#0a0a0a] border-emerald-500 hover:bg-emerald-400"
+                                >
+                                    {isLoading ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Zap className="w-4 h-4" />
+                                    )}
+                                    <span>{isLoading ? 'Generating...' : 'Generate Content'}</span>
+                                </button>
                             </div>
                         </div>
                     </motion.div>

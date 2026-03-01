@@ -16,6 +16,8 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 // ─── Input Sanitization ────────────────────────────────────────────────────────
 // Strips prompt injection attempts before injecting user content into prompts.
 const MAX_INPUT_LENGTH = 500;
+const MAX_SCRIPT_LENGTH = 10000; // Scripts are much longer than short user inputs
+
 function sanitizeInput(raw) {
     if (typeof raw !== 'string') return '';
     return raw
@@ -23,6 +25,20 @@ function sanitizeInput(raw) {
         .replace(/[<>]/g, '')                      // Strip HTML tags
         .replace(/```[\s\S]*?```/g, '')            // Remove code blocks
         .replace(/\bignore\b.{0,80}\bprevious\b/gi, '[FILTERED]')  // Prompt injection
+        .replace(/\bsystem\s*prompt\b/gi, '[FILTERED]')
+        .replace(/\bpretend\b.{0,60}\byou are\b/gi, '[FILTERED]')
+        .replace(/\bforget\b.{0,60}\binstructions\b/gi, '[FILTERED]')
+        .trim();
+}
+
+// For longer structured inputs like full scripts and critique text.
+// Applies the same injection guards but with a higher character cap.
+function sanitizeScriptInput(raw) {
+    if (typeof raw !== 'string') return '';
+    return raw
+        .slice(0, MAX_SCRIPT_LENGTH)
+        .replace(/[<>]/g, '')
+        .replace(/\bignore\b.{0,80}\bprevious\b/gi, '[FILTERED]')
         .replace(/\bsystem\s*prompt\b/gi, '[FILTERED]')
         .replace(/\bpretend\b.{0,60}\byou are\b/gi, '[FILTERED]')
         .replace(/\bforget\b.{0,60}\binstructions\b/gi, '[FILTERED]')
@@ -216,8 +232,8 @@ app.post('/api/critique', async (req, res) => {
 
 app.post('/api/improve', async (req, res) => {
     try {
-        const script = sanitizeInput(req.body.script);
-        const critique = sanitizeInput(req.body.critique);
+        const script = sanitizeScriptInput(req.body.script);    // FIX #4: use high-cap sanitizer for scripts
+        const critique = sanitizeScriptInput(req.body.critique);  // FIX #4: critique can also be long
         const visualStyle = sanitizeInput(req.body.visualStyle) || 'Default';
         const { visualGenerationType, videoDuration } = req.body;
         if (!script) return res.status(400).json({ error: 'Script is required.' });
@@ -257,6 +273,12 @@ app.post('/api/improve', async (req, res) => {
         }
         const expectedSegments = originalTimelineLines.length;
 
+        // FIX #2: Reject early if we couldn't extract a valid timeline.
+        // Without this guard, expectedSegments=0 would silently skip the segment count check.
+        if (expectedSegments === 0) {
+            return res.status(400).json({ error: 'Could not extract a valid timeline from the provided script. Ensure it contains timestamped segments.' });
+        }
+
         while (attempts < maxAttempts) {
             attempts++;
             try {
@@ -284,7 +306,19 @@ app.post('/api/improve', async (req, res) => {
           2. Strict Visual Style: Every single prompt MUST strictly match the "${visualStyle}" style. Do not default to generic styles.
           3. Prompt Type: The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g., Veo, Runway)' : 'IMAGE generation (e.g., Midjourney, Flux)'}. Format the description strictly for this medium (e.g., "Cinematic tracking shot..." for video).
           4. 9:16 Aspect Ratio: Explicitly add exactly "--ar 9:16" at the very end of EVERY distinct visual prompt. Descriptions must be optimized for a vertical, mobile-first composition.
-          5. Visual Direction: Include specific lighting and camera movement instructions formatted to match the vertical 9:16 frame.`,
+          5. Visual Direction: Include specific lighting and camera movement instructions formatted to match the vertical 9:16 frame.
+          
+          CRITICAL 10X SCRIPT UPGRADE REQUIREMENT:
+          You are not just tweaking the script; you are transforming it into a top-tier, viral-quality masterpiece. 
+          - The script MUST be 10x stronger. "10x stronger" means operationally:
+            1. INTENSITY: Every sentence must provoke curiosity, shock, or relatable frustration.
+            2. PACING: Cut ALL filler words. Use short, punchy, active voice sentences.
+            3. SPECIFICITY: Replace vague statements with hyper-specific micro-details.
+            4. VISUAL RICHNESS: Maximize aesthetic descriptors (lighting, texture, angle) over plain subjects.
+          - The HOOK (first segment) must be a punchy, pattern-interrupt that demands attention instantly.
+          - Do NOT simply say "make it better". Specifically apply the operational rules above to completely rewrite the text.
+          - The visual Prompts MUST be dramatically upgraded. Make them highly cinematic, visually compelling, hyper-detailed. 
+          - If the original was "A man walking", the new prompt should be "Low angle tracking shot of a silhouetted figure striding through a neon-drenched cyberpunk alley, rain slicking the pavement, dramatic chiaroscuro lighting."`,
                     config: {
                         responseMimeType: "application/json",
                         responseSchema: {
@@ -372,16 +406,19 @@ app.post('/api/improve', async (req, res) => {
 app.post('/api/analyze', async (req, res) => {
     try {
         const niche = sanitizeInput(req.body.niche);
+        const bypassCache = req.body.bypassCache === true;
         const cacheKey = niche ? niche.toLowerCase() : '__general__';
 
-        // Serve from cache if available
-        const cached = getCachedAnalysis(cacheKey);
-        if (cached) {
-            console.log(`[Cache HIT] /api/analyze for: "${cacheKey}"`);
-            return res.json({ ...cached, _cached: true });
+        // Serve from cache if available and not explicitly bypassed
+        if (!bypassCache) {
+            const cached = getCachedAnalysis(cacheKey);
+            if (cached) {
+                console.log(`[Cache HIT] /api/analyze for: "${cacheKey}"`);
+                return res.json({ ...cached, _cached: true });
+            }
         }
 
-        console.log(`[Cache MISS] /api/analyze for: "${cacheKey}"`);
+        console.log(`[Cache MISS] /api/analyze for: "${cacheKey}" (bypassCache: ${bypassCache})`);
         const prompt = niche
             ? `Search for and analyze the current top YouTube Shorts trends specifically within the niche: "${niche}". Focus on trending topics, viral formats, hooks, structures, music, and hashtags relevant to this niche. For each topic, strictly define the competition level, precise target audience, and provide a single robust example video idea.`
             : "Search for and analyze the current top YouTube Shorts trends for this week. Focus on trending topics, viral formats, hooks, structures, music, and hashtags. For each topic, strictly define the competition level, precise target audience, and provide a single robust example video idea.";
@@ -475,6 +512,9 @@ app.post('/api/generate', async (req, res) => {
             durationInstruction = `      3. Break the script down into exactly ${totalSegments} distinct sequential segments.${roundingInstruction} Format the timestamp as a duration range (e.g., 00:00 - 00:08, 00:08 - 00:16) reflecting the exact start and end times of each chunk.`;
             extraInstructions = `\n      4. STRICT STRUCTURAL PRESERVATION: The complete script MUST be a full 60-second video. You MUST output exactly ${totalSegments} separate script segment blocks.
       - WORD LIMIT PER BLOCK: For EVERY distinct segment block, you MUST write between ${minWords} and ${maxWords} words to ensure a natural 1.5 words/second speaking pace.`;
+        } else {
+            extraInstructions = `\n      4. STRICT PACING PRESERVATION: The complete script MUST be a full 60-second video.
+              - PACING CONTROL: You must generate between 10 and 20 segments total. No segment can be shorter than 3 seconds or longer than 8 seconds.`;
         }
 
         let result = null;
@@ -498,6 +538,13 @@ app.post('/api/generate', async (req, res) => {
               1. Hook Variations: Generate 3 distinct hook variations based on psychological triggers (e.g., Curiosity, Direct/Aggressive, Contrarian).
               2. Enhance Segments: Build strong pacing and engaging narrative. Use a natural 1.5 words per second speaking rate.
         ${durationInstruction}${extraInstructions}
+        
+              CRITICAL HOOK REQUIREMENT:
+              The very first segment (timestamp: 00:00-...) is the HOOK. This is the most important part of the video.
+              - It MUST use a pattern-interrupt style.
+              - It MUST trigger high emotion (curiosity, shock, relatable frustration, or sudden realization).
+              - Do NOT use generic openings like "Here are 5 ways..." or "Did you know...".
+              - Start mid-action or with a bold, controversial, or highly relatable statement.
         
               CRITICAL INSTRUCTIONS FOR VISUAL PROMPTS:
               1. Extremely Granular: Provide a new prompt for EVERY SINGLE sentence, comma, pause, or change in scenario.
@@ -584,13 +631,20 @@ app.post('/api/generate', async (req, res) => {
                 if (!response.text) throw new Error("No response text from Gemini API");
                 const parsed = JSON.parse(response.text);
 
-                if (expectedSegments > 0 && parsed.script.length !== expectedSegments) {
-                    throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, but LLM generated ${parsed.script.length}.`);
+                if (expectedSegments > 0) {
+                    if (parsed.script.length !== expectedSegments) {
+                        throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, but LLM generated ${parsed.script.length}.`);
+                    }
+                } else {
+                    if (parsed.script.length < 10 || parsed.script.length > 20) {
+                        throw new Error(`Validation failed: Expected between 10 and 20 segments for optimal pacing, but LLM generated ${parsed.script.length}.`);
+                    }
                 }
 
                 result = parsed;
                 break;
             } catch (err) {
+                // Note: the final-attempt 500 response is handled immediately below
                 console.warn(`[Generate Attempt ${attempts}] failed:`, err.message);
                 if (attempts >= maxAttempts) {
                     return res.status(500).json({ error: "Failed to generate valid structure after multiple attempts." });
@@ -598,8 +652,16 @@ app.post('/api/generate', async (req, res) => {
             }
         }
 
+        // FIX #1: Guard against result=null if all retries failed outside the inner catch
+        if (!result) {
+            return res.status(500).json({ error: 'Generation failed: no valid result could be produced after multiple attempts.' });
+        }
+
         // Mathematically enforce exact timestamps so we don't rely on LLM formatting
         if (result.script && result.script.length > 0) {
+            let currentStartSecs = 0;
+            const totalScriptLength = result.script.reduce((acc, s) => acc + s.text.length, 0);
+
             result.script = result.script.map((segment, index) => {
                 let startTimeSecs, endTimeSecs;
 
@@ -607,10 +669,23 @@ app.post('/api/generate', async (req, res) => {
                     startTimeSecs = index * videoDuration;
                     endTimeSecs = Math.min(startTimeSecs + videoDuration, 60);
                 } else {
-                    const segmentDuration = 60 / result.script.length;
-                    startTimeSecs = Math.floor(index * segmentDuration);
-                    endTimeSecs = Math.floor((index + 1) * segmentDuration);
+                    // Start at the accumulated current start time
+                    startTimeSecs = currentStartSecs;
+                    // Calculate optimal pacing mathematically based on specific text density
+                    const proportionalDuration = (segment.text.length / totalScriptLength) * 60;
+                    endTimeSecs = currentStartSecs + proportionalDuration;
+                    currentStartSecs = endTimeSecs; // Advance pointer
                 }
+
+                // Force ultimate bound to exactly 60
+                if (index === result.script.length - 1) {
+                    endTimeSecs = 60;
+                }
+
+                // FIX #3: Use floor/ceil + enforce minimum 1s gap to prevent zero-duration segments
+                // Math.round can cause two adjacent floats (e.g. 4.5 and 5.4) to both become 5
+                const roundedStart = Math.max(0, Math.floor(startTimeSecs));
+                const roundedEnd = Math.min(60, Math.max(roundedStart + 1, Math.ceil(endTimeSecs)));
 
                 const formatTime = (secs) => {
                     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -618,7 +693,7 @@ app.post('/api/generate', async (req, res) => {
                     return `${m}:${s}`;
                 };
 
-                const exactTimestamp = `${formatTime(startTimeSecs)} – ${formatTime(endTimeSecs)}`;
+                const exactTimestamp = `${formatTime(roundedStart)} – ${formatTime(roundedEnd)}`;
 
                 if (result.imagePrompts && result.imagePrompts[index]) {
                     result.imagePrompts[index].frame = exactTimestamp;

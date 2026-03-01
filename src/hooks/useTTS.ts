@@ -1,12 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useTTS() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeText, setActiveText] = useState<string | null>(null);
+    // BUG FIX #4: Cache voices in a ref to survive re-renders without re-calling getVoices().
+    // Chrome loads voices asynchronously — getVoices() returns [] on first call until
+    // the voiceschanged event fires. Without this, TTS always uses the browser default voice.
+    const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
 
     useEffect(() => {
-        // Cleanup on unmount
+        const loadVoices = () => {
+            voicesRef.current = window.speechSynthesis.getVoices();
+        };
+        // Load immediately in case they're already available (Firefox / Safari)
+        loadVoices();
+        // Also listen for async load (required for Chrome)
+        window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
         return () => {
+            window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
             window.speechSynthesis.cancel();
         };
     }, []);
@@ -28,8 +39,8 @@ export function useTTS() {
 
         const utterance = new SpeechSynthesisUtterance(text);
 
-        // Try to get a good English voice
-        const voices = window.speechSynthesis.getVoices();
+        // Use cached voices to avoid the Chrome race condition
+        const voices = voicesRef.current;
         const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google'))
             || voices.find(v => v.lang.startsWith('en'));
 

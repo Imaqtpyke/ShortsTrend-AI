@@ -16,12 +16,20 @@ async function fetchFromBackend<T>(endpoint: string, body: any, retries = 3, del
       if (response.status === 429) {
         throw new Error(errorData.error || "API overload. Please wait a minute, the Google model is busy.");
       }
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      // BUG FIX #7: Don't retry on non-retryable client errors (4xx).
+      // A 400 means the request itself is malformed — retrying will always fail.
+      // Only 429 (rate limit) and 5xx (server errors) are worth retrying.
+      const isClientError = response.status >= 400 && response.status < 500;
+      const err = new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      (err as any).status = response.status;
+      (err as any).isClientError = isClientError;
+      throw err;
     }
 
     return await response.json();
   } catch (error: any) {
-    if (retries > 0 && !error.message?.includes('API overload')) {
+    // BUG FIX #7 cont: Skip retry for client errors (4xx) — retrying won't help.
+    if (retries > 0 && !error.message?.includes('API overload') && !error.isClientError) {
       console.warn(`API call to ${endpoint} failed, retrying in ${delay}ms...`, error);
       await new Promise(resolve => setTimeout(resolve, delay));
       return fetchFromBackend<T>(endpoint, body, retries - 1, delay * 2);
@@ -38,8 +46,8 @@ export async function generateImprovement(script: string, critique: string, visu
   return fetchFromBackend<Partial<ScriptCritique>>("/improve", { script, critique, visualStyle, visualGenerationType, videoDuration });
 }
 
-export async function analyzeTrends(niche?: string): Promise<TrendAnalysis> {
-  return fetchFromBackend<TrendAnalysis>("/analyze", { niche });
+export async function analyzeTrends(niche?: string, bypassCache?: boolean): Promise<TrendAnalysis> {
+  return fetchFromBackend<TrendAnalysis>("/analyze", { niche, bypassCache });
 }
 
 export async function generateContentIdea(

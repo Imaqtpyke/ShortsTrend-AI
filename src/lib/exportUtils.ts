@@ -50,14 +50,18 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
         });
     }
 
-    // Trigger Download
     const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `script_${contentIdea.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // BUG FIX #6: Wrap in try/finally so the object URL is always revoked,
+    // even if link.click() throws. Without this, the URL leaks until page unload.
+    try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `script_${contentIdea.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } finally {
+        URL.revokeObjectURL(url);
+    }
 }

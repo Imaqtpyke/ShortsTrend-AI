@@ -1,70 +1,87 @@
 {
-  "what if?": {
+  "hypothetical what if": {
     "data": {
       "trendingTopics": [
         {
-          "name": "Alternate History Hypotheticals",
+          "name": "Alternate History Scenarios",
           "velocity": 85,
           "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "History Enthusiasts, Strategy Gamers, Curious Minds, Ages 15-40",
-          "exampleIdea": "What if the Roman Empire never fell and continued to expand into modern times?"
+          "competition": "High",
+          "targetAudience": "History enthusiasts, alternate reality fiction fans, curious general audience",
+          "exampleIdea": "What if the dinosaurs never went extinct and evolved intelligence?"
         },
         {
-          "name": "Extreme Scientific Hypotheticals",
+          "name": "Everyday Physics/Biology Changes",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Science fiction fans, curious individuals, students",
+          "exampleIdea": "What if gravity suddenly reversed for 5 minutes globally?"
+        },
+        {
+          "name": "Fictional Universe Crossovers/Twists",
           "velocity": 90,
           "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Science Buffs, Space Enthusiasts, Speculative Fiction Readers, Gen Z & Millennials",
-          "exampleIdea": "What if the Earth's magnetic field suddenly vanished, exposing us to solar radiation?"
+          "competition": "High",
+          "targetAudience": "Pop culture fans, specific fandoms (Marvel, Star Wars, Anime, Gaming)",
+          "exampleIdea": "What if Harry Potter was sorted into Slytherin and befriended Voldemort?"
         },
         {
-          "name": "Fictional Universe Crossovers/Power Swaps",
-          "velocity": 75,
+          "name": "Technological Advancements/Regressions",
+          "velocity": 82,
           "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Comic Book Fans, Anime Enthusiasts, Movie/TV Show Buffs, Ages 12-30",
-          "exampleIdea": "What if Spider-Man's venom symbiote bonded with Superman instead?"
+          "competition": "Medium",
+          "targetAudience": "Tech enthusiasts, futurists, general audience interested in sci-fi",
+          "exampleIdea": "What if AI gained full sentience and took over all internet communication?"
+        },
+        {
+          "name": "Philosophical Concepts Literalized",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Intellectuals, philosophy students, introspective individuals",
+          "exampleIdea": "What if 'ignorance is bliss' became a literal superpower you could activate?"
         }
       ],
       "viralFormats": [
-        "Fast-paced cuts with text overlays and infographics",
-        "Narrated animation or simplified simulations",
-        "Green screen effects for immersive hypothetical scenarios",
-        "Dramatic reveal sequences with suspenseful sound design",
-        "Split-screen comparisons showing 'reality' vs. 'what if' outcome"
+        "Rapid-fire narration with bold text overlays and dynamic visuals",
+        "Greenscreen reactions/commentary on hypothetical prompts",
+        "Short animated sequences depicting the 'what if' scenario",
+        "POV acting out an immediate consequence of the hypothetical",
+        "Comparison charts or split screens showing 'before vs. after' the hypothetical"
       ],
       "hooks": [
-        "What if everything you knew about X was wrong?",
-        "Imagine a world where...",
-        "This is what would happen if [event]...",
-        "The most terrifying 'what if' scenario you've never considered.",
-        "You won't believe the outcome of this 'what if'."
+        "What if (shocking scenario)...?",
+        "Imagine a world where (unusual condition)...",
+        "This 'what if' will blow your mind...",
+        "Could YOU survive if (extreme event)...?",
+        "The craziest 'what if' question you'll hear today..."
       ],
       "videoStructures": [
-        "Problem-Solution-Consequence: Introduce the 'what if', explain immediate effects, then long-term global consequences.",
-        "Hypothesis-Visual-Conclusion: State the 'what if', show a visual representation/simulation, then summarize the final state.",
-        "Narrative Journey: Follow a character or entity through a step-by-step unfolding of the hypothetical situation.",
-        "Comparative Analysis: Present current reality vs. the 'what if' scenario with pros and cons or drastic differences."
+        "Hook -> Introduce hypothetical -> Brief visual/audio exploration of scenario -> Implied consequence/open question",
+        "Hook -> State 'what if' -> Act out a short, immediate reaction/outcome -> Punchline/cliffhanger",
+        "Hook -> Present 'normal' situation -> Twist with 'what if' -> Rapid-fire visual examples of new reality -> Call to action to comment"
       ],
       "popularMusic": [
-        "Suspenseful cinematic scores (royalty-free)",
-        "Upbeat, inquisitive instrumental tracks",
-        "Atmospheric synthwave or sci-fi soundscapes",
-        "Sound effects for dramatic reveals or impacts",
-        "Trending sound memes adapted for a speculative mood"
+        "Upbeat, slightly mysterious instrumental tracks",
+        "Cinematic, dramatic scores building tension",
+        "Fast-paced, high-energy background music for quick cuts",
+        "Synthesizer-heavy, futuristic sounds",
+        "Sound effects for emphasis (whooshes, dings, dramatic stings)"
       ],
       "hashtagPatterns": [
         "#WhatIf",
-        "#(SpecificTopic)WhatIf (e.g., #HistoryWhatIf, #SpaceWhatIf)",
         "#Hypothetical",
+        "#ThoughtExperiment",
         "#AlternateReality",
-        "#MindBlown",
         "#SciFi",
-        "#ScienceFacts",
-        "#EducationalShorts",
+        "#Fantasy",
         "#Shorts",
-        "#YouTubeShorts"
+        "#YouTubeShorts",
+        "#Viral",
+        "#Trending",
+        "#Imagination",
+        "#Future"
       ],
       "nicheDNA": [
         {
@@ -72,27 +89,230 @@
           "value": 95
         },
         {
-          "subject": "Speculative",
+          "subject": "Imagination",
           "value": 90
         },
         {
-          "subject": "Educational",
+          "subject": "Informative (speculative)",
           "value": 70
         },
         {
-          "subject": "Imaginative",
+          "subject": "Fast-paced",
+          "value": 80
+        },
+        {
+          "subject": "Thought-provoking",
           "value": 85
         },
         {
-          "subject": "Dramatic",
+          "subject": "Concise",
           "value": 75
-        },
-        {
-          "subject": "Visual-driven",
-          "value": 80
         }
       ]
     },
-    "expiresAt": 1772300854112
+    "expiresAt": 1772367912616
+  },
+  "what if?": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Alternate History Scenarios",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "History enthusiasts, casual learners, alternate history fiction readers (Gen Z & Millennials)",
+          "exampleIdea": "What if the Roman Empire never fell, leading to a technologically advanced, pan-European empire in the modern age?"
+        },
+        {
+          "name": "Hypothetical Scientific/Physical Changes",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Science buffs, curious minds, students interested in physics/astronomy (Teens to Young Adults)",
+          "exampleIdea": "What if Earth had two suns, drastically altering climate, life cycles, and human society?"
+        },
+        {
+          "name": "Everyday Life with Extreme Rules",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "General curious audience, Gen Z looking for thought experiments and relatable absurdism",
+          "exampleIdea": "What if every time you said 'hello', a random item from your house disappeared permanently?"
+        },
+        {
+          "name": "Fictional Crossover Scenarios",
+          "velocity": 82,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Pop culture fans, specific fandoms (e.g., Marvel, Anime, Gaming communities)",
+          "exampleIdea": "What if characters from 'The Office' were suddenly transported into the 'Game of Thrones' universe?"
+        },
+        {
+          "name": "Future Technology/Societal Impact",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Tech enthusiasts, futurists, ethical AI debaters (Millennials & Gen Z)",
+          "exampleIdea": "What if brain-computer interfaces became mandatory for all education, making traditional learning obsolete?"
+        }
+      ],
+      "viralFormats": [
+        "Text-on-screen with dynamic visuals and rapid cuts",
+        "Green screen explanations with creator reacting or illustrating points",
+        "Animated explainers (simple motion graphics or whiteboard style)",
+        "POV scenarios with voiceover and on-screen text",
+        "Comparison/Contrast visuals (e.g., 'our world vs. what if world')"
+      ],
+      "hooks": [
+        "What if [shocking premise]?",
+        "Imagine a world where...",
+        "The one change that would alter EVERYTHING.",
+        "You won't believe what happens if...",
+        "Ever wondered...?"
+      ],
+      "videoStructures": [
+        "Hook (Question) -> Setup of Premise -> Immediate Consequences -> Long-term Societal/Environmental Shifts -> Call to Action/Cliffhanger",
+        "Question -> Brief Background -> Key Implication 1 -> Key Implication 2 -> Quick Summary/Open-ended Question",
+        "Problem (the 'what if') -> Exploration of cause-and-effect -> Visual demonstration -> Concluding thought"
+      ],
+      "popularMusic": [
+        "Suspenseful instrumental background scores (e.g., 'Interstellar' style ambient)",
+        "Fast-paced, slightly urgent cinematic beats",
+        "Trending TikTok/Shorts sounds that evoke curiosity or mild tension",
+        "Mysterious lo-fi or 'dark academia' type beats",
+        "Dramatic sound effects (whooshes, dings, impact sounds)"
+      ],
+      "hashtagPatterns": [
+        "#WhatIf",
+        "#Hypothetical",
+        "#AlternateReality",
+        "#Speculation",
+        "#MindBlown",
+        "#DidYouKnow",
+        "#Curiosity",
+        "#YouTubeShorts",
+        "#ShortsViral",
+        "#ScienceFacts",
+        "#HistoryBuff",
+        "#Futurism"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Curiosity",
+          "value": 95
+        },
+        {
+          "subject": "Speculation",
+          "value": 90
+        },
+        {
+          "subject": "Education/Information",
+          "value": 70
+        },
+        {
+          "subject": "Imagination",
+          "value": 98
+        },
+        {
+          "subject": "Analytical Thinking",
+          "value": 60
+        },
+        {
+          "subject": "Shock Value/Surprise",
+          "value": 65
+        }
+      ]
+    },
+    "expiresAt": 1772369461451
+  },
+  "what if": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Historical Reversal What Ifs",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "History buffs, alternate history enthusiasts, strategic thinkers",
+          "exampleIdea": "What if the Roman Empire never fell and continued to exist into the modern era?"
+        },
+        {
+          "name": "Science Fiction & Fantasy What Ifs",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Sci-fi fans, fantasy enthusiasts, speculative fiction readers, AI art fans",
+          "exampleIdea": "What if magic suddenly became real and everyone had a unique, random spell they could cast once?"
+        },
+        {
+          "name": "Everyday Life & Societal What Ifs",
+          "velocity": 65,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "General audience, philosophical thinkers, those seeking relatable hypotheticals",
+          "exampleIdea": "What if money ceased to exist overnight and society had to revert to a pure bartering system?"
+        }
+      ],
+      "viralFormats": [
+        "Fast-paced narration with AI-generated or stock footage visuals",
+        "Text-on-screen with dramatic music and quick cuts",
+        "POV scenarios with voiceover speculation",
+        "Animated short sequences illustrating the 'what if' outcome",
+        "Comparison shorts: 'Reality vs. What If' with split screens"
+      ],
+      "hooks": [
+        "What if you woke up tomorrow and...?",
+        "Imagine a world where one small change...?",
+        "This one historical event could have changed EVERYTHING.",
+        "The consequences of X would be unimaginable.",
+        "You think you know how X works? What if it didn't?"
+      ],
+      "videoStructures": [
+        "Hook (question/statement) -> Introduce scenario -> Explore 2-3 key impacts/changes -> Concluding thought/question for audience.",
+        "Dramatic opening visual/music -> 'What if' premise -> Rapid montage of potential outcomes -> Call to action (comment).",
+        "Problem (current/historical) -> 'What if' a key variable changed -> Visualize the new reality."
+      ],
+      "popularMusic": [
+        "Dramatic cinematic scores (e.g., 'Two Steps From Hell' style)",
+        "Suspenseful ambient tracks",
+        "Mysterious, thought-provoking instrumental beats",
+        "Upbeat, whimsical tunes for lighter 'what if' scenarios",
+        "Epic orchestral arrangements"
+      ],
+      "hashtagPatterns": [
+        "#WhatIf #Hypothetical #AlternateReality",
+        "#Scenario #Future #Prediction",
+        "#History #ScienceFiction #Fantasy #Dystopian #Utopia",
+        "#Imagine #Thoughts #Debate #Question",
+        "#AIArt (if applicable) #ShortsFeed"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Curiosity",
+          "value": 95
+        },
+        {
+          "subject": "Imagination",
+          "value": 90
+        },
+        {
+          "subject": "Speculation",
+          "value": 85
+        },
+        {
+          "subject": "Thought-provoking",
+          "value": 80
+        },
+        {
+          "subject": "Dramatic/Suspenseful",
+          "value": 70
+        },
+        {
+          "subject": "Educational (indirect)",
+          "value": 60
+        }
+      ]
+    },
+    "expiresAt": 1772369469634
   }
 }

@@ -114,7 +114,18 @@ export function GeneratorView() {
                     <span className="font-mono text-[10px] uppercase tracking-widest opacity-60 block">Generated Content for: {selectedTrend}</span>
                     <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">{contentIdea.title}</h2>
                 </div>
-                <div className="flex w-full md:w-auto gap-2">
+                <div className="flex flex-wrap w-full md:w-auto gap-2 justify-end">
+                    <button
+                        onClick={() => handleGenerate(selectedTrend!)}
+                        disabled={isLoading}
+                        className={cn(
+                            "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] border border-white/10 hover:bg-white/5",
+                            isLoading && "opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                        <span>Regenerate</span>
+                    </button>
                     <button
                         onClick={() => downloadAsMarkdown(contentIdea, critique)}
                         className={cn(
@@ -147,7 +158,13 @@ export function GeneratorView() {
                                 <div className="absolute left-[15px] top-2 bottom-2 w-[2px] opacity-10 bg-white" />
 
                                 {contentIdea.script.map((segment, i) => {
-                                    const visualPrompt = contentIdea?.imagePrompts?.find(p => p.frame === segment.timestamp);
+                                    // BUG FIX #5: Strict string equality on timestamps is fragile — a single
+                                    // character difference (em-dash vs hyphen, extra space) causes all visual
+                                    // prompts to silently not render. Normalize both sides before comparing.
+                                    const normalizeTs = (ts: string) => ts.replace(/[\u2013\u2014\-]/g, '-').replace(/\s+/g, '').toLowerCase();
+                                    const visualPrompt = contentIdea?.imagePrompts?.find(
+                                        p => normalizeTs(p.frame) === normalizeTs(segment.timestamp)
+                                    );
 
                                     const baseDuration = contentIdea.videoDuration || 60;
                                     const segmentDuration = baseDuration / (contentIdea.script.length || 1);
