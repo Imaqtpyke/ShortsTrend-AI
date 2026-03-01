@@ -1,0 +1,98 @@
+{
+  "what if?": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Alternate History Hypotheticals",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "History Enthusiasts, Strategy Gamers, Curious Minds, Ages 15-40",
+          "exampleIdea": "What if the Roman Empire never fell and continued to expand into modern times?"
+        },
+        {
+          "name": "Extreme Scientific Hypotheticals",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Science Buffs, Space Enthusiasts, Speculative Fiction Readers, Gen Z & Millennials",
+          "exampleIdea": "What if the Earth's magnetic field suddenly vanished, exposing us to solar radiation?"
+        },
+        {
+          "name": "Fictional Universe Crossovers/Power Swaps",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Comic Book Fans, Anime Enthusiasts, Movie/TV Show Buffs, Ages 12-30",
+          "exampleIdea": "What if Spider-Man's venom symbiote bonded with Superman instead?"
+        }
+      ],
+      "viralFormats": [
+        "Fast-paced cuts with text overlays and infographics",
+        "Narrated animation or simplified simulations",
+        "Green screen effects for immersive hypothetical scenarios",
+        "Dramatic reveal sequences with suspenseful sound design",
+        "Split-screen comparisons showing 'reality' vs. 'what if' outcome"
+      ],
+      "hooks": [
+        "What if everything you knew about X was wrong?",
+        "Imagine a world where...",
+        "This is what would happen if [event]...",
+        "The most terrifying 'what if' scenario you've never considered.",
+        "You won't believe the outcome of this 'what if'."
+      ],
+      "videoStructures": [
+        "Problem-Solution-Consequence: Introduce the 'what if', explain immediate effects, then long-term global consequences.",
+        "Hypothesis-Visual-Conclusion: State the 'what if', show a visual representation/simulation, then summarize the final state.",
+        "Narrative Journey: Follow a character or entity through a step-by-step unfolding of the hypothetical situation.",
+        "Comparative Analysis: Present current reality vs. the 'what if' scenario with pros and cons or drastic differences."
+      ],
+      "popularMusic": [
+        "Suspenseful cinematic scores (royalty-free)",
+        "Upbeat, inquisitive instrumental tracks",
+        "Atmospheric synthwave or sci-fi soundscapes",
+        "Sound effects for dramatic reveals or impacts",
+        "Trending sound memes adapted for a speculative mood"
+      ],
+      "hashtagPatterns": [
+        "#WhatIf",
+        "#(SpecificTopic)WhatIf (e.g., #HistoryWhatIf, #SpaceWhatIf)",
+        "#Hypothetical",
+        "#AlternateReality",
+        "#MindBlown",
+        "#SciFi",
+        "#ScienceFacts",
+        "#EducationalShorts",
+        "#Shorts",
+        "#YouTubeShorts"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Curiosity",
+          "value": 95
+        },
+        {
+          "subject": "Speculative",
+          "value": 90
+        },
+        {
+          "subject": "Educational",
+          "value": 70
+        },
+        {
+          "subject": "Imaginative",
+          "value": 85
+        },
+        {
+          "subject": "Dramatic",
+          "value": 75
+        },
+        {
+          "subject": "Visual-driven",
+          "value": 80
+        }
+      ]
+    },
+    "expiresAt": 1772300854112
+  }
+}

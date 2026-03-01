@@ -1,9 +1,17 @@
 import { create } from 'zustand';
 import { AppState, HistoryItem, Toast, VISUAL_STYLES } from '../types';
-import { analyzeTrends, generateContentIdea, getWorkflow, critiqueScript, generateImprovement } from '../services/geminiService';
+import { analyzeTrends, generateContentIdea, critiqueScript, generateImprovement } from '../services/geminiService';
+import localforage from 'localforage';
+
+localforage.config({
+    name: 'ShortsTrendAI',
+    storeName: 'app_state'
+});
 
 interface AppStore extends AppState {
     // UI State
+    isHydrated: boolean;
+    initStore: () => Promise<void>;
     activeTab: 'trends' | 'generator' | 'workflow' | 'history' | 'critique';
     setActiveTab: (tab: 'trends' | 'generator' | 'workflow' | 'history' | 'critique') => void;
 
@@ -33,6 +41,8 @@ interface AppStore extends AppState {
     setSearchQuery: (query: string) => void;
     setVisualStyle: (style: string) => void;
     setVisualGenerationType: (type: 'image' | 'video') => void;
+    setVideoDuration: (duration: number) => void;
+    setCustomVideoDuration: (duration: number | null) => void;
 
     // Phase 5: UX Improvements
     loadingMessage: string;
@@ -51,19 +61,6 @@ interface AppStore extends AppState {
 }
 
 // ─── Persistence Helpers ───────────────────────────────────────────────────────
-// Persist history
-const getInitialHistory = (): HistoryItem[] => {
-    try {
-        const savedHistory = localStorage.getItem('shorts_trend_history');
-        if (savedHistory) return JSON.parse(savedHistory);
-    } catch (e) {
-        console.error('Failed to parse history from localStorage', e);
-    }
-    return [];
-};
-
-// Persist the current session (analysis, idea, critique, workflow) so work
-// survives page refreshes — even without a backend database.
 const SESSION_KEY = 'shorts_trend_session';
 
 interface PersistedSession {
@@ -77,52 +74,40 @@ interface PersistedSession {
 
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-function getInitialSession(): Partial<PersistedSession> {
+async function persistSession(partial: Partial<PersistedSession>) {
     try {
-        const raw = localStorage.getItem(SESSION_KEY);
-        if (!raw) return {};
-        const session: PersistedSession = JSON.parse(raw);
-        // Discard sessions older than 24 hours
-        if (Date.now() - session.savedAt > SESSION_MAX_AGE_MS) {
-            localStorage.removeItem(SESSION_KEY);
-            return {};
-        }
-        return session;
-    } catch {
-        return {};
-    }
-}
+        const raw = await localforage.getItem<string>(SESSION_KEY);
+        let current: Partial<PersistedSession> = {};
+        if (raw) current = JSON.parse(raw);
 
-function persistSession(partial: Partial<PersistedSession>) {
-    try {
-        const current = getInitialSession() as Partial<PersistedSession>;
         const next: PersistedSession = {
-            analysis: partial.analysis ?? current.analysis ?? null,
-            contentIdea: partial.contentIdea ?? current.contentIdea ?? null,
-            critique: partial.critique ?? current.critique ?? null,
-            workflow: partial.workflow ?? current.workflow ?? null,
-            searchQuery: partial.searchQuery ?? current.searchQuery ?? '',
+            analysis: partial.analysis !== undefined ? partial.analysis : current.analysis ?? null,
+            contentIdea: partial.contentIdea !== undefined ? partial.contentIdea : current.contentIdea ?? null,
+            critique: partial.critique !== undefined ? partial.critique : current.critique ?? null,
+            workflow: partial.workflow !== undefined ? partial.workflow : current.workflow ?? null,
+            searchQuery: partial.searchQuery !== undefined ? partial.searchQuery : current.searchQuery ?? '',
             savedAt: Date.now(),
         };
-        localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+        await localforage.setItem(SESSION_KEY, JSON.stringify(next));
     } catch {
-        // Storage may be full — silently skip
+        console.error("Failed to persist session to localforage");
     }
 }
 
-const initialSession = getInitialSession() as Partial<PersistedSession>;
-
 export const useAppStore = create<AppStore>((set, get) => ({
-    // Initial AppState — restored from session if available
-    analysis: initialSession.analysis ?? null,
-    contentIdea: initialSession.contentIdea ?? null,
-    workflow: initialSession.workflow ?? null,
-    critique: initialSession.critique ?? null,
+    // Initial AppState
+    isHydrated: false,
+    analysis: null,
+    contentIdea: null,
+    workflow: null,
+    critique: null,
     isLoading: false,
     error: null,
     selectedVisualStyle: VISUAL_STYLES[0],
     visualGenerationType: 'image',
-    history: getInitialHistory(),
+    videoDuration: 6,
+    customVideoDuration: null,
+    history: [],
     searchQuery: '',
 
     // Initial UI/Feature State
@@ -160,9 +145,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
     copyAllForProduction: () => {
         const { contentIdea, copyToClipboard } = get();
         if (!contentIdea) return;
-        const { title, script, hook, caption, hashtags, musicStyle, soundEffects, visualStyle, imagePrompts } = contentIdea;
+        const { title, script, hookVariations, seoMetadata, hashtags, musicStyle, soundEffects, visualStyle, imagePrompts, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
 
-        const text = `TITLE: ${title}\n\nHOOK: ${hook}\n\nSCRIPT:\n${script.map(s => `[${s.timestamp}] ${s.text}`).join('\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nSTORYBOARD PROMPTS:\n${imagePrompts?.map(p => `[${p.frame}] ${p.prompt}`).join('\n') || 'None Generated'}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nCAPTION:\n${caption}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
+        const text = `TITLE: ${title}\n\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSCRIPT:\n${script.map(s => `[${s.timestamp}] ${s.text}`).join('\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nSTORYBOARD PROMPTS:\n${imagePrompts?.map(p => `[${p.frame}] ${p.prompt}`).join('\n') || 'None Generated'}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
 
         copyToClipboard(text, 'all');
     },
@@ -171,6 +156,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setSearchQuery: (query) => set({ searchQuery: query }),
     setVisualStyle: (style) => set({ selectedVisualStyle: style }),
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
+    setVideoDuration: (duration) => set({ videoDuration: duration }),
+    setCustomVideoDuration: (duration) => set({ customVideoDuration: duration }),
 
     // Phase 5: Progressive Loading & Interactive UI
     loadingMessage: '',
@@ -184,8 +171,39 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }),
 
     // Actions
+    initStore: async () => {
+        try {
+            const historyRaw = await localforage.getItem<string>('shorts_trend_history');
+            const history = historyRaw ? JSON.parse(historyRaw) : [];
+
+            const rawSession = await localforage.getItem<string>(SESSION_KEY);
+            let session: Partial<PersistedSession> = {};
+            if (rawSession) {
+                const parsed: PersistedSession = JSON.parse(rawSession);
+                if (Date.now() - parsed.savedAt <= SESSION_MAX_AGE_MS) {
+                    session = parsed;
+                } else {
+                    await localforage.removeItem(SESSION_KEY);
+                }
+            }
+
+            set({
+                history,
+                analysis: session.analysis ?? null,
+                contentIdea: session.contentIdea ?? null,
+                workflow: session.workflow ?? null,
+                critique: session.critique ?? null,
+                searchQuery: session.searchQuery ?? '',
+                isHydrated: true
+            });
+        } catch (e) {
+            console.error('Failed to init store from localforage', e);
+            set({ isHydrated: true });
+        }
+    },
+
     resetApp: () => {
-        try { localStorage.removeItem(SESSION_KEY); } catch { }
+        try { localforage.removeItem(SESSION_KEY); } catch { }
         set({
             analysis: null,
             contentIdea: null,
@@ -211,7 +229,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             };
 
             const newHistory = [newHistoryItem, ...state.history].slice(0, 10);
-            try { localStorage.setItem('shorts_trend_history', JSON.stringify(newHistory)); } catch (e) { console.error("History save failed", e); }
+            try { await localforage.setItem('shorts_trend_history', JSON.stringify(newHistory)); } catch (e) { console.error("History save failed", e); }
 
             set({
                 analysis,
@@ -233,7 +251,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const timers: NodeJS.Timeout[] = [];
 
         try {
-            // Staggered loading messages to keep user engaged during long API waits
             timers.push(setTimeout(() => {
                 if (get().isLoading) set({ loadingMessage: "Generating visual hooks and scene setups..." });
             }, 3000));
@@ -241,13 +258,67 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 if (get().isLoading) set({ loadingMessage: "Writing the script segments..." });
             }, 6000));
 
-            const [idea, workflow] = await Promise.all([
-                generateContentIdea(trend, state.selectedVisualStyle, state.visualGenerationType),
-                getWorkflow()
-            ]);
+            const finalVideoDuration = state.customVideoDuration || state.videoDuration;
 
-            set({ contentIdea: idea, workflow, critique: null, isLoading: false, completedSteps: [], activeTab: 'generator' });
-            persistSession({ contentIdea: idea, workflow, critique: null });
+            let startedStreaming = false;
+
+            const ideaPromise = generateContentIdea(
+                trend,
+                state.selectedVisualStyle,
+                state.visualGenerationType,
+                finalVideoDuration,
+                (partial) => {
+                    if (!startedStreaming) {
+                        startedStreaming = true;
+                        set({ isLoading: false, activeTab: 'generator', critique: null });
+                    }
+
+                    const partialIdea = {
+                        title: partial.title || "Drafting Idea...",
+                        script: partial.script || [],
+                        imagePrompts: partial.imagePrompts || [],
+                        musicStyle: partial.musicStyle || "Processing...",
+                        soundEffects: partial.soundEffects || [],
+                        visualStyle: partial.visualStyle || state.selectedVisualStyle,
+                        hookVariations: partial.hookVariations || [],
+                        seoMetadata: partial.seoMetadata || { youtubeTitle: "...", youtubeDescription: "...", pinnedCommentIdea: "..." },
+                        hashtags: partial.hashtags || [],
+                        coachingTips: partial.coachingTips || "",
+                        editingEffects: partial.editingEffects || [],
+                        fontStyle: partial.fontStyle || "...",
+                        editingEffectsContext: partial.editingEffectsContext || "",
+                        videoDuration: state.visualGenerationType === 'image' ? undefined : finalVideoDuration
+                    };
+
+                    set({ contentIdea: partialIdea });
+                }
+            );
+
+            const idea = await ideaPromise;
+            const builtIdea = { ...idea, videoDuration: state.visualGenerationType === 'image' ? undefined : finalVideoDuration };
+
+            const hardcodedWorkflow = {
+                software: {
+                    voiceGen: "ElevenLabs (for ultra-realistic cloning)",
+                    imageGen: "Midjourney v6 or Flux (for high-fidelity frames)",
+                    videoGen: "Runway Gen-3 or Luma Dream Machine (for motion)",
+                    editing: "CapCut or Premiere Pro (for assembly and pacing)"
+                },
+                steps: [
+                    "Export the `.md` script from the Generator to track lines.",
+                    "Generate voiceover audio first to establish pacing.",
+                    "Generate visuals exactly matching the timeline timestamps.",
+                    "Compile in your editor, adding music and SFX."
+                ],
+                optimizationTips: [
+                    "Keep the first 3 seconds visually jarring to stop the scroll.",
+                    "Use high-contrast captions to hold visual attention.",
+                    "Duck the music volume when the AI voice is speaking."
+                ]
+            };
+
+            set({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null, isLoading: false, completedSteps: [], activeTab: 'generator' });
+            persistSession({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null });
         } catch (err) {
             console.error(err);
             set({ isLoading: false, error: 'Failed to generate content. Please try again.' });
@@ -269,7 +340,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             }, 3000));
 
             const scriptText = state.contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
-            const critique = await critiqueScript(scriptText, state.contentIdea.hook);
+            const critique = await critiqueScript(scriptText, state.contentIdea.hookVariations[0]?.text || '');
             set({ critique, isLoading: false, activeTab: 'critique' });
             persistSession({ critique });
         } catch (err) {
@@ -295,10 +366,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
             const scriptText = state.contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
             const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
-            const improvement = await generateImprovement(scriptText, critiqueText, state.selectedVisualStyle, state.visualGenerationType);
+            const builtVideoDuration = state.contentIdea.videoDuration || state.videoDuration;
+            const improvement = await generateImprovement(scriptText, critiqueText, state.selectedVisualStyle, state.visualGenerationType, builtVideoDuration);
 
             const improvedScriptText = improvement.improvedScript!.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
-            const newCritique = await critiqueScript(improvedScriptText, improvement.improvedHook || state.contentIdea.hook);
+            const newCritique = await critiqueScript(improvedScriptText, improvement.improvedHook || state.contentIdea.hookVariations[0]?.text || '');
 
             const finalCritique = {
                 ...newCritique,
@@ -323,8 +395,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
             ...state.contentIdea,
             script: state.critique.improvedScript,
             imagePrompts: state.critique.improvedImagePrompts || state.contentIdea.imagePrompts,
-            hook: state.critique.improvedHook || state.contentIdea.hook,
-            caption: state.critique.improvedCaption || state.contentIdea.caption,
+            hookVariations: state.critique.improvedHook ? [{ type: 'Improved', text: state.critique.improvedHook }] : state.contentIdea.hookVariations,
+            seoMetadata: state.critique.improvedCaption ? { ...state.contentIdea.seoMetadata, youtubeDescription: state.critique.improvedCaption } : state.contentIdea.seoMetadata,
             hashtags: state.critique.improvedHashtags || state.contentIdea.hashtags,
             musicStyle: state.critique.improvedMusicStyle || state.contentIdea.musicStyle,
             soundEffects: state.critique.improvedSoundEffects || state.contentIdea.soundEffects,
@@ -346,9 +418,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
         persistSession({ analysis: item.analysis, searchQuery: item.query === 'General Trends' ? '' : item.query });
     },
 
-    clearHistory: () => {
+    clearHistory: async () => {
         set({ history: [] });
-        try { localStorage.setItem('shorts_trend_history', JSON.stringify([])); } catch (e) { }
+        try { await localforage.setItem('shorts_trend_history', JSON.stringify([])); } catch (e) { }
     }
 }));
 

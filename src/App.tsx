@@ -217,7 +217,7 @@ export default function App() {
   const {
     analysis, contentIdea, workflow, critique, isLoading, error, history, searchQuery,
     activeTab, setActiveTab, selectedTrend, toasts, historySearch, handleAnalyze, resetApp,
-    loadingMessage
+    loadingMessage, isHydrated, initStore
   } = useAppStore();
 
   const theme = (() => {
@@ -267,12 +267,26 @@ export default function App() {
   const mainContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isLoading && (analysis || activeTab === 'history')) {
+    if (!isHydrated) {
+      initStore();
+    }
+  }, [isHydrated, initStore]);
+
+  useEffect(() => {
+    if (!isLoading && (analysis || activeTab === 'history') && isHydrated) {
       setTimeout(() => {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
-  }, [activeTab, isLoading, analysis]);
+  }, [activeTab, isLoading, analysis, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen font-sans transition-colors duration-500 relative bg-[#0a0a0a] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-500 relative overflow-x-hidden bg-[#0a0a0a] text-[#f5f5f5] selection:bg-[#f5f5f5] selection:text-[#0a0a0a]">
@@ -351,17 +365,20 @@ export default function App() {
                       placeholder="Enter a niche (e.g. Tech, Cooking)..."
                       value={searchQuery}
                       onChange={(e) => useAppStore.getState().setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                      className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-white"
+                      onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleAnalyze()}
+                      disabled={isLoading}
+                      className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-white disabled:opacity-50"
                     />
                   </div>
                   <button
                     onClick={() => handleAnalyze()}
+                    disabled={isLoading}
                     className={cn(
-                      "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring",
+                      "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring disabled:opacity-50 disabled:cursor-not-allowed",
                       `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
                     )}
                   >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
                     Search Niche
                   </button>
                 </div>
@@ -370,7 +387,8 @@ export default function App() {
               <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
                 <button
                   onClick={() => handleAnalyze('')}
-                  className="text-xs font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity underline underline-offset-4 focus-ring px-2 py-1 rounded-sm"
+                  disabled={isLoading}
+                  className="text-xs font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity underline underline-offset-4 focus-ring px-2 py-1 rounded-sm disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Or see general trends
                 </button>

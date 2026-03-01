@@ -1,10 +1,12 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BarChart, ArrowLeft, Zap, Loader2, TrendingUp, AlertTriangle, ThumbsUp, Wand2, Copy, Check, ImageIcon, Lightbulb } from 'lucide-react';
+import { BarChart, ArrowLeft, Zap, Loader2, TrendingUp, AlertTriangle, ThumbsUp, Wand2, Copy, Check, ImageIcon, Lightbulb, Play, Square, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { RetentionGraph } from '../ui/RetentionGraph';
 import { useAppStore, useTheme } from '../../store/useAppStore';
+import { useTTS } from '../../hooks/useTTS';
+import { downloadAsMarkdown } from '../../lib/exportUtils';
 
 
 
@@ -22,9 +24,11 @@ export function CritiqueView() {
         copyToClipboard,
         confirmApply,
         setConfirmApply,
-        applyImprovedScript
+        applyImprovedScript,
+        visualGenerationType
     } = useAppStore();
     const theme = useTheme();
+    const { speak, stop, isPlaying, activeText } = useTTS();
 
     if (!contentIdea) {
         return (
@@ -206,6 +210,7 @@ export function CritiqueView() {
                         <h3 className="text-xl md:text-2xl font-bold tracking-tight">Ready to level up?</h3>
                         <p className="opacity-60 max-w-md mx-auto text-sm md:text-base">Our AI can rewrite your script based on this roast, fixing every retention leak and optimizing for maximum virality.</p>
                     </div>
+
                     <button
                         onClick={handleImprove}
                         disabled={isLoading}
@@ -222,27 +227,79 @@ export function CritiqueView() {
                     className="space-y-12 border-t border-dashed border-white/10 pt-12"
                 >
                     <Section title="Improved Script Comparison" icon={<Wand2 className="w-5 h-5 text-purple-600" />}>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="space-y-2 flex flex-col">
-                                <span className="text-[10px] font-mono uppercase opacity-60">Original Script</span>
-                                <div className="font-mono text-xs leading-relaxed whitespace-pre-wrap p-4 opacity-60 border transition-colors flex-1 break-words overflow-x-hidden max-h-[300px] md:max-h-[500px] overflow-y-auto custom-scrollbar bg-[#0a0a0a] border-white/10">
-                                    {contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n\n')}
-                                </div>
-                            </div>
-                            <div className="space-y-2 flex flex-col">
-                                <span className="text-[10px] font-mono uppercase text-purple-600 font-bold">Improved Script</span>
-                                <div className="relative group flex-1 flex flex-col">
-                                    <div className="border font-mono text-xs leading-relaxed whitespace-pre-wrap p-4 pr-12 shadow-lg transition-colors flex-1 break-words overflow-x-hidden max-h-[300px] md:max-h-[500px] overflow-y-auto custom-scrollbar bg-purple-500/10 border-purple-600 text-purple-400">
-                                        {critique.improvedScript.map(s => `[${s.timestamp}] ${s.text}`).join('\n\n')}
+                        <div className="flex justify-end mb-4">
+                            <button
+                                onClick={() => downloadAsMarkdown(contentIdea, critique)}
+                                className={cn(
+                                    "flex items-center justify-center gap-2 px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] border border-white/10 hover:bg-white/5",
+                                )}
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>Export Final Artifact .MD</span>
+                            </button>
+                        </div>
+                        <div className="space-y-6">
+                            {critique.improvedScript.map((improvedSegment, i) => {
+                                const originalSegment = contentIdea.script.find(s => s.timestamp === improvedSegment.timestamp) || { timestamp: improvedSegment.timestamp, text: "No original mapped" };
+
+                                return (
+                                    <div key={i} className="flex flex-col md:flex-row border border-white/10 overflow-hidden bg-[#1a1a1a]">
+                                        {/* Original Segment */}
+                                        <div className="flex-1 border-b md:border-b-0 md:border-r border-white/10 flex flex-col group relative">
+                                            <div className="p-2 border-b border-white/10 flex justify-between items-center opacity-60">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono text-xs font-bold text-white px-1.5 py-0.5 rounded-sm">{originalSegment.timestamp}</span>
+                                                    <span className="text-[10px] font-mono uppercase">Original</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => isPlaying && activeText === originalSegment.text ? stop() : speak(originalSegment.text)}
+                                                        className={cn(
+                                                            "p-1 rounded transition-colors",
+                                                            isPlaying && activeText === originalSegment.text ? "bg-emerald-500 text-black border-transparent" : "hover:bg-white/10 border border-transparent hover:border-white/10"
+                                                        )}
+                                                    >
+                                                        {isPlaying && activeText === originalSegment.text ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 font-mono text-xs leading-relaxed text-white/60">
+                                                {originalSegment.text}
+                                            </div>
+                                        </div>
+
+                                        {/* Improved Segment */}
+                                        <div className="flex-1 bg-purple-500/5 group relative flex flex-col">
+                                            <div className="p-2 border-b border-purple-500/20 flex justify-between items-center bg-purple-500/10">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono text-xs font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-sm">{improvedSegment.timestamp}</span>
+                                                    <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">Improved Revision</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => isPlaying && activeText === improvedSegment.text ? stop() : speak(improvedSegment.text)}
+                                                        className={cn(
+                                                            "p-1 rounded transition-colors",
+                                                            isPlaying && activeText === improvedSegment.text ? "bg-purple-600 text-white border-transparent" : "hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
+                                                        )}
+                                                    >
+                                                        {isPlaying && activeText === improvedSegment.text ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => copyToClipboard(improvedSegment.text, `improved-${i}`)}
+                                                        className="p-1 rounded transition-colors hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
+                                                    >
+                                                        {copiedId === `improved-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 font-mono text-xs leading-relaxed text-purple-300 font-bold shadow-inner">
+                                                {improvedSegment.text}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button
-                                        onClick={() => copyToClipboard(critique!.improvedScript!.map(s => `[${s.timestamp}] ${s.text}`).join('\n\n'), 'improved-script')}
-                                        className="absolute right-3 top-3 p-2 rounded border transition-all opacity-0 group-hover:opacity-100 shadow-sm bg-white/10 border-purple-500/20"
-                                    >
-                                        {copiedId === 'improved-script' ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-purple-600" />}
-                                    </button>
-                                </div>
-                            </div>
+                                );
+                            })}
                         </div>
                     </Section>
 

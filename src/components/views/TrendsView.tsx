@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
-import { Search, BarChart, Zap, MessageSquare, Music, Hash, Check, X, ImageIcon, Video, RefreshCw } from 'lucide-react';
+import { Search, BarChart, Zap, MessageSquare, Music, Hash, Check, X, ImageIcon, Video, RefreshCw, Sliders } from 'lucide-react';
 import { ResponsiveContainer, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell } from 'recharts';
 import { VISUAL_STYLES } from '../../types';
 import { cn } from '../../lib/utils';
@@ -27,10 +27,15 @@ export function TrendsView() {
         selectedVisualStyle,
         setVisualStyle,
         visualGenerationType,
-        setVisualGenerationType
+        setVisualGenerationType,
+        videoDuration,
+        setVideoDuration,
+        customVideoDuration,
+        setCustomVideoDuration
     } = useAppStore();
     const theme = useTheme();
     const [selectedTrendForModal, setSelectedTrendForModal] = React.useState<string | null>(null);
+    const [sortBy, setSortBy] = React.useState<'velocity' | 'competition'>('velocity');
 
     if (isLoading || !analysis) {
         return (
@@ -118,16 +123,31 @@ export function TrendsView() {
                         {searchQuery ? `Niche: ${searchQuery}` : 'General Trends'}
                     </h2>
                 </div>
-                <div className="relative w-full md:w-64">
-                    <input
-                        type="text"
-                        placeholder="Search another niche..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                        className="w-full pl-8 pr-4 py-2 font-mono text-xs focus:outline-none border min-h-[44px] bg-[#0a0a0a] border-white/10 text-white focus:border-emerald-500"
-                    />
-                    <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 opacity-40" />
+                <div className="relative w-full md:w-80 flex gap-2">
+                    <div className="relative flex-1">
+                        <input
+                            type="text"
+                            placeholder="Search another niche..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !isLoading) {
+                                    handleAnalyze();
+                                }
+                            }}
+                            disabled={isLoading}
+                            className="w-full pl-8 pr-4 py-2 font-mono text-xs focus:outline-none border min-h-[44px] bg-[#0a0a0a] border-white/10 text-white focus:border-emerald-500 disabled:opacity-50"
+                        />
+                        <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 opacity-40" />
+                    </div>
+                    <button
+                        onClick={() => handleAnalyze()}
+                        disabled={isLoading}
+                        title="Regenerate Trends for this Niche"
+                        className="px-4 border min-h-[44px] transition-colors bg-[#1a1a1a] border-white/10 hover:border-emerald-500 text-white/80 hover:text-emerald-400 disabled:opacity-50 flex items-center justify-center focus-visible:ring-2 focus-visible:outline-none focus:ring-emerald-500"
+                    >
+                        <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                    </button>
                 </div>
             </div>
 
@@ -207,6 +227,17 @@ export function TrendsView() {
                                     </button>
                                 );
                             })}
+                            <div className="ml-auto flex items-center gap-2 border px-3 py-2 border-white/10 bg-[#1a1a1a] transition-all hover:border-emerald-500/50">
+                                <Sliders className="w-3.5 h-3.5 text-white/50" />
+                                <select
+                                    className="bg-transparent text-[10px] font-mono uppercase tracking-widest outline-none text-white focus:text-emerald-400 cursor-pointer"
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as 'velocity' | 'competition')}
+                                >
+                                    <option value="velocity" className="bg-[#1a1a1a]">Sort: Velocity (High→Low)</option>
+                                    <option value="competition" className="bg-[#1a1a1a]">Sort: Competition (Low→High)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <motion.div
@@ -221,6 +252,12 @@ export function TrendsView() {
                             {[...analysis.trendingTopics]
                                 .filter(t => trendFilter === 'all' || t.growth === trendFilter)
                                 .sort((a, b) => {
+                                    if (sortBy === 'competition') {
+                                        const compRank: Record<string, number> = { Low: 1, Medium: 2, High: 3 };
+                                        const rankA = a.competition ? compRank[a.competition] : 4;
+                                        const rankB = b.competition ? compRank[b.competition] : 4;
+                                        if (rankA !== rankB) return rankA - rankB;
+                                    }
                                     if (a.growth === 'exploding' && b.growth !== 'exploding') return -1;
                                     if (b.growth === 'exploding' && a.growth !== 'exploding') return 1;
                                     return b.velocity - a.velocity;
@@ -234,6 +271,9 @@ export function TrendsView() {
                                             title={topic.name}
                                             velocity={topic.velocity}
                                             growth={topic.growth}
+                                            competition={topic.competition}
+                                            targetAudience={topic.targetAudience}
+                                            exampleIdea={topic.exampleIdea}
                                             featured={false}
                                             onAction={() => setSelectedTrendForModal(topic.name)}
                                         />
@@ -385,6 +425,53 @@ export function TrendsView() {
                                                 {type}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 pt-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
+                                        {visualGenerationType === 'video' ? <Video className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
+                                        {visualGenerationType === 'video' ? 'Clip Length (per scene)' : 'Segment Length'}
+                                    </label>
+                                    <div className="flex flex-col space-y-2">
+                                        <select
+                                            className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
+                                            value={customVideoDuration !== null ? 'custom' : videoDuration}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'custom') {
+                                                    setCustomVideoDuration(10);
+                                                } else {
+                                                    setCustomVideoDuration(null);
+                                                    setVideoDuration(Number(e.target.value));
+                                                }
+                                            }}
+                                        >
+                                            <option value="6">6 seconds (Minimum)</option>
+                                            <option value="8">8 seconds (Medium)</option>
+                                            <option value="15">15 seconds (Maximum)</option>
+                                            <option value="custom">Customize Your Duration...</option>
+                                        </select>
+
+                                        {customVideoDuration !== null && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="flex flex-col space-y-2 pt-2"
+                                            >
+                                                <input
+                                                    type="number"
+                                                    min="2"
+                                                    max="120"
+                                                    value={customVideoDuration}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value);
+                                                        setCustomVideoDuration(isNaN(val) ? 6 : Math.max(2, Math.min(120, val)));
+                                                    }}
+                                                    placeholder="Enter custom duration (s)"
+                                                    className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-emerald-500/50 focus:border-emerald-500 outline-none min-h-[48px]"
+                                                />
+                                            </motion.div>
+                                        )}
                                     </div>
                                 </div>
 

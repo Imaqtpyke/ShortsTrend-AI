@@ -2,6 +2,9 @@ export interface TrendingTopic {
   name: string;
   velocity: number; // 0-100 score
   growth: 'exploding' | 'steady' | 'declining';
+  competition: 'Low' | 'Medium' | 'High';
+  targetAudience: string;
+  exampleIdea: string;
 }
 
 export interface DNAFactor {
@@ -31,13 +34,18 @@ export interface ContentIdea {
   musicStyle: string;
   soundEffects: string[];
   visualStyle: string;
-  hook: string;
-  caption: string;
+  hookVariations: { type: string; text: string }[];
+  seoMetadata: {
+    youtubeTitle: string;
+    youtubeDescription: string;
+    pinnedCommentIdea: string;
+  };
   hashtags: string[];
   coachingTips: string;
   editingEffects: string[];
   fontStyle: string; // Recommended font style for text overlays
   editingEffectsContext: string; // Contextual explanation for editing effects
+  videoDuration?: number; // Nullish if generated as Image or older version
 }
 
 export interface ProductionWorkflow {
@@ -110,6 +118,8 @@ export interface AppState {
   error: string | null;
   selectedVisualStyle: string;
   visualGenerationType: 'image' | 'video';
+  videoDuration: number;
+  customVideoDuration: number | null;
   history: HistoryItem[];
   searchQuery: string;
 }

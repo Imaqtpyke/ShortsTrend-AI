@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import { ArrowUpRight, ArrowDownRight, Minus, ArrowRight } from 'lucide-react';
 
-export const TrendCard = React.memo(({ title, velocity, growth, featured, onAction }: { title: string, velocity?: number, growth?: string, featured?: boolean, onAction: () => void }) => {
+export const TrendCard = React.memo(({ title, velocity, growth, competition, targetAudience, exampleIdea, featured, onAction }: { title: string, velocity?: number, growth?: string, competition?: 'Low' | 'Medium' | 'High', targetAudience?: string, exampleIdea?: string, featured?: boolean, onAction: () => void }) => {
     const cardTheme = (() => {
         switch (growth) {
             case 'exploding': return { primary: 'red-500', glow: 'shadow-red-500/20', text: 'text-red-400', bg: 'bg-red-500/10' };
@@ -58,12 +58,31 @@ export const TrendCard = React.memo(({ title, velocity, growth, featured, onActi
 
             <div className="space-y-3 relative z-10">
                 <h4 className={cn(
-                    "font-bold leading-[1.2] tracking-tight break-words line-clamp-2",
+                    "font-bold leading-[1.2] tracking-tight break-words",
                     featured ? "text-base md:text-lg" : "text-xs md:text-sm",
                     "text-white"
                 )}>
                     {title}
                 </h4>
+
+                {competition && targetAudience && exampleIdea && (
+                    <div className="space-y-2 mt-2">
+                        <div className="flex items-center gap-2">
+                            <span className={cn(
+                                "px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold text-black",
+                                competition === 'Low' ? 'bg-emerald-500' : competition === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
+                            )}>
+                                {competition} Competition
+                            </span>
+                            <span className="text-[10px] text-white/60 font-mono truncate" title={targetAudience}>
+                                🎯 {targetAudience}
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-white/80 italic leading-snug line-clamp-2" title={exampleIdea}>
+                            "{exampleIdea}"
+                        </p>
+                    </div>
+                )}
 
                 <div className="flex items-end justify-between gap-2 pt-2 border-t border-current/10">
                     <div className="flex flex-col">
