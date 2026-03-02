@@ -32,14 +32,32 @@ const expensiveLimiter = rateLimit({
 });
 
 app.use(generalLimiter);
-app.use(cors());
+// CORS: Restrict to the frontend origin. Set ALLOWED_ORIGIN in your deployment env.
+// Falls back to localhost:3000 for local development only.
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000' }));
 app.use(express.json({ limit: '16kb' })); // Prevent oversized payloads
+
+// Health check — used for uptime monitoring (no credentials required)
+app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
 // Applied to expensive endpoints below
 app.post('/api/generate', expensiveLimiter);
 app.post('/api/improve', expensiveLimiter);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+// ─── Safe Error Helper ─────────────────────────────────────────────────────────
+// Prevents internal error details (stack traces, file paths) from leaking to
+// the client on unhandled 500s. 4xx and rate-limit errors pass through as-is
+// since they carry meaningful user-facing messages.
+function safeError(error, fallback = "Internal server error. Please try again.") {
+    const status = error?.status || 0;
+    // Pass through client errors and known operational errors
+    if (status >= 400 && status < 500) return error.message || fallback;
+    if (status === 429) return error.message || "API overload. Please wait a moment.";
+    // For true server errors, return a generic message (don't leak internals)
+    return error.message?.startsWith('Validation failed') ? error.message : fallback;
+}
 
 // ─── Input Sanitization ────────────────────────────────────────────────────────
 // Strips prompt injection attempts before injecting user content into prompts.
@@ -118,7 +136,7 @@ function setCachedAnalysis(key, data) {
 // If the primary model is rate-limited or unavailable, automatically fallback
 // through the cascade until a model succeeds.
 const MODEL_CASCADE = [
-    'gemini-1.5-flash',
+    'gemini-2.5-flash',
 ];
 
 // Retryable HTTP status codes
@@ -153,70 +171,38 @@ async function generateWithFallback(requestConfig) {
     throw lastError;
 }
 
-async function generateStreamWithFallback(requestConfig, res) {
-    let lastError = null;
-
-    for (const model of MODEL_CASCADE) {
-        try {
-            console.log(`[Model] Trying ${model} (stream)...`);
-            const stream = await ai.models.generateContentStream({ ...requestConfig, model });
-            console.log(`[Model] Success with ${model} (stream started)`);
-
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
-
-            for await (const chunk of stream) {
-                if (chunk.text) {
-                    res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-                }
-            }
-            res.write('data: [DONE]\n\n');
-            res.end();
-            return;
-        } catch (err) {
-            const status = err?.status ?? err?.code ?? 0;
-            if (res.headersSent) {
-                // Too late to fallback if headers already sent
-                console.error("[Model] Stream failed mid-flight", err);
-                res.write(`data: ${JSON.stringify({ error: err.message || "Interrupted" })}\n\n`);
-                res.write('data: [DONE]\n\n');
-                res.end();
-                return;
-            }
-            if (RETRYABLE_CODES.has(status)) {
-                console.warn(`[Model] ${model} failed (${status}) during stream init. Trying next model...`);
-                lastError = err;
-                continue;
-            }
-            throw err;
-        }
-    }
-
-    console.error('[Model] All models in cascade failed (stream).');
-    if (lastError && (lastError.status === 429 || lastError.code === 429)) {
-        res.status(429).json({ error: "API overload. Please wait a minute, the Google model is busy." });
-        return;
-    }
-    res.status(lastError?.status || 500).json({ error: lastError?.message || "All fallback models failed" });
-}
-
-
 
 app.post('/api/critique', async (req, res) => {
     try {
-        // B4 FIX: A full 60s script is 2000-3000 chars. sanitizeInput's 500-char cap
-        // was silently truncating the script so that Gemini only saw the first ~3 segments.
-        // Using the high-cap sanitizer ensures the full script is always critiqued.
         const script = sanitizeScriptInput(req.body.script);
         const hook = sanitizeInput(req.body.hook);
         if (!script) return res.status(400).json({ error: 'Script is required.' });
+
+        // Custom Character: sanitize and build optional roast-voice injection block
+        let characterBlock = '';
+        if (req.body.character && req.body.character.name) {
+            const charName = sanitizeInput(req.body.character.name);
+            const charDesc = sanitizeScriptInput(req.body.character.description || '');
+            if (charName && charDesc) {
+                characterBlock = `
+
+ROAST VOICE REQUIREMENT (MANDATORY):
+Deliver this ENTIRE critique as if you ARE the character "${charName}".
+Character Personality/Tone: ${charDesc}
+- Maintain this character's voice, energy, and personality throughout ALL feedback sections.
+- The retention leaks, overall feedback, AND all 3 hook suggestions must be written entirely in ${charName}'s voice and phrasing style.
+- The 3 hook suggestions must sound like something ${charName} would personally say — not generic advice.
+- Be punchy, retention-focused, and entertaining — exactly as this character would be.`;
+            }
+        }
+
         const response = await generateWithFallback({
             model: "gemini-2.5-flash",
             contents: `Analyze this YouTube Shorts script and hook for virality.
       
       Hook: "${hook}"
       Script: "${script}"
+${characterBlock}
 
       Provide a deep critique focusing on:
       1. Retention Leaks: Identify specific timestamps (0-60 seconds) where the audience might get bored or scroll away.
@@ -257,198 +243,10 @@ app.post('/api/critique', async (req, res) => {
         res.json(JSON.parse(response.text));
     } catch (error) {
         console.error("Critique error:", error);
-        res.status(error.status || 500).json({ error: error.message || "Unknown error" });
+        res.status(error.status || 500).json({ error: safeError(error) });
     }
 });
 
-app.post('/api/improve', async (req, res) => {
-    try {
-        const script = sanitizeScriptInput(req.body.script);
-        const critique = sanitizeScriptInput(req.body.critique);
-        const visualStyle = sanitizeInput(req.body.visualStyle) || 'Default';
-        const { visualGenerationType } = req.body;
-        if (!script) return res.status(400).json({ error: 'Script is required.' });
-
-        // B1 FIX: Strictly validate videoDuration to prevent arithmetic failures and prompt injection.
-        let videoDuration = undefined;
-        if (req.body.videoDuration !== undefined && req.body.videoDuration !== null) {
-            videoDuration = Number(req.body.videoDuration);
-            if (!Number.isFinite(videoDuration) || videoDuration < 2 || videoDuration > 30) {
-                return res.status(400).json({ error: 'videoDuration must be a finite number between 2 and 30 seconds.' });
-            }
-            videoDuration = Math.floor(videoDuration); // Force integer to make modulo reliable
-        }
-
-        // B1 FIX: Validate visualGenerationType against an allowlist.
-        const ALLOWED_GEN_TYPES = ['image', 'video'];
-        if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
-            return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
-        }
-
-        let extraInstructions = "";
-        let originalTimeline = "";
-
-        if (script) {
-            originalTimeline = script.split('\n').filter(line => line.trim().startsWith('[')).join('\n');
-        }
-
-        if (videoDuration) {
-            let minWords = Math.floor(videoDuration * 1.2);
-            let maxWords = Math.floor(videoDuration * 1.5);
-
-            if (videoDuration === 8) {
-                minWords = 10;
-                maxWords = 13;
-            } else if (videoDuration <= 6) {
-                minWords = 8;
-                maxWords = 10;
-            }
-
-            extraInstructions = `\n      4. STRICT STRUCTURAL PRESERVATION: You are receiving an original script with a specific number of segmented blocks and timestamps. You MUST return EXACTLY the same number of segment blocks. Do not combine, merge, or delete frames. Keep the exact timestamps identical to the original script provided. Only refine the dialogue inside. You must preserve the original narrative progression and scene order. Do not reorder segments.
-      - EXACT ORIGINAL TIMELINE TO FOLLOW:\n${originalTimeline}
-      - TIMESTAMPS: Format the timestamp as a duration range reflecting the specific start and end time of each chunk.
-      - WORD LIMIT: You MUST write between ${minWords} and ${maxWords} words total to ensure a natural 1.5 words/second speaking pace.`;
-        }
-
-        let result = null;
-        let attempts = 0;
-        const maxAttempts = 3;
-
-        let originalTimelineLines = [];
-        if (script) {
-            originalTimelineLines = script.split('\n').filter(line => line.trim().startsWith('['));
-        }
-        const expectedSegments = originalTimelineLines.length;
-
-        // FIX #2: Reject early if we couldn't extract a valid timeline.
-        // Without this guard, expectedSegments=0 would silently skip the segment count check.
-        if (expectedSegments === 0) {
-            return res.status(400).json({ error: 'Could not extract a valid timeline from the provided script. Ensure it contains timestamped segments.' });
-        }
-
-        while (attempts < maxAttempts) {
-            attempts++;
-            try {
-                const response = await generateWithFallback({
-                    model: "gemini-2.5-flash",
-                    contents: `Based on the following script and its critique, generate a highly optimized, viral version of the script.
-          
-          Original Script: "${script}"
-          Critique: "${critique}"
-    
-          Requirements for the Improved Script:
-          1. Shorten the Hook: Ensure the opening hook is punchy and high-energy.
-          2. Enhance, Do NOT Lessen: You must ENHANCE the script's vocabulary, flow, and impact without chopping or deeply shortening the narrative. Retain the same amount of detail and spoken lines, but make them more viral and engaging. 
-          3. Precise Timestamps: Use the exact timestamps from the original script.${extraInstructions}
-    
-    
-          Additionally, you must re-generate updated metadata that fits this newly improved script, including:
-          - A shortened, punchy hook (1 line max).
-          - A catchy caption and hashtags.
-          - Updated audio design (music style and sound effects).
-          - Editing and post-production advice (editing effects, font style, and context).
-    
-          CRITICAL INSTRUCTIONS FOR VISUAL PROMPTS:
-          1. Extremely Granular: Provide a new prompt for EVERY SINGLE script segment.
-          2. Strict Visual Style: Every single prompt MUST strictly match the "${visualStyle}" style. Do not default to generic styles.
-          3. Prompt Type: The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g., Veo, Runway)' : 'IMAGE generation (e.g., Midjourney, Flux)'}. Format the description strictly for this medium (e.g., "Cinematic tracking shot..." for video).
-          4. 9:16 Aspect Ratio: Explicitly add exactly "--ar 9:16" at the very end of EVERY distinct visual prompt. Descriptions must be optimized for a vertical, mobile-first composition.
-          5. Visual Direction: Include specific lighting and camera movement instructions formatted to match the vertical 9:16 frame.
-          
-          CRITICAL 10X SCRIPT UPGRADE REQUIREMENT:
-          You are not just tweaking the script; you are transforming it into a top-tier, viral-quality masterpiece. 
-          - The script MUST be 10x stronger. "10x stronger" means operationally:
-            1. INTENSITY: Every sentence must provoke curiosity, shock, or relatable frustration.
-            2. PACING: Cut ALL filler words. Use short, punchy, active voice sentences.
-            3. SPECIFICITY: Replace vague statements with hyper-specific micro-details.
-            4. VISUAL RICHNESS: Maximize aesthetic descriptors (lighting, texture, angle) over plain subjects.
-          - The HOOK (first segment) must be a punchy, pattern-interrupt that demands attention instantly.
-          - Do NOT simply say "make it better". Specifically apply the operational rules above to completely rewrite the text.
-          - The visual Prompts MUST be dramatically upgraded. Make them highly cinematic, visually compelling, hyper-detailed. 
-          - If the original was "A man walking", the new prompt should be "Low angle tracking shot of a silhouetted figure striding through a neon-drenched cyberpunk alley, rain slicking the pavement, dramatic chiaroscuro lighting."`,
-                    config: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: Type.OBJECT,
-                            properties: {
-                                improvedScript: {
-                                    type: Type.ARRAY,
-                                    items: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            timestamp: { type: Type.STRING, description: "Start time (e.g. 00:00)" },
-                                            text: { type: Type.STRING, description: "Spoken text or action description" }
-                                        },
-                                        required: ["timestamp", "text"]
-                                    }
-                                },
-                                improvedImagePrompts: {
-                                    type: Type.ARRAY,
-                                    items: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            frame: { type: Type.STRING, description: "Timestamp (e.g. 00:00)" },
-                                            prompt: { type: Type.STRING, description: "Detailed visual prompt" }
-                                        },
-                                        required: ["frame", "prompt"]
-                                    }
-                                },
-                                improvedHook: { type: Type.STRING, description: "First 1 line maximum" },
-                                improvedCaption: { type: Type.STRING },
-                                improvedHashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                improvedMusicStyle: { type: Type.STRING },
-                                improvedSoundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                improvedEditingEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                improvedFontStyle: { type: Type.STRING },
-                                improvedEditingEffectsContext: { type: Type.STRING }
-                            },
-                            required: ["improvedScript", "improvedImagePrompts", "improvedHook", "improvedCaption", "improvedHashtags", "improvedMusicStyle", "improvedSoundEffects", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"],
-                        },
-                    },
-                });
-
-                if (!response.text) throw new Error("No response text from Gemini API");
-                const parsed = JSON.parse(response.text);
-
-                if (expectedSegments > 0 && parsed.improvedScript.length !== expectedSegments) {
-                    throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, but LLM generated ${parsed.improvedScript.length}.`);
-                }
-
-                result = parsed;
-                break; // Validation passed!
-            } catch (err) {
-                console.warn(`[Improve Attempt ${attempts}] failed:`, err.message);
-                if (attempts >= maxAttempts) {
-                    return res.status(500).json({ error: "Failed to generate valid structure after multiple attempts." });
-                }
-            }
-        }
-
-        // Strictly enforce original timestamps and AR tags
-        if (result.improvedScript && result.improvedScript.length === expectedSegments) {
-            result.improvedScript = result.improvedScript.map((segment, index) => {
-                const originalMatch = originalTimelineLines[index].match(/\[(.*?)\]/);
-                const exactTimestamp = originalMatch ? originalMatch[1] : segment.timestamp;
-
-                if (result.improvedImagePrompts && result.improvedImagePrompts[index]) {
-                    result.improvedImagePrompts[index].frame = exactTimestamp;
-                    let prompt = result.improvedImagePrompts[index].prompt.trim();
-                    if (!prompt.includes('--ar 9:16')) {
-                        prompt = `${prompt} --ar 9:16`;
-                    }
-                    result.improvedImagePrompts[index].prompt = prompt;
-                }
-
-                return { ...segment, timestamp: exactTimestamp };
-            });
-        }
-
-        res.json(result);
-    } catch (error) {
-        console.error("Improve error:", error);
-        res.status(error.status || 500).json({ error: error.message || "Unknown error" });
-    }
-});
 
 app.post('/api/analyze', async (req, res) => {
     try {
@@ -522,7 +320,7 @@ app.post('/api/analyze', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error("Analyze error:", error);
-        res.status(error.status || 500).json({ error: error.message || "Unknown error" });
+        res.status(error.status || 500).json({ error: safeError(error) });
     }
 });
 
@@ -533,125 +331,141 @@ app.post('/api/generate', async (req, res) => {
         const { visualGenerationType } = req.body;
         if (!trend) return res.status(400).json({ error: 'Trend is required.' });
 
-        // B1 FIX: Validate videoDuration to prevent NaN/negative arithmetic and prompt injection.
-        let videoDuration = undefined;
-        if (req.body.videoDuration !== undefined && req.body.videoDuration !== null) {
-            videoDuration = Number(req.body.videoDuration);
-            if (!Number.isFinite(videoDuration) || videoDuration < 2 || videoDuration > 30) {
-                return res.status(400).json({ error: 'videoDuration must be a finite number between 2 and 30 seconds.' });
+        // ── Input Validation ──────────────────────────────────────────────────
+        let segmentLength = undefined;
+        if (req.body.segmentLength !== undefined && req.body.segmentLength !== null) {
+            segmentLength = Number(req.body.segmentLength);
+            if (!Number.isFinite(segmentLength) || segmentLength < 2 || segmentLength > 30) {
+                return res.status(400).json({ error: 'segmentLength must be a finite number between 2 and 30 seconds.' });
             }
-            videoDuration = Math.floor(videoDuration); // Force integer — modulo arithmetic requires this
+            segmentLength = Math.floor(segmentLength);
         }
 
-        // B1 FIX: Validate visualGenerationType against an explicit allowlist.
+        let totalDuration = 60;
+        if (req.body.totalDuration !== undefined && req.body.totalDuration !== null) {
+            totalDuration = Number(req.body.totalDuration);
+            if (!Number.isFinite(totalDuration) || totalDuration < 10 || totalDuration > 300) {
+                return res.status(400).json({ error: 'totalDuration must be a number between 10 and 300 seconds.' });
+            }
+            totalDuration = Math.floor(totalDuration);
+        }
+
         const ALLOWED_GEN_TYPES = ['image', 'video'];
         if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
             return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
         }
 
-        let extraInstructions = "";
-        let durationInstruction = "      3. The script must be exactly 1 minute long when read at a normal pace. Break the script down into segments with precise timestamps.";
+        // ── Timing Math (server-side) ─────────────────────────────────────────
+        // segmentLength defined  → fixed mode: exact segmentCount enforced
+        // segmentLength undefined → dynamic mode: AI picks 10-20 segments
+        let segmentCount = 0;
+        let maxWordsPerSegment = 0;
+        let timingRules = '';
 
-        if (videoDuration) {
-            let minWords = Math.floor(videoDuration * 1.2);
-            let maxWords = Math.floor(videoDuration * 1.5);
+        if (segmentLength) {
+            segmentCount = Math.floor(totalDuration / segmentLength);
+            const remainder = totalDuration % segmentLength;
+            if (remainder > 0) segmentCount += 1; // last short segment
+            maxWordsPerSegment = Math.floor(segmentLength * 2.7);
 
-            if (videoDuration === 8) {
-                minWords = 10;
-                maxWords = 13;
-            } else if (videoDuration <= 6) {
-                minWords = 8;
-                maxWords = 10;
-            }
+            const shortSegmentNote =
+                segmentLength <= 4 ? '\n- SHORT SEGMENTS (≤4s): Use punchy micro-sentences only. No multi-clause sentences.' :
+                    segmentLength <= 8 ? '\n- MEDIUM SEGMENTS (5-8s): Use short impactful statements.' :
+                        '\n- LONGER SEGMENTS (≥10s): Slightly more explanation allowed but still no padding.';
 
-            const fullSegments = Math.floor(60 / videoDuration);
-            const remainder = 60 % videoDuration;
-            const totalSegments = remainder > 0 ? fullSegments + 1 : fullSegments;
-
-            let roundingInstruction = remainder > 0
-                ? ` The first ${fullSegments} segments must be exactly ${videoDuration} seconds each, and the final segment must be exactly ${remainder} seconds to reach 60 seconds total.`
-                : ` Every segment must be exactly ${videoDuration} seconds.`;
-
-            durationInstruction = `      3. Break the script down into exactly ${totalSegments} distinct sequential segments.${roundingInstruction} Format the timestamp as a duration range (e.g., 00:00 - 00:08, 00:08 - 00:16) reflecting the exact start and end times of each chunk.`;
-            extraInstructions = `\n      4. STRICT STRUCTURAL PRESERVATION: The complete script MUST be a full 60-second video. You MUST output exactly ${totalSegments} separate script segment blocks.
-      - WORD LIMIT PER BLOCK: For EVERY distinct segment block, you MUST write between ${minWords} and ${maxWords} words to ensure a natural 1.5 words/second speaking pace.`;
+            timingRules = `
+TIMING RULES (MANDATORY — DO NOT DEVIATE):
+- segmentLength = ${segmentLength}s per segment
+- totalDuration = ${totalDuration}s total
+- segmentCount = ${segmentCount} — you MUST generate EXACTLY ${segmentCount} segments
+- maxWordsPerSegment = ${maxWordsPerSegment} words (2.7 words/second speech pacing)
+- Each "audio" field MUST NOT exceed ${maxWordsPerSegment} words${shortSegmentNote}`;
         } else {
-            extraInstructions = `\n      4. STRICT PACING PRESERVATION: The complete script MUST be a full 60-second video.
-              - PACING CONTROL: You must generate between 10 and 20 segments total. No segment can be shorter than 3 seconds or longer than 8 seconds.`;
+            timingRules = `
+TIMING RULES (DYNAMIC MODE):
+- totalDuration = ${totalDuration}s total
+- You MUST generate between 10 and 20 segments.
+- No segment shorter than 3 seconds or longer than 8 seconds.
+- Keep audio word count proportional to segment duration.`;
         }
+
+        // ── Character Block ──────────────────────────────────────────────────
+        let characterBlock = '';
+        if (req.body.character && req.body.character.name) {
+            const charName = sanitizeInput(req.body.character.name);
+            const charDesc = sanitizeScriptInput(req.body.character.description || '');
+            const charType = ['image', 'video', 'both'].includes(req.body.character.type) ? req.body.character.type : 'both';
+            if (charName && charDesc) {
+                characterBlock = `
+
+CUSTOM CHARACTER REQUIREMENT (MANDATORY):
+Feature "${charName}" throughout the ENTIRE output. Character: ${charDesc}
+Applies to: ${charType === 'both' ? 'audio AND visual prompts' : charType === 'video' ? 'video visuals only' : 'image visuals only'}
+- ${charType !== 'video' ? `Every visual prompt must prominently feature ${charName}.` : ''}
+- ${charType !== 'image' ? `Every video prompt must show ${charName} in action/motion.` : ''}`;
+            }
+        }
+
+        const expectedSegments = segmentLength ? segmentCount : 0;
 
         let result = null;
         let attempts = 0;
         const maxAttempts = 3;
-
-        let expectedSegments = 0;
-        if (videoDuration) {
-            const remainder = 60 % videoDuration;
-            expectedSegments = Math.floor(60 / videoDuration) + (remainder > 0 ? 1 : 0);
-        }
 
         while (attempts < maxAttempts) {
             attempts++;
             try {
                 const response = await generateWithFallback({
                     model: "gemini-2.5-flash",
-                    contents: `Generate a complete YouTube Shorts content idea based on this trend: "${trend}".
-        
-              CRITICAL INSTRUCTIONS FOR SCRIPT WRITING:
-              1. Hook Variations: Generate 3 distinct hook variations based on psychological triggers (e.g., Curiosity, Direct/Aggressive, Contrarian).
-              2. Enhance Segments: Build strong pacing and engaging narrative. Use a natural 1.5 words per second speaking rate.
-        ${durationInstruction}${extraInstructions}
-        
-              CRITICAL HOOK REQUIREMENT:
-              The very first segment (timestamp: 00:00-...) is the HOOK. This is the most important part of the video.
-              - It MUST use a pattern-interrupt style.
-              - It MUST trigger high emotion (curiosity, shock, relatable frustration, or sudden realization).
-              - Do NOT use generic openings like "Here are 5 ways..." or "Did you know...".
-              - Start mid-action or with a bold, controversial, or highly relatable statement.
-        
-              CRITICAL INSTRUCTIONS FOR VISUAL PROMPTS:
-              1. Extremely Granular: Provide a new prompt for EVERY SINGLE sentence, comma, pause, or change in scenario.
-              2. Strict Visual Style: Every single prompt MUST strictly match the "${visualStyle}" style. Do not default to generic styles.
-              3. Prompt Type: The prompts are for ${visualGenerationType === 'video' ? 'VIDEO generation (e.g., Veo, Runway)' : 'IMAGE generation (e.g., Midjourney, Flux)'}. Format the description strictly for this medium (e.g., "Cinematic tracking shot..." for video).
-              4. 9:16 Aspect Ratio: Explicitly add exactly "--ar 9:16" at the very end of EVERY distinct visual prompt. Descriptions must be optimized for a vertical, mobile-first composition.
-              5. Visual Direction: Include specific lighting and camera movement instructions formatted to match the vertical 9:16 frame.
-        
-              CRITICAL INSTRUCTIONS FOR METADATA:
-              Generate SEO-optimized YouTube Shorts metadata including a title, a description (with hashtags embedded), and an engaging pinned comment designed to drive audience interaction.
-        
-              CRITICAL INSTRUCTIONS FOR EDITING EFFECTS:
-              Provide specific recommendations for visual effects, transitions, and post-production techniques. Provide a short contextual explanation for why they suit the story.
-        
-              CRITICAL INSTRUCTIONS FOR FONT STYLE:
-              Recommend a specific font style suitable for the story, and explain why.`,
+                    contents: `You are a short-form vertical content production engine.
+Generate a scroll-stopping storyboard timeline for a YouTube Short about: "${trend}".
+${timingRules}
+
+HOOK PRIORITY RULE — SEGMENT index=0 MUST:
+- Create immediate tension or curiosity
+- Target audience pain or desire directly
+- Be emotionally sharp — NO intros like "Today we'll talk about..."
+- Start mid-action or with a bold, controversial, or relatable statement
+
+VISUAL INTENSITY — EVERY "visual" prompt MUST include:
+- Strong subject focus (extreme close-up or powerful framing)
+- Clear emotional trigger (fear, desire, shock, curiosity)
+- Dynamic lighting (cinematic, dramatic, high contrast)
+- Action, tension, or curiosity element
+AVOID: empty wide landscapes, neutral expressions, "A person standing..."
+
+PROMPT TYPE: ${visualGenerationType === 'video' ? 'VIDEO generation (Veo, Runway) — use cinematic motion language' : 'IMAGE generation (Midjourney, Flux) — use still-frame composition language'}
+ASPECT RATIO: Append "--ar 9:16" to the END of EVERY visual prompt
+VISUAL STYLE: Every prompt MUST strictly match the "${visualStyle}" style
+${characterBlock}
+
+Also generate:
+- 3 hook variations (Curiosity / Direct-Aggressive / Contrarian psychological triggers)
+- SEO title, description, and pinned comment idea
+- Hashtags (10-15)
+- Music style and sound effects
+- Editing effects, font style, and editing context
+- Coaching tips for the creator`,
                     config: {
                         responseMimeType: "application/json",
                         responseSchema: {
                             type: Type.OBJECT,
                             properties: {
                                 title: { type: Type.STRING },
-                                script: {
+                                timeline: {
                                     type: Type.ARRAY,
                                     items: {
                                         type: Type.OBJECT,
                                         properties: {
-                                            timestamp: { type: Type.STRING, description: "Start time (e.g. 00:00)" },
-                                            text: { type: Type.STRING, description: "Spoken text or action description" }
+                                            index: { type: Type.NUMBER, description: "Zero-based segment index" },
+                                            startTime: { type: Type.NUMBER, description: "Segment start in seconds from video start" },
+                                            endTime: { type: Type.NUMBER, description: "Segment end in seconds from video start" },
+                                            audio: { type: Type.STRING, description: "Spoken narration/dialogue for this segment" },
+                                            visual: { type: Type.STRING, description: `9:16 vertical ${visualGenerationType} prompt with --ar 9:16` }
                                         },
-                                        required: ["timestamp", "text"]
+                                        required: ["index", "startTime", "endTime", "audio", "visual"]
                                     },
-                                    description: "A full 60-second script broken into segments with timestamps"
-                                },
-                                imagePrompts: {
-                                    type: Type.ARRAY,
-                                    items: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            frame: { type: Type.STRING, description: "Timestamp matching the script segment" },
-                                            prompt: { type: Type.STRING, description: `9: 16 vertical ${visualGenerationType} prompt` },
-                                        },
-                                        required: ["frame", "prompt"],
-                                    },
+                                    description: "Storyboard timeline — one entry per segment"
                                 },
                                 musicStyle: { type: Type.STRING },
                                 soundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -661,53 +475,49 @@ app.post('/api/generate', async (req, res) => {
                                     items: {
                                         type: Type.OBJECT,
                                         properties: {
-                                            type: { type: Type.STRING, description: "e.g., Curiosity, Direct, Contrarian" },
-                                            text: { type: Type.STRING, description: "The hook script" }
+                                            type: { type: Type.STRING },
+                                            text: { type: Type.STRING }
                                         },
                                         required: ["type", "text"]
-                                    },
+                                    }
                                 },
                                 seoMetadata: {
                                     type: Type.OBJECT,
                                     properties: {
-                                        youtubeTitle: { type: Type.STRING, description: "SEO optimized short title" },
-                                        youtubeDescription: { type: Type.STRING, description: "Algorithm-friendly description" },
-                                        pinnedCommentIdea: { type: Type.STRING, description: "Comment to drive engagement" }
+                                        youtubeTitle: { type: Type.STRING },
+                                        youtubeDescription: { type: Type.STRING },
+                                        pinnedCommentIdea: { type: Type.STRING }
                                     },
                                     required: ["youtubeTitle", "youtubeDescription", "pinnedCommentIdea"]
                                 },
                                 hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
                                 coachingTips: { type: Type.STRING },
-                                editingEffects: {
-                                    type: Type.ARRAY,
-                                    items: { type: Type.STRING },
-                                    description: "Recommended visual effects and transitions for editing"
-                                },
-                                fontStyle: { type: Type.STRING, description: "Recommended font style for text overlays" },
-                                editingEffectsContext: { type: Type.STRING, description: "Contextual explanation for editing effects" }
+                                editingEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                fontStyle: { type: Type.STRING },
+                                editingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["title", "script", "imagePrompts", "musicStyle", "soundEffects", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"],
-                        },
-                    },
+                            required: ["title", "timeline", "musicStyle", "soundEffects", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
+                        }
+                    }
                 });
 
                 if (!response.text) throw new Error("No response text from Gemini API");
                 const parsed = JSON.parse(response.text);
 
+                // ── Structural Validation ─────────────────────────────────────
                 if (expectedSegments > 0) {
-                    if (parsed.script.length !== expectedSegments) {
-                        throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, but LLM generated ${parsed.script.length}.`);
+                    if (parsed.timeline.length !== expectedSegments) {
+                        throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.timeline.length}.`);
                     }
                 } else {
-                    if (parsed.script.length < 10 || parsed.script.length > 20) {
-                        throw new Error(`Validation failed: Expected between 10 and 20 segments for optimal pacing, but LLM generated ${parsed.script.length}.`);
+                    if (parsed.timeline.length < 10 || parsed.timeline.length > 20) {
+                        throw new Error(`Validation failed: Dynamic mode expected 10–20 segments, got ${parsed.timeline.length}.`);
                     }
                 }
 
                 result = parsed;
                 break;
             } catch (err) {
-                // Note: the final-attempt 500 response is handled immediately below
                 console.warn(`[Generate Attempt ${attempts}] failed:`, err.message);
                 if (attempts >= maxAttempts) {
                     return res.status(500).json({ error: "Failed to generate valid structure after multiple attempts." });
@@ -715,58 +525,31 @@ app.post('/api/generate', async (req, res) => {
             }
         }
 
-        // FIX #1: Guard against result=null if all retries failed outside the inner catch
         if (!result) {
-            return res.status(500).json({ error: 'Generation failed: no valid result could be produced after multiple attempts.' });
+            return res.status(500).json({ error: 'Generation failed: no valid result after multiple attempts.' });
         }
 
-        // Mathematically enforce exact timestamps so we don't rely on LLM formatting
-        if (result.script && result.script.length > 0) {
-            const totalScriptLength = result.script.reduce((acc, s) => acc + s.text.length, 0);
-            // B6 FIX: Accumulate exact float positions first, THEN round each boundary independently.
-            // This prevents floating-point drift from causing the second-to-last segment to round
-            // UP to 60s, making the final segment zero-duration (01:00 – 01:00).
-            // Strategy: pre-calculate all float boundaries, then quantize as a separate pass.
-            const floatBoundaries = [];
-            let acc = 0;
-            for (let i = 0; i < result.script.length; i++) {
-                const start = acc;
-                if (videoDuration) {
-                    acc = Math.min(start + videoDuration, 60);
+        // ── Mathematically Enforce Timestamps ────────────────────────────────
+        // Override LLM timestamps with exact arithmetic — clock-perfect every time.
+        if (result.timeline && result.timeline.length > 0) {
+            const count = result.timeline.length;
+            result.timeline = result.timeline.map((seg, i) => {
+                let start, end;
+                if (segmentLength) {
+                    // Fixed mode: evenly spaced, last segment clamped to totalDuration
+                    start = i * segmentLength;
+                    end = Math.min((i + 1) * segmentLength, totalDuration);
                 } else {
-                    const proportionalDuration = (result.script[i].text.length / totalScriptLength) * 60;
-                    acc = start + proportionalDuration;
-                }
-                floatBoundaries.push({ start, end: acc });
-            }
-            // Force last boundary to exactly 60 regardless of float accumulation
-            floatBoundaries[floatBoundaries.length - 1].end = 60;
-
-            result.script = result.script.map((segment, index) => {
-                const { start: startTimeSecs, end: endTimeSecs } = floatBoundaries[index];
-
-                // Round independently with a guaranteed minimum 1-second gap.
-                const roundedStart = Math.max(0, Math.floor(startTimeSecs));
-                const roundedEnd = Math.min(60, Math.max(roundedStart + 1, Math.ceil(endTimeSecs)));
-
-                const formatTime = (secs) => {
-                    const m = Math.floor(secs / 60).toString().padStart(2, '0');
-                    const s = Math.floor(secs % 60).toString().padStart(2, '0');
-                    return `${m}:${s}`;
-                };
-
-                const exactTimestamp = `${formatTime(roundedStart)} – ${formatTime(roundedEnd)}`;
-
-                if (result.imagePrompts && result.imagePrompts[index]) {
-                    result.imagePrompts[index].frame = exactTimestamp;
-                    let prompt = result.imagePrompts[index].prompt.trim();
-                    if (!prompt.includes('--ar 9:16')) {
-                        prompt = `${prompt} --ar 9:16`;
-                    }
-                    result.imagePrompts[index].prompt = prompt;
+                    // Dynamic mode: preserve LLM proportions, clamp to valid range
+                    start = Math.max(0, Math.min(Number(seg.startTime) || 0, totalDuration - 1));
+                    end = Math.max(start + 1, Math.min(Number(seg.endTime) || start + 4, totalDuration));
+                    if (i === count - 1) end = totalDuration;
                 }
 
-                return { ...segment, timestamp: exactTimestamp };
+                let visual = (seg.visual || '').trim();
+                if (!visual.includes('--ar 9:16')) visual = `${visual} --ar 9:16`;
+
+                return { index: i, startTime: start, endTime: end, audio: seg.audio || '', visual };
             });
         }
 
@@ -774,9 +557,187 @@ app.post('/api/generate', async (req, res) => {
 
     } catch (error) {
         console.error("Generate error:", error);
-        res.status(error.status || 500).json({ error: error.message || "Unknown error" });
+        res.status(error.status || 500).json({ error: safeError(error) });
     }
 });
+
+
+app.post('/api/improve', async (req, res) => {
+    try {
+        const script = sanitizeScriptInput(req.body.script);
+        const critique = sanitizeScriptInput(req.body.critique);
+        const visualStyle = sanitizeInput(req.body.visualStyle) || 'Default';
+        const { visualGenerationType } = req.body;
+        if (!script) return res.status(400).json({ error: 'Script is required.' });
+
+        // ── Input Validation ──────────────────────────────────────────────────
+        let segmentLength = undefined;
+        if (req.body.segmentLength !== undefined && req.body.segmentLength !== null) {
+            segmentLength = Number(req.body.segmentLength);
+            if (!Number.isFinite(segmentLength) || segmentLength < 2 || segmentLength > 30) {
+                return res.status(400).json({ error: 'segmentLength must be a finite number between 2 and 30 seconds.' });
+            }
+            segmentLength = Math.floor(segmentLength);
+        }
+
+        let totalDuration = 60;
+        if (req.body.totalDuration !== undefined && req.body.totalDuration !== null) {
+            totalDuration = Number(req.body.totalDuration);
+            if (!Number.isFinite(totalDuration) || totalDuration < 10 || totalDuration > 300) {
+                return res.status(400).json({ error: 'totalDuration must be a number between 10 and 300 seconds.' });
+            }
+            totalDuration = Math.floor(totalDuration);
+        }
+
+        const ALLOWED_GEN_TYPES = ['image', 'video'];
+        if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
+            return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
+        }
+
+        // ── Extract Original Timeline Segment Count ───────────────────────────
+        // Script text is "[MM:SS–MM:SS] audio" lines — count how many segments are expected.
+        const originalTimelineLines = script.split('\n').filter(line => line.trim().startsWith('['));
+        const expectedSegments = originalTimelineLines.length;
+
+        if (expectedSegments === 0) {
+            return res.status(400).json({ error: 'Could not extract a valid timeline from the script. Ensure it contains timestamped segments.' });
+        }
+
+        const maxWordsPerSegment = segmentLength ? Math.floor(segmentLength * 2.7) : 21;
+        const timingConstraint = segmentLength
+            ? `Each segment is exactly ${segmentLength}s. Max audio words per segment: ${maxWordsPerSegment} (2.7 wps).`
+            : `Preserve original segment durations. Keep audio concise and punchy.`;
+
+        // ── Character Block ──────────────────────────────────────────────────
+        let characterImproveBlock = '';
+        if (req.body.character && req.body.character.name) {
+            const charName = sanitizeInput(req.body.character.name);
+            const charDesc = sanitizeScriptInput(req.body.character.description || '');
+            const charType = ['image', 'video', 'both'].includes(req.body.character.type) ? req.body.character.type : 'both';
+            if (charName && charDesc) {
+                characterImproveBlock = `
+
+CUSTOM CHARACTER REQUIREMENT (MANDATORY):
+Deepen "${charName}"'s presence 10x. Character: ${charDesc}
+- ${charType !== 'video' ? `All visual prompts must feature ${charName} prominently.` : ''}
+- ${charType !== 'image' ? `All video prompts must show ${charName} in action.` : ''}`;
+            }
+        }
+
+        let result = null;
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            attempts++;
+            try {
+                const response = await generateWithFallback({
+                    model: "gemini-2.5-flash",
+                    contents: `Based on this critique, generate a 10x stronger viral storyboard.
+
+ORIGINAL SCRIPT:
+${script}
+
+CRITIQUE:
+${critique}
+${characterImproveBlock}
+
+STRUCTURAL PRESERVATION (MANDATORY):
+- Return EXACTLY ${expectedSegments} segments in improvedTimeline — no merging, splitting, or deleting.
+- Preserve each segment's index exactly (0 through ${expectedSegments - 1}).
+- Timing: ${timingConstraint}
+
+VISUAL INTENSITY — every "visual" prompt MUST:
+- Have strong subject focus, clear emotional trigger, dynamic/high-contrast lighting
+- Append "--ar 9:16" at the end
+- Match the "${visualStyle}" style strictly
+- Type: ${visualGenerationType === 'video' ? 'VIDEO generation (cinematic motion descriptions)' : 'IMAGE generation (still-frame composition)'}
+
+10X UPGRADE RULES:
+1. Hook (index 0): Punchy pattern-interrupt — NO generic openings
+2. Every audio line must provoke curiosity, shock, or relatable frustration
+3. Cut ALL filler words. Short punchy active-voice sentences
+4. Replace vague statements with hyper-specific micro-details
+5. Make every visual prompt dramatic, cinematic, hyper-detailed
+
+Also provide: improved hook (1 line max), caption, hashtags, music style, sound effects, editing effects, font style, editing context.`,
+                    config: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: Type.OBJECT,
+                            properties: {
+                                improvedTimeline: {
+                                    type: Type.ARRAY,
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            index: { type: Type.NUMBER },
+                                            startTime: { type: Type.NUMBER },
+                                            endTime: { type: Type.NUMBER },
+                                            audio: { type: Type.STRING },
+                                            visual: { type: Type.STRING }
+                                        },
+                                        required: ["index", "startTime", "endTime", "audio", "visual"]
+                                    }
+                                },
+                                improvedHook: { type: Type.STRING, description: "First 1 line maximum" },
+                                improvedCaption: { type: Type.STRING },
+                                improvedHashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                improvedMusicStyle: { type: Type.STRING },
+                                improvedSoundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                improvedEditingEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                improvedFontStyle: { type: Type.STRING },
+                                improvedEditingEffectsContext: { type: Type.STRING }
+                            },
+                            required: ["improvedTimeline", "improvedHook", "improvedCaption", "improvedHashtags", "improvedMusicStyle", "improvedSoundEffects", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"]
+                        }
+                    }
+                });
+
+                if (!response.text) throw new Error("No response text from Gemini API");
+                const parsed = JSON.parse(response.text);
+
+                if (parsed.improvedTimeline.length !== expectedSegments) {
+                    throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.improvedTimeline.length}.`);
+                }
+
+                result = parsed;
+                break;
+            } catch (err) {
+                console.warn(`[Improve Attempt ${attempts}] failed:`, err.message);
+                if (attempts >= maxAttempts) {
+                    return res.status(500).json({ error: "Failed to generate valid structure after multiple attempts." });
+                }
+            }
+        }
+
+        // ── Re-enforce Timestamps Mathematically ─────────────────────────────
+        if (result && result.improvedTimeline && result.improvedTimeline.length === expectedSegments) {
+            result.improvedTimeline = result.improvedTimeline.map((seg, i) => {
+                let start, end;
+                if (segmentLength) {
+                    start = i * segmentLength;
+                    end = Math.min((i + 1) * segmentLength, totalDuration);
+                } else {
+                    start = Math.max(0, Math.min(Number(seg.startTime) || 0, totalDuration - 1));
+                    end = Math.max(start + 1, Math.min(Number(seg.endTime) || start + 4, totalDuration));
+                    if (i === expectedSegments - 1) end = totalDuration;
+                }
+
+                let visual = (seg.visual || '').trim();
+                if (!visual.includes('--ar 9:16')) visual = `${visual} --ar 9:16`;
+
+                return { index: i, startTime: start, endTime: end, audio: seg.audio || '', visual };
+            });
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error("Improve error:", error);
+        res.status(error.status || 500).json({ error: safeError(error) });
+    }
+});
+
 
 app.post('/api/workflow', async (req, res) => {
     try {
@@ -810,7 +771,7 @@ app.post('/api/workflow', async (req, res) => {
         res.json(JSON.parse(response.text));
     } catch (error) {
         console.error("Workflow error:", error);
-        res.status(error.status || 500).json({ error: error.message || "Unknown error" });
+        res.status(error.status || 500).json({ error: safeError(error) });
     }
 });
 

@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { BarChart, ArrowLeft, Zap, Loader2, TrendingUp, AlertTriangle, ThumbsUp, Wand2, Copy, Check, ImageIcon, Lightbulb, Play, Square, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { normalizeTs } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { RetentionGraph } from '../ui/RetentionGraph';
 import { useAppStore, useTheme } from '../../store/useAppStore';
@@ -30,6 +29,12 @@ export function CritiqueView() {
     } = useAppStore();
     const theme = useTheme();
     const { speak, stop, isPlaying, activeText } = useTTS();
+
+    const formatTime = (secs: number) => {
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = Math.floor(secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
 
     if (!contentIdea) {
         return (
@@ -75,7 +80,6 @@ export function CritiqueView() {
                         Your script is generated. Now let AI tear it apart — and then make it 10× better.
                     </p>
                 </div>
-                {/* What the roast does */}
                 {[
                     { icon: <BarChart className="w-4 h-4" />, label: 'Virality Score', desc: 'Rated 0-100 vs current trends' },
                     { icon: <AlertTriangle className="w-4 h-4" />, label: 'Retention Leaks', desc: 'Pinpoint every second viewers might scroll past' },
@@ -109,9 +113,6 @@ export function CritiqueView() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full space-y-12 text-left"
         >
-            {/* Bug 1+5 Fix: Inline loading banner so the user sees feedback while Roast/Improve
-                runs. The full-page skeleton no longer replaces this view, so we show a subtle
-                top banner with the current loading message instead. */}
             {isLoading && (
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
@@ -124,15 +125,15 @@ export function CritiqueView() {
             )}
             <div className="border-b pb-6 border-white/10">
                 <span className="font-mono text-xs uppercase tracking-widest opacity-50 mb-2 block">
-                    {critique.improvedScript ? "Improved Script Critique" : "AI Critique Result"}
+                    {critique.improvedTimeline ? "Improved Storyboard Critique" : "AI Critique Result"}
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    {critique.improvedScript ? "New Roast Results" : "Script Roast"}
+                    {critique.improvedTimeline ? "New Roast Results" : "Script Roast"}
                 </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                {/* Overall Feedback (Hero Tile - Left, extends 2 rows) */}
+                {/* Overall Feedback */}
                 <div className="md:col-span-6 md:row-span-2 flex flex-col p-6 rounded-2xl border transition-colors bg-blue-500/5 border-blue-500/20 text-blue-400">
                     <div className="flex items-center gap-2 mb-4">
                         <ThumbsUp className="w-5 h-5 flex-shrink-0" />
@@ -143,7 +144,7 @@ export function CritiqueView() {
                     </div>
                 </div>
 
-                {/* Simulated Retention Graph (Top Right) */}
+                {/* Simulated Retention Graph */}
                 <div className="md:col-span-6 flex flex-col p-6 rounded-2xl border transition-colors bg-[#1a1a1a] border-white/10">
                     <div className="flex items-center gap-2 mb-4">
                         <TrendingUp className="w-5 h-5 text-emerald-500 flex-shrink-0" />
@@ -154,10 +155,10 @@ export function CritiqueView() {
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full" />
                             <span className="font-mono text-[10px] uppercase opacity-60">
-                                {critique.improvedScript ? "Improved Script" : "Original Script"}
+                                {critique.improvedTimeline ? "Improved Script" : "Original Script"}
                             </span>
                         </div>
-                        {!critique.improvedScript && (
+                        {!critique.improvedTimeline && (
                             <div className="flex items-center gap-2">
                                 <div className={cn("w-3 h-3 border border-dashed rounded-full", `${theme.border}`)} />
                                 <span className="font-mono text-[10px] uppercase opacity-60">Improved (Predicted)</span>
@@ -166,7 +167,7 @@ export function CritiqueView() {
                     </div>
                 </div>
 
-                {/* Virality Score (Bottom Right - Left half) */}
+                {/* Virality Score */}
                 <div className={cn(
                     "md:col-span-3 flex flex-col items-center justify-center p-6 rounded-2xl border transition-colors text-center border-white/10",
                     critique.viralityScore >= 80 ? "bg-emerald-600 text-white" :
@@ -178,7 +179,7 @@ export function CritiqueView() {
                     <span className="text-sm opacity-70 mt-2">/ 100</span>
                 </div>
 
-                {/* Retention Leaks (Bottom Right - Right half) */}
+                {/* Retention Leaks */}
                 <div className="md:col-span-3 flex flex-col p-6 rounded-2xl border transition-colors overflow-hidden bg-red-500/5 border-red-500/20">
                     <div className="flex items-center gap-2 mb-4">
                         <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
@@ -202,7 +203,7 @@ export function CritiqueView() {
                     )}
                 </div>
 
-                {/* Punchier Hook Alternatives (Full Width) */}
+                {/* Punchier Hook Alternatives */}
                 <div className="md:col-span-12 flex flex-col p-6 rounded-2xl border transition-colors bg-yellow-500/5 border-yellow-500/20">
                     <div className="flex items-center gap-2 mb-4">
                         <Zap className="w-5 h-5 text-yellow-600 flex-shrink-0" />
@@ -218,11 +219,11 @@ export function CritiqueView() {
                 </div>
             </div>
 
-            {!critique.improvedScript ? (
+            {!critique.improvedTimeline ? (
                 <div className="pt-8 flex flex-col items-center justify-center text-center space-y-6 border-t border-dashed border-white/10">
                     <div className="space-y-2">
                         <h3 className="text-xl md:text-2xl font-bold tracking-tight">Ready to level up?</h3>
-                        <p className="opacity-60 max-w-md mx-auto text-sm md:text-base">Our AI can rewrite your script based on this roast, fixing every retention leak and optimizing for maximum virality.</p>
+                        <p className="opacity-60 max-w-md mx-auto text-sm md:text-base">Our AI can rewrite your storyboard based on this roast, fixing every retention leak and optimizing for maximum virality.</p>
                     </div>
 
                     <button
@@ -240,7 +241,7 @@ export function CritiqueView() {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-12 border-t border-dashed border-white/10 pt-12"
                 >
-                    <Section title="Improved Script Comparison" icon={<Wand2 className="w-5 h-5 text-purple-600" />}>
+                    <Section title="Improved Storyboard Comparison" icon={<Wand2 className="w-5 h-5 text-purple-600" />}>
                         <div className="flex justify-end mb-4">
                             <button
                                 onClick={() => downloadAsMarkdown(contentIdea, critique)}
@@ -253,12 +254,10 @@ export function CritiqueView() {
                             </button>
                         </div>
                         <div className="space-y-6">
-                            {critique.improvedScript.map((improvedSegment, i) => {
-                                const originalSegment = contentIdea.script.find(
-                                    // Bug 4 Fix: Use shared normalizeTs so em-dash vs hyphen
-                                    // differences don't cause "No original mapped" for every row.
-                                    s => normalizeTs(s.timestamp) === normalizeTs(improvedSegment.timestamp)
-                                ) || { timestamp: improvedSegment.timestamp, text: "No original mapped" };
+                            {critique.improvedTimeline.map((improvedSeg, i) => {
+                                const originalSeg = contentIdea.timeline.find(s => s.index === improvedSeg.index)
+                                    || contentIdea.timeline[i]
+                                    || { index: i, startTime: improvedSeg.startTime, endTime: improvedSeg.endTime, audio: 'No original mapped', visual: '' };
 
                                 return (
                                     <div key={i} className="flex flex-col md:flex-row border border-white/10 overflow-hidden bg-[#1a1a1a]">
@@ -266,23 +265,25 @@ export function CritiqueView() {
                                         <div className="flex-1 border-b md:border-b-0 md:border-r border-white/10 flex flex-col group relative">
                                             <div className="p-2 border-b border-white/10 flex justify-between items-center opacity-60">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-mono text-xs font-bold text-white px-1.5 py-0.5 rounded-sm">{originalSegment.timestamp}</span>
+                                                    <span className="font-mono text-xs font-bold text-white px-1.5 py-0.5 rounded-sm">
+                                                        {formatTime(originalSeg.startTime)}–{formatTime(originalSeg.endTime)}
+                                                    </span>
                                                     <span className="text-[10px] font-mono uppercase">Original</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => isPlaying && activeText === originalSegment.text ? stop() : speak(originalSegment.text)}
+                                                        onClick={() => isPlaying && activeText === originalSeg.audio ? stop() : speak(originalSeg.audio)}
                                                         className={cn(
                                                             "p-1 rounded transition-colors",
-                                                            isPlaying && activeText === originalSegment.text ? "bg-emerald-500 text-black border-transparent" : "hover:bg-white/10 border border-transparent hover:border-white/10"
+                                                            isPlaying && activeText === originalSeg.audio ? "bg-emerald-500 text-black border-transparent" : "hover:bg-white/10 border border-transparent hover:border-white/10"
                                                         )}
                                                     >
-                                                        {isPlaying && activeText === originalSegment.text ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                                                        {isPlaying && activeText === originalSeg.audio ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
                                                     </button>
                                                 </div>
                                             </div>
                                             <div className="p-4 font-mono text-xs leading-relaxed text-white/60">
-                                                {originalSegment.text}
+                                                {originalSeg.audio}
                                             </div>
                                         </div>
 
@@ -290,21 +291,23 @@ export function CritiqueView() {
                                         <div className="flex-1 bg-purple-500/5 group relative flex flex-col">
                                             <div className="p-2 border-b border-purple-500/20 flex justify-between items-center bg-purple-500/10">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-mono text-xs font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-sm">{improvedSegment.timestamp}</span>
+                                                    <span className="font-mono text-xs font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-sm">
+                                                        {formatTime(improvedSeg.startTime)}–{formatTime(improvedSeg.endTime)}
+                                                    </span>
                                                     <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">Improved Revision</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => isPlaying && activeText === improvedSegment.text ? stop() : speak(improvedSegment.text)}
+                                                        onClick={() => isPlaying && activeText === improvedSeg.audio ? stop() : speak(improvedSeg.audio)}
                                                         className={cn(
                                                             "p-1 rounded transition-colors",
-                                                            isPlaying && activeText === improvedSegment.text ? "bg-purple-600 text-white border-transparent" : "hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
+                                                            isPlaying && activeText === improvedSeg.audio ? "bg-purple-600 text-white border-transparent" : "hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
                                                         )}
                                                     >
-                                                        {isPlaying && activeText === improvedSegment.text ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                                                        {isPlaying && activeText === improvedSeg.audio ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
                                                     </button>
                                                     <button
-                                                        onClick={() => copyToClipboard(improvedSegment.text, `improved-${i}`)}
+                                                        onClick={() => copyToClipboard(improvedSeg.audio, `improved-${i}`)}
                                                         className="p-1 rounded transition-colors hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
                                                     >
                                                         {copiedId === `improved-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -312,33 +315,19 @@ export function CritiqueView() {
                                                 </div>
                                             </div>
                                             <div className="p-4 font-mono text-xs leading-relaxed text-purple-300 font-bold shadow-inner">
-                                                {improvedSegment.text}
+                                                {improvedSeg.audio}
                                             </div>
+                                            {/* Improved Visual Prompt inline */}
+                                            {improvedSeg.visual && (
+                                                <div className="px-4 pb-4">
+                                                    <span className="text-[9px] font-mono uppercase text-purple-400/60 block mb-1">Visual</span>
+                                                    <p className="font-mono text-[10px] italic text-purple-300/60 leading-relaxed">{improvedSeg.visual}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
                             })}
-                        </div>
-                    </Section>
-
-                    <Section title="Improved Visual Prompts" icon={<ImageIcon className="w-5 h-5 text-emerald-500" />} collapsible defaultCollapsed>
-                        <div className="space-y-4">
-                            {critique.improvedImagePrompts && critique.improvedImagePrompts.length > 0 ? (
-                                critique.improvedImagePrompts.map((p, i) => (
-                                    <div
-                                        key={i}
-                                        className="p-4 border font-mono text-xs bg-[#1a1a1a] border-white/10"
-                                    >
-                                        <div className="flex items-center gap-2 mb-2 opacity-50">
-                                            <ImageIcon className="w-3 h-3" />
-                                            <span>{p.frame}</span>
-                                        </div>
-                                        <p className="leading-relaxed">{p.prompt}</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm opacity-60 italic p-4">No visual prompts provided for improved script.</p>
-                            )}
                         </div>
                     </Section>
 
@@ -360,7 +349,7 @@ export function CritiqueView() {
                         )}
                     >
                         {confirmApply ? <AlertTriangle className="w-4 h-4" /> : <Wand2 className="w-4 h-4" />}
-                        {confirmApply ? "Are you sure? Original script will be replaced." : "Apply Improved Script to Generator"}
+                        {confirmApply ? "Are you sure? Original storyboard will be replaced." : "Apply Improved Storyboard to Generator"}
                     </button>
                 </motion.div>
             )}

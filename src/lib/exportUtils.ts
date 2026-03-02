@@ -1,6 +1,12 @@
 import { ContentIdea, ScriptCritique } from '../types';
 
 export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCritique | null) {
+    const formatTime = (secs: number) => {
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = Math.floor(secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
+
     let md = `# Production Script: ${contentIdea.title}\n\n`;
 
     md += `## 🪝 Hooks\n`;
@@ -9,14 +15,11 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
     });
     md += `\n`;
 
-    md += `## 📝 Script Timeline\n`;
-    contentIdea.script.forEach(segment => {
-        md += `### ${segment.timestamp}\n**Dialogue:** ${segment.text}\n`;
-        const visual = contentIdea.imagePrompts?.find(p => p.frame === segment.timestamp);
-        if (visual) {
-            md += `*Visual Instruction: ${visual.prompt}*\n`;
-        }
-        md += `\n`;
+    md += `## 🎬 Storyboard Timeline\n`;
+    contentIdea.timeline.forEach(seg => {
+        md += `### [${formatTime(seg.startTime)}–${formatTime(seg.endTime)}]\n`;
+        md += `**AUDIO:** ${seg.audio}\n`;
+        md += `*VISUAL: ${seg.visual}*\n\n`;
     });
 
     md += `## 🎨 Design & Post-Production\n`;
@@ -37,23 +40,18 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
     }
     md += `- **Hashtags:** ${contentIdea.hashtags.map(h => '#' + h.replace('#', '')).join(' ')}\n\n`;
 
-    if (critique?.improvedScript) {
-        md += `---\n\n## ✨ AI Improved Script Revision\n\n`;
-        md += `*The AI rebuilt this script to maximize retention against a ${critique.viralityScore}/100 baseline score.*\n\n`;
-        critique.improvedScript.forEach(segment => {
-            md += `### ${segment.timestamp}\n**Dialogue:** ${segment.text}\n`;
-            const visual = critique.improvedImagePrompts?.find(p => p.frame === segment.timestamp);
-            if (visual) {
-                md += `*Visual Instruction: ${visual.prompt}*\n`;
-            }
-            md += `\n`;
+    if (critique?.improvedTimeline) {
+        md += `---\n\n## ✨ AI Improved Storyboard\n\n`;
+        md += `*Rebuilt to maximize retention against a ${critique.viralityScore}/100 baseline score.*\n\n`;
+        critique.improvedTimeline.forEach(seg => {
+            md += `### [${formatTime(seg.startTime)}–${formatTime(seg.endTime)}]\n`;
+            md += `**AUDIO:** ${seg.audio}\n`;
+            md += `*VISUAL: ${seg.visual}*\n\n`;
         });
     }
 
     const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    // BUG FIX #6: Wrap in try/finally so the object URL is always revoked,
-    // even if link.click() throws. Without this, the URL leaks until page unload.
     try {
         const link = document.createElement('a');
         link.href = url;

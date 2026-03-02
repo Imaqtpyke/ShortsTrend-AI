@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppState, HistoryItem, Toast, VISUAL_STYLES } from '../types';
+import { AppState, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES } from '../types';
 import { analyzeTrends, generateContentIdea, critiqueScript, generateImprovement } from '../services/geminiService';
 import localforage from 'localforage';
 
@@ -41,15 +41,18 @@ interface AppStore extends AppState {
     setSearchQuery: (query: string) => void;
     setVisualStyle: (style: string) => void;
     setVisualGenerationType: (type: 'image' | 'video') => void;
-    setVideoDuration: (duration: number) => void;
-    setCustomVideoDuration: (duration: number | null) => void;
+    setSegmentLength: (length: number) => void;
+    setCustomSegmentLength: (length: number | null) => void;
     segmentMode: 'adjustable' | 'fixed';
     setSegmentMode: (mode: 'adjustable' | 'fixed') => void;
+    // Custom Character
+    setUseCustomCharacter: (enabled: boolean) => void;
+    setCustomCharacter: (character: CustomCharacter) => void;
 
     // Phase 5: UX Improvements
     loadingMessage: string;
     setLoadingMessage: (msg: string) => void;
-    updateScriptSegment: (index: number, newText: string) => void;
+    updateTimelineAudio: (index: number, newAudio: string) => void;
 
     // Actions
     resetApp: () => void;
@@ -72,7 +75,9 @@ interface PersistedSession {
     critique: AppState['critique'];
     workflow: AppState['workflow'];
     searchQuery: string;
-    segmentMode: 'adjustable' | 'fixed'; // Bug 6 Fix: persist user's mode preference
+    segmentMode: 'adjustable' | 'fixed';
+    useCustomCharacter: boolean;
+    customCharacter: CustomCharacter;
     savedAt: number;
 }
 
@@ -91,6 +96,8 @@ async function persistSession(partial: Partial<PersistedSession>) {
             workflow: partial.workflow !== undefined ? partial.workflow : current.workflow ?? null,
             searchQuery: partial.searchQuery !== undefined ? partial.searchQuery : current.searchQuery ?? '',
             segmentMode: partial.segmentMode !== undefined ? partial.segmentMode : (current.segmentMode ?? 'adjustable'),
+            useCustomCharacter: partial.useCustomCharacter !== undefined ? partial.useCustomCharacter : (current.useCustomCharacter ?? false),
+            customCharacter: partial.customCharacter !== undefined ? partial.customCharacter : (current.customCharacter ?? { name: '', description: '', type: 'both' }),
             savedAt: Date.now(),
         };
         await localforage.setItem(SESSION_KEY, JSON.stringify(next));
@@ -110,12 +117,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
     error: null,
     selectedVisualStyle: VISUAL_STYLES[0],
     visualGenerationType: 'image',
-    videoDuration: 6,
-    customVideoDuration: null,
+    segmentLength: 6,
+    customSegmentLength: null,
     segmentMode: 'adjustable',
     history: [],
     searchQuery: '',
     _generateRequestId: 0,
+    // Custom Character initial state
+    useCustomCharacter: false,
+    customCharacter: { name: '', description: '', type: 'both' as const },
 
     // Initial UI/Feature State
     activeTab: 'trends',
@@ -164,9 +174,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
     copyAllForProduction: () => {
         const { contentIdea, copyToClipboard } = get();
         if (!contentIdea) return;
-        const { title, script, hookVariations, seoMetadata, hashtags, musicStyle, soundEffects, visualStyle, imagePrompts, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
+        const { title, timeline, hookVariations, seoMetadata, hashtags, musicStyle, soundEffects, visualStyle, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
 
-        const text = `TITLE: ${title}\n\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSCRIPT:\n${script.map(s => `[${s.timestamp}] ${s.text}`).join('\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nSTORYBOARD PROMPTS:\n${imagePrompts?.map(p => `[${p.frame}] ${p.prompt}`).join('\n') || 'None Generated'}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
+        const formatTime = (secs: number) => {
+            const m = Math.floor(secs / 60).toString().padStart(2, '0');
+            const s = Math.floor(secs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        };
+
+        const text = `TITLE: ${title}\n\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSTORYBOARD TIMELINE:\n${timeline.map(seg => `[${formatTime(seg.startTime)}–${formatTime(seg.endTime)}]\nAUDIO: ${seg.audio}\nVISUAL: ${seg.visual}`).join('\n\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
 
         copyToClipboard(text, 'all');
     },
@@ -175,23 +191,30 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setSearchQuery: (query) => set({ searchQuery: query }),
     setVisualStyle: (style) => set({ selectedVisualStyle: style }),
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
-    setVideoDuration: (duration) => set({ videoDuration: duration }),
-    setCustomVideoDuration: (duration) => set({ customVideoDuration: duration }),
+    setSegmentLength: (length) => set({ segmentLength: length }),
+    setCustomSegmentLength: (length) => set({ customSegmentLength: length }),
     setSegmentMode: (mode) => {
         set({ segmentMode: mode });
-        // Bug 6 Fix: Persist segmentMode immediately when user changes it
         persistSession({ segmentMode: mode });
+    },
+    setUseCustomCharacter: (enabled) => {
+        set({ useCustomCharacter: enabled });
+        persistSession({ useCustomCharacter: enabled });
+    },
+    setCustomCharacter: (character) => {
+        set({ customCharacter: character });
+        persistSession({ customCharacter: character });
     },
 
     // Phase 5: Progressive Loading & Interactive UI
     loadingMessage: '',
     setLoadingMessage: (msg: string) => set({ loadingMessage: msg }),
 
-    updateScriptSegment: (index: number, newText: string) => set(state => {
+    updateTimelineAudio: (index: number, newAudio: string) => set(state => {
         if (!state.contentIdea) return state;
-        const newScript = [...state.contentIdea.script];
-        newScript[index] = { ...newScript[index], text: newText };
-        return { contentIdea: { ...state.contentIdea, script: newScript } };
+        const newTimeline = [...state.contentIdea.timeline];
+        newTimeline[index] = { ...newTimeline[index], audio: newAudio };
+        return { contentIdea: { ...state.contentIdea, timeline: newTimeline } };
     }),
 
     // Actions
@@ -211,15 +234,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 }
             }
 
+            // ── Migration Guard ───────────────────────────────────────────────────
+            // If the restored contentIdea uses the old schema (has .script but no .timeline),
+            // drop it silently. Crashing would be worse than a fresh start.
+            let contentIdea = session.contentIdea ?? null;
+            if (contentIdea && !contentIdea.timeline) {
+                console.warn('[Session] Dropping old-schema contentIdea (missing .timeline). User will need to regenerate.');
+                contentIdea = null;
+            }
+            // Same guard for critique improved fields
+            let critique = session.critique ?? null;
+            if (critique && (critique as any).improvedScript && !critique.improvedTimeline) {
+                console.warn('[Session] Dropping old-schema critique (has .improvedScript, no .improvedTimeline).');
+                critique = null;
+            }
+
             set({
                 history,
                 analysis: session.analysis ?? null,
-                contentIdea: session.contentIdea ?? null,
+                contentIdea,
                 workflow: session.workflow ?? null,
-                critique: session.critique ?? null,
+                critique,
                 searchQuery: session.searchQuery ?? '',
-                // Bug 6 Fix: Restore persisted segmentMode so Fixed/Adjustable survives page refresh
                 segmentMode: session.segmentMode ?? 'adjustable',
+                useCustomCharacter: session.useCustomCharacter ?? false,
+                customCharacter: session.customCharacter ?? { name: '', description: '', type: 'both' },
                 isHydrated: true
             });
         } catch (e) {
@@ -283,31 +322,32 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
         try {
             timers.push(setTimeout(() => {
-                if (get().isLoading) set({ loadingMessage: "Generating visual hooks and scene setups..." });
+                if (get().isLoading) set({ loadingMessage: "Generating visual storyboard and scene setups..." });
             }, 3000));
             timers.push(setTimeout(() => {
-                if (get().isLoading) set({ loadingMessage: "Writing the script segments..." });
+                if (get().isLoading) set({ loadingMessage: "Writing the storyboard audio segments..." });
             }, 6000));
 
-            const finalVideoDuration = state.segmentMode === 'fixed'
+            const finalSegmentLength = state.segmentMode === 'fixed'
                 ? undefined
-                : (state.customVideoDuration || state.videoDuration);
+                : (state.customSegmentLength || state.segmentLength);
+
+            const character = state.useCustomCharacter ? state.customCharacter : undefined;
 
             const ideaPromise = generateContentIdea(
                 trend,
                 state.selectedVisualStyle,
                 state.visualGenerationType,
-                finalVideoDuration,
+                finalSegmentLength,
+                60, // totalDuration always 60s
+                character,
                 (partial) => {
                     // B3 FIX: Only update state if this request is still the current one.
-                    // If the user clicked Regenerate again, requestId will no longer match
-                    // and we discard this stale in-flight update entirely.
                     if (get()._generateRequestId !== requestId) return;
 
                     const partialIdea = {
                         title: partial.title || "Drafting Idea...",
-                        script: partial.script || [],
-                        imagePrompts: partial.imagePrompts || [],
+                        timeline: partial.timeline || [],
                         musicStyle: partial.musicStyle || "Processing...",
                         soundEffects: partial.soundEffects || [],
                         visualStyle: partial.visualStyle || state.selectedVisualStyle,
@@ -318,7 +358,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
                         editingEffects: partial.editingEffects || [],
                         fontStyle: partial.fontStyle || "...",
                         editingEffectsContext: partial.editingEffectsContext || "",
-                        videoDuration: state.visualGenerationType === 'image' ? undefined : finalVideoDuration
+                        segmentLength: finalSegmentLength
                     };
 
                     set({ contentIdea: partialIdea, activeTab: 'generator', critique: null });
@@ -330,7 +370,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             // B3 FIX: Final guard — if a newer request started during the await, abort.
             if (get()._generateRequestId !== requestId) return;
 
-            const builtIdea = { ...idea, videoDuration: state.visualGenerationType === 'image' ? undefined : finalVideoDuration };
+            const builtIdea = { ...idea, segmentLength: finalSegmentLength };
 
             const hardcodedWorkflow = {
                 software: {
@@ -362,7 +402,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         } finally {
             timers.forEach(clearTimeout);
             // B3 FIX: Only clear isLoading if we are still the active request.
-            // (The success path above sets isLoading: false directly.)
             if (get()._generateRequestId === requestId) {
                 set({ isLoading: false });
             }
@@ -381,8 +420,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 if (get().isLoading) set({ loadingMessage: "Evaluating hooks and audience retention drops..." });
             }, 3000));
 
-            const scriptText = state.contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
-            const critique = await critiqueScript(scriptText, state.contentIdea.hookVariations[0]?.text || '');
+            const scriptText = state.contentIdea.timeline.map(seg => {
+                const m = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+                return `[${m(seg.startTime)}–${m(seg.endTime)}] ${seg.audio}`;
+            }).join('\n');
+            const character = state.useCustomCharacter ? state.customCharacter : undefined;
+            const firstHook = state.contentIdea.hookVariations[0]?.text || '';
+            const critique = await critiqueScript(scriptText, firstHook, character);
             set({ critique, isLoading: false, activeTab: 'critique' });
             persistSession({ critique });
         } catch (err: any) {
@@ -406,15 +450,34 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 if (get().isLoading) set({ loadingMessage: "Designing higher-retention visual storyboard..." });
             }, 4000));
 
-            const scriptText = state.contentIdea.script.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
-            const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
-            const builtVideoDuration = state.segmentMode === 'fixed'
-                ? undefined
-                : (state.contentIdea.videoDuration || state.videoDuration);
-            const improvement = await generateImprovement(scriptText, critiqueText, state.selectedVisualStyle, state.visualGenerationType, builtVideoDuration);
+            const formatTime = (secs: number) => {
+                const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                const s = Math.floor(secs % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
 
-            const improvedScriptText = improvement.improvedScript!.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
-            const newCritique = await critiqueScript(improvedScriptText, improvement.improvedHook || state.contentIdea.hookVariations[0]?.text || '');
+            const scriptText = state.contentIdea.timeline.map(seg =>
+                `[${formatTime(seg.startTime)}–${formatTime(seg.endTime)}] ${seg.audio}`
+            ).join('\n');
+            const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
+            const builtSegmentLength = state.segmentMode === 'fixed'
+                ? undefined
+                : (state.contentIdea.segmentLength || state.segmentLength);
+            const character = state.useCustomCharacter ? state.customCharacter : undefined;
+            const improvement = await generateImprovement(
+                scriptText, critiqueText,
+                state.selectedVisualStyle, state.visualGenerationType,
+                builtSegmentLength, 60, character
+            );
+
+            const improvedScriptText = improvement.improvedTimeline!.map(seg =>
+                `[${formatTime(seg.startTime)}–${formatTime(seg.endTime)}] ${seg.audio}`
+            ).join('\n');
+            const newCritique = await critiqueScript(
+                improvedScriptText,
+                improvement.improvedHook || state.contentIdea.hookVariations[0]?.text || '',
+                character
+            );
 
             const finalCritique = {
                 ...newCritique,
@@ -433,14 +496,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     applyImprovedScript: () => {
         const state = get();
-        if (!state.contentIdea || !state.critique || !state.critique.improvedScript) return;
+        if (!state.contentIdea || !state.critique || !state.critique.improvedTimeline) return;
 
         const updated = {
             ...state.contentIdea,
-            script: state.critique.improvedScript,
-            imagePrompts: state.critique.improvedImagePrompts || state.contentIdea.imagePrompts,
-            hookVariations: state.critique.improvedHook ? [{ type: 'Improved', text: state.critique.improvedHook }] : state.contentIdea.hookVariations,
-            seoMetadata: state.critique.improvedCaption ? { ...state.contentIdea.seoMetadata, youtubeDescription: state.critique.improvedCaption } : state.contentIdea.seoMetadata,
+            timeline: state.critique.improvedTimeline,
+            hookVariations: state.critique.improvedHook
+                ? [{ type: 'Improved', text: state.critique.improvedHook }]
+                : state.contentIdea.hookVariations,
+            seoMetadata: state.critique.improvedCaption
+                ? { ...state.contentIdea.seoMetadata, youtubeDescription: state.critique.improvedCaption }
+                : state.contentIdea.seoMetadata,
             hashtags: state.critique.improvedHashtags || state.contentIdea.hashtags,
             musicStyle: state.critique.improvedMusicStyle || state.contentIdea.musicStyle,
             soundEffects: state.critique.improvedSoundEffects || state.contentIdea.soundEffects,
@@ -496,8 +562,6 @@ export const useTheme = () => {
     switch (topic.growth) {
         case 'exploding': return { ...defaultTheme, primary: 'red-500', ring: 'focus:ring-red-500', hoverBorder: 'hover:border-red-500', textAccent: 'text-red-400', borderAccent: 'border-red-500/30', bgAccent: 'bg-red-500/10', hoverBgAccent: 'hover:bg-red-500/20', borderAccent2: 'border-red-500/20', accent: 'red', focusBorder: 'focus:border-red-500', border: 'border-red-500', hoverBg: 'hover:bg-red-400', bg: 'bg-red-500', bgOpacity: 'bg-red-500/5', shadowAccent: 'shadow-red-500/10', groupHoverBg: 'group-hover:bg-red-500', groupHoverBorder: 'group-hover:border-red-500' };
         case 'steady': return { ...defaultTheme, primary: 'blue-500', ring: 'focus:ring-blue-500', hoverBorder: 'hover:border-blue-500', textAccent: 'text-blue-400', borderAccent: 'border-blue-500/30', bgAccent: 'bg-blue-500/10', hoverBgAccent: 'hover:bg-blue-500/20', borderAccent2: 'border-blue-500/20', accent: 'blue', focusBorder: 'focus:border-blue-500', border: 'border-blue-500', hoverBg: 'hover:bg-blue-400', bg: 'bg-blue-500', bgOpacity: 'bg-blue-500/5', shadowAccent: 'shadow-blue-500/10', groupHoverBg: 'group-hover:bg-blue-500', groupHoverBorder: 'group-hover:border-blue-500' };
-        // Bug 7 Fix: Added 'declining' case — previously fell through to green default,
-        // causing inconsistency between App.tsx (slate) and all other themed components (green).
         case 'declining': return { ...defaultTheme, primary: 'slate-500', ring: 'focus:ring-slate-500', hoverBorder: 'hover:border-slate-500', textAccent: 'text-slate-400', borderAccent: 'border-slate-500/30', bgAccent: 'bg-slate-500/10', hoverBgAccent: 'hover:bg-slate-500/20', borderAccent2: 'border-slate-500/20', accent: 'slate', focusBorder: 'focus:border-slate-500', border: 'border-slate-500', hoverBg: 'hover:bg-slate-400', bg: 'bg-slate-500', bgOpacity: 'bg-slate-500/5', shadowAccent: 'shadow-slate-500/10', groupHoverBg: 'group-hover:bg-slate-500', groupHoverBorder: 'group-hover:border-slate-500' };
         default: return defaultTheme;
     }

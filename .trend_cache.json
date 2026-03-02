@@ -173,73 +173,59 @@
     "data": {
       "trendingTopics": [
         {
-          "name": "What if Earth had rings like Saturn?",
+          "name": "What If: Historical Turning Points",
           "velocity": 85,
           "growth": "exploding",
           "competition": "Medium",
-          "targetAudience": "Space enthusiasts, visual learners, sci-fi fans, aesthetic content lovers",
-          "exampleIdea": "A cinematic short depicting a major city skyline at dawn, slowly revealing massive, glowing rings appearing in Earth's orbit, with brief on-screen text explaining one immediate consequence."
+          "targetAudience": "History enthusiasts, students, alternate reality fans, general knowledge seekers (16-45 years old).",
+          "exampleIdea": "What if the Roman Empire never fell? We'd be living in a world of advanced aqueducts and gladiator AI sports."
         },
         {
-          "name": "What if animals could talk?",
+          "name": "Sentient Everyday Objects/Animals",
           "velocity": 70,
           "growth": "steady",
           "competition": "Medium",
-          "targetAudience": "Animal lovers, pet owners, families, younger audiences, humor seekers",
-          "exampleIdea": "A POV short where a dog 'talks' to its owner, explaining in human words why it absolutely needs another treat, using a comedic voiceover and reaction shots."
+          "targetAudience": "Younger audiences (12-30), pet owners, philosophical thinkers, meme culture enthusiasts.",
+          "exampleIdea": "What if your pet dog could suddenly talk? They'd reveal all your secrets and demand gourmet meals."
         },
         {
-          "name": "What if you woke up with a superpower?",
+          "name": "Physics Gone Wild: Breaking Fundamental Laws",
           "velocity": 90,
           "growth": "exploding",
-          "competition": "High",
-          "targetAudience": "Comic book fans, fantasy enthusiasts, dreamers, younger adults, role-play viewers",
-          "exampleIdea": "A quick skit showing someone trying to discreetly use their newfound telekinesis to grab a remote across the room, only to accidentally break something else, with a panicked reaction."
-        },
-        {
-          "name": "What if historical figures had modern jobs?",
-          "velocity": 65,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "History buffs, comedy lovers, meme enthusiasts, younger generations learning history",
-          "exampleIdea": "A short imagining Cleopatra as a cutthroat fashion influencer, dramatically showcasing her latest 'royal' collection while subtly throwing shade at rival empresses."
+          "competition": "Low",
+          "targetAudience": "Science enthusiasts, curious teens and young adults, speculative fiction fans (15-40 years old).",
+          "exampleIdea": "What if gravity vanished for 5 seconds worldwide? Chaos would ensue as everything not bolted down floated into space."
         }
       ],
       "viralFormats": [
-        "Visual simulations/CGI shorts",
-        "POV (Point of View) scenarios with voiceovers",
-        "Fast-paced explainer videos with text overlays and stock footage/animation",
-        "Mini-skits and comedic role-play",
-        "Before & After (imagined vs. reality) comparisons",
-        "Rapid-fire fact presentation about hypothetical scenarios"
+        "AI-generated visuals and voiceover with fast-paced editing",
+        "Fast-paced kinetic text and graphic animation explaining scenarios",
+        "Creator-led direct address with quick cuts and visual effects to illustrate hypotheticals",
+        "Simple, stylized 2D animations demonstrating 'what if' outcomes"
       ],
       "hooks": [
-        "Imagine this for a second...",
-        "What would REALLY happen if...?",
-        "This 'what if' question will blow your mind!",
-        "You won't believe the answer to this crazy hypothetical.",
-        "If THIS changed, our world would be unrecognizable.",
-        "The craziest scenario you never thought of..."
+        "Imagine a world where...",
+        "This single change would shatter everything we know.",
+        "Could *this* actually happen in an alternate reality?",
+        "Your mind is about to be blown by this thought experiment.",
+        "What if the impossible became our new normal?"
       ],
       "videoStructures": [
-        "Hook -> Premise (the 'what if') -> Visual demonstration/Explanation -> (Optional) Engaging Question/CTA",
-        "Setup (normal situation) -> 'What If' trigger -> Consequence/Scenario unfolds (quick cuts)",
-        "Problem/Question -> Rapid visual examples of the 'what if' -> Concise answer/outcome",
-        "POV introduction -> Sudden change due to 'what if' -> Immediate, relatable reaction"
+        "Engaging Hook -> 'What If' Premise -> 2-3 Key Consequences/Implications -> Open-ended question for comments",
+        "Dramatic Question -> Brief Scenario Setup -> Rapid-fire Visuals of Outcomes -> Shocking Conclusion/Twist",
+        "Problem Statement -> 'What If' Solution -> Visual Demonstration of Impact -> Call to Action (e.g., 'What would *you* do?')"
       ],
       "popularMusic": [
-        "Upbeat, trending instrumental tracks (e.g., viral CapCut/TikTok sounds)",
-        "Cinematic/epic background scores for dramatic visuals",
-        "Quirky, lighthearted tunes for comedic or whimsical scenarios",
-        "Royalty-free tracks with a driving, energetic beat",
-        "Ambient or futuristic sounds for sci-fi concepts"
+        "Suspenseful, cinematic instrumental tracks",
+        "Mysterious and ethereal synth-wave background music",
+        "Fast-paced, high-energy electronic beats for quick cuts",
+        "Dramatic orchestral crescendos for impactful moments"
       ],
       "hashtagPatterns": [
-        "#WhatIf #Shorts #YouTubeShorts #Hypothetical #Imagination",
-        "#SciFi #Fantasy #History #Animals #Space #Future",
-        "#QuestionOfTheDay #ThinkAboutIt #MindBlown #CreativeIdeas",
-        "#POV #Animation #CGI #ExplainerVideo #WhatIfChallenge",
-        "#AlternateReality #HypotheticalScenarios #Possibilities"
+        "#WhatIf[Topic] #Hypothetical #AlternateReality",
+        "#MindBlown #ThoughtExperiment #SciFiShorts",
+        "#SpeculativeFiction #Consequences #ImagineThis",
+        "#Theory #FutureScenario #HistoryAltered"
       ],
       "nicheDNA": [
         {
@@ -251,24 +237,24 @@
           "value": 90
         },
         {
-          "subject": "Thought-provoking",
-          "value": 85
+          "subject": "Speculation",
+          "value": 88
         },
         {
-          "subject": "Creative Visuals",
+          "subject": "Intellectual Stimulation",
           "value": 80
         },
         {
-          "subject": "Explanatory",
-          "value": 70
+          "subject": "Entertainment",
+          "value": 85
         },
         {
-          "subject": "Entertaining",
-          "value": 90
+          "subject": "Surprise/Shock Factor",
+          "value": 75
         }
       ]
     },
-    "expiresAt": 1772386395041
+    "expiresAt": 1772447750339
   },
   "what if": {
     "data": {
@@ -379,5 +365,319 @@
       ]
     },
     "expiresAt": 1772386415119
+  },
+  "chaos culture": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Public Social Disasters",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z & Millennials who enjoy cringe humor and relatable awkwardness.",
+          "exampleIdea": "POV: You accidentally make eye contact with a stranger eating spaghetti on a train, and they dramatically drop it, then you both pretend it didn't happen."
+        },
+        {
+          "name": "Impromptu Prank Challenges",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Young Adults and teens who like shock value, spontaneity, and light-hearted mischief.",
+          "exampleIdea": "Attempting to order an absurdly complex Starbucks drink using only animal sounds, then reacting to the barista's escalating confusion."
+        },
+        {
+          "name": "Absurdist Mini-Skits",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Internet culture enthusiasts and Gen Z who appreciate alternative, non-sequitur comedy.",
+          "exampleIdea": "A short skit where a person is earnestly giving a cooking tutorial, only to accidentally summon a tiny, chaotic octopus instead of seasoning, and continues cooking."
+        },
+        {
+          "name": "Everyday Objects Used Absurdly",
+          "velocity": 80,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Creative thinkers, meme aficionados, and anyone who enjoys visual gags and unexpected uses.",
+          "exampleIdea": "Demonstrating how to 'properly' eat a bowl of cereal using only a stapler and a pair of fuzzy dice, with increasingly messy results."
+        }
+      ],
+      "viralFormats": [
+        "Fast-cut montages of mishaps",
+        "POV scenarios with unexpected, often awkward, endings",
+        "Green screen content integrating chaotic elements into mundane scenes",
+        "Lip-syncs with ironic or absurd spoken word twists",
+        "Challenge fails or experiments gone hilariously wrong",
+        "Before & After videos with a chaotic 'after' reveal"
+      ],
+      "hooks": [
+        "You won't believe what happened next...",
+        "This is your sign to NOT try this at home.",
+        "My brain at 3 AM, visualized:",
+        "POV: when [relatable chaotic situation]",
+        "Watch till the end, it gets so much worse.",
+        "I tried this so you don't have to (and now I regret it)."
+      ],
+      "videoStructures": [
+        "Setup-Punchline: Quick intro to a situation, followed by an immediate chaotic resolution.",
+        "POV Scenario: Viewer is placed into a first-person perspective of an unfolding chaotic event.",
+        "Challenge/Experiment Gone Wrong: Show the intent, the execution, and the inevitable chaotic failure.",
+        "Rapid-fire Vignettes: A series of short, unrelated chaotic moments tied together by a specific sound or theme.",
+        "Anti-tutorial: Deliberately doing something wrong or inefficiently for comedic, chaotic effect."
+      ],
+      "popularMusic": [
+        "Sound effects: Cartoon boings, record scratches, Wilhelm scream, dramatic stingers",
+        "Meme audios: Sped-up viral sounds, 'Oh no oh no oh no no no no', 'It's a me, Mario!'",
+        "Dramatic build-up music leading to an abrupt, chaotic drop",
+        "Upbeat, slightly dissonant background tracks that imply impending chaos",
+        "Nostalgic children's show themes remixed with an edgy, chaotic twist"
+      ],
+      "hashtagPatterns": [
+        "#ChaosCulture #RandomHumor #InternetHumor",
+        "#POV #[specificchaoticsituation] #RelatableChaos",
+        "#Meme #[currentviralmeme] #MemeCulture",
+        "#Fails #EpicFail #FunnyFails #Unexpected",
+        "#Shorts #YouTubeShorts #TrendingComedy",
+        "#Comedy #Skits #AbsurdHumor #CringeComedy"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Humor",
+          "value": 95
+        },
+        {
+          "subject": "Unpredictability",
+          "value": 90
+        },
+        {
+          "subject": "Relatability",
+          "value": 75
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 85
+        },
+        {
+          "subject": "Absurdity",
+          "value": 80
+        },
+        {
+          "subject": "Edginess/Ironic",
+          "value": 60
+        }
+      ]
+    },
+    "expiresAt": 1772445750886
+  },
+  "__general__": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "AI Tool Demos & Quick Tutorials",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Tech Enthusiasts, Small Business Owners, Students, Creative Professionals seeking efficiency.",
+          "exampleIdea": "Watch me generate a full marketing campaign in 60 seconds using this new AI writing tool."
+        },
+        {
+          "name": "Aesthetic Mini-Vlogs & Routines",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z & Millennials interested in lifestyle, fashion, home decor, self-care, and aspirational content.",
+          "exampleIdea": "My calming evening routine after a busy day, featuring soft lighting, herbal tea, and journaling."
+        },
+        {
+          "name": "Relatable 'POV' Comedy Skits",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Broad audience, especially Gen Z & Millennials who appreciate internet humor, memes, and observational comedy.",
+          "exampleIdea": "POV: You're trying to explain a niche internet joke to your parents and they just don't get it."
+        }
+      ],
+      "viralFormats": [
+        "Short-form tutorials (15-60 sec)",
+        "\"POV\" (Point of View) skits",
+        "\"Day in the Life\" or \"Routine\" montages",
+        "Visual before-and-after transformations",
+        "Talking head with engaging text overlays and quick cuts",
+        "Challenge participation/recreation"
+      ],
+      "hooks": [
+        "STOP scrolling if you want to [achieve X]...",
+        "I tried the viral [trend/product] and here's what happened.",
+        "The secret to [desirable outcome] in 60 seconds.",
+        "You're doing [common activity] WRONG.",
+        "Wait for the [shocking/satisfying] reveal!",
+        "This changed my life, and it will change yours too."
+      ],
+      "videoStructures": [
+        "Hook-Problem-Solution-Loop (tutorials/hacks)",
+        "POV-Setup-Punchline-Relatable reaction (comedy)",
+        "Aesthetic intro-Montage-Text overlay explanation-Satisfying outro (lifestyle)",
+        "Question-Quick Answer-Demonstration-Summary (informative)",
+        "Intrigue (first 3s)-Content dump-Engagement prompt"
+      ],
+      "popularMusic": [
+        "Upbeat, optimistic pop tracks (often sped-up versions)",
+        "Cinematic, emotional background scores (for aesthetic content)",
+        "Short, punchy audio memes/soundbites with vocal phrases",
+        "Lo-fi chill beats (for routine/study content)",
+        "Dramatic reveal sounds (for before/after transitions)"
+      ],
+      "hashtagPatterns": [
+        "#Shorts #[Niche] #Viral #[MicroNiche]",
+        "Question-based tags like #WhyIsThisTrending #HowTo_[X]",
+        "Emotional/relatable tags such as #Relatable #LifeHacks #Motivation",
+        "Challenge/Trend participation: #_[TrendName]Challenge #POV #[SoundName]",
+        "Concise, high-volume tags: #YouTubeShorts #Trending #FYP #ForYou"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Fast-paced",
+          "value": 90
+        },
+        {
+          "subject": "Entertaining",
+          "value": 85
+        },
+        {
+          "subject": "Relatable",
+          "value": 80
+        },
+        {
+          "subject": "Informative",
+          "value": 70
+        },
+        {
+          "subject": "Humorous",
+          "value": 75
+        },
+        {
+          "subject": "Aesthetic",
+          "value": 65
+        }
+      ]
+    },
+    "expiresAt": 1772450072574
+  },
+  "imagine": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Alternate History Scenarios",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "History enthusiasts, speculative fiction fans, curious learners",
+          "exampleIdea": "Imagine if dinosaurs never went extinct and evolved alongside humans, what would daily life look like?"
+        },
+        {
+          "name": "Futuristic Daily Life & Tech",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Sci-fi fans, futurists, tech enthusiasts, Gen Z exploring future trends",
+          "exampleIdea": "Imagine waking up in 2077 where AI manages all your chores and you only pursue hobbies."
+        },
+        {
+          "name": "Philosophical Paradoxes & Dilemmas",
+          "velocity": 65,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Critical thinkers, philosophy students, those who enjoy intellectual challenges",
+          "exampleIdea": "Imagine if you could only remember one memory from each day, which one would you choose to save?"
+        },
+        {
+          "name": "Fantastical World-Building Elements",
+          "velocity": 72,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Fantasy readers/gamers, aspiring writers, artists, dreamers",
+          "exampleIdea": "Imagine a world where islands float in the sky and people travel by airships powered by crystals."
+        },
+        {
+          "name": "Everyday Hypotheticals",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "General audience, relatable content seekers, meme enthusiasts",
+          "exampleIdea": "Imagine if every time you said a specific word, a random animal appeared, what word would you choose?"
+        }
+      ],
+      "viralFormats": [
+        "Text-on-screen with captivating AI-generated visuals or stock footage montages",
+        "Voiceover explaining a complex 'what if' scenario with minimalist animation",
+        "POV style where the creator poses a hypothetical question to the camera",
+        "Short documentary-style clips exploring an imagined concept",
+        "Interactive 'Choose Your Own Adventure' prompts within the comments"
+      ],
+      "hooks": [
+        "Imagine a world where...",
+        "What if you woke up tomorrow and...",
+        "Picture this:",
+        "Your brain won't comprehend this...",
+        "Ever wondered what life would be like if...",
+        "The craziest thought experiment yet:"
+      ],
+      "videoStructures": [
+        "Hook -> Premise set up -> Scenario elaboration -> Open-ended question for comments",
+        "Hook -> Visual journey into imagined world -> Key features explained -> Reflective question",
+        "Hook -> Paradox presented -> Brief explanation of implications -> Challenge for viewer interpretation",
+        "Hook -> Everyday scenario twist -> Humorous/serious consequence -> Audience response prompt"
+      ],
+      "popularMusic": [
+        "Ethereal and atmospheric ambient tracks",
+        "Mysterious, slightly suspenseful cinematic scores",
+        "Uplifting and inspiring orchestral pieces",
+        "Subtle, dreamy lo-fi beats",
+        "Futuristic synthwave or chillwave"
+      ],
+      "hashtagPatterns": [
+        "#ImagineIf",
+        "#WhatIf",
+        "#Hypothetical",
+        "#Scifi",
+        "#Fantasy",
+        "#MindBlown",
+        "#Philosophy",
+        "#ThoughtExperiment",
+        "#Future",
+        "#AlternateReality",
+        "#Worldbuilding",
+        "#DreamCore",
+        "#CreativeThinking",
+        "#Dilemma"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Creativity",
+          "value": 95
+        },
+        {
+          "subject": "Intrigue",
+          "value": 90
+        },
+        {
+          "subject": "Thought-Provoking",
+          "value": 88
+        },
+        {
+          "subject": "Escapism",
+          "value": 80
+        },
+        {
+          "subject": "Aesthetic",
+          "value": 75
+        },
+        {
+          "subject": "Curiosity",
+          "value": 92
+        }
+      ]
+    },
+    "expiresAt": 1772450305393
   }
 }

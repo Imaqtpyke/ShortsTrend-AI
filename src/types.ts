@@ -22,15 +22,30 @@ export interface TrendAnalysis {
   nicheDNA: DNAFactor[];
 }
 
+/**
+ * Legacy interface — kept for the /api/improve internal timeline line extraction only.
+ * All new generation uses TimelineSegment.
+ */
 export interface ScriptSegment {
   timestamp: string;
   text: string;
 }
 
+/**
+ * Unified storyboard segment produced by the Storyboard Engine.
+ * Replaces the old ScriptSegment+imagePrompts pair.
+ */
+export interface TimelineSegment {
+  index: number;
+  startTime: number;   // seconds from start (e.g. 0, 4, 8...)
+  endTime: number;     // seconds from start (e.g. 4, 8, 12...)
+  audio: string;       // spoken script for this segment
+  visual: string;      // image/video generation prompt (incl. --ar 9:16)
+}
+
 export interface ContentIdea {
   title: string;
-  script: ScriptSegment[];
-  imagePrompts: { frame: string; prompt: string }[];
+  timeline: TimelineSegment[];
   musicStyle: string;
   soundEffects: string[];
   visualStyle: string;
@@ -43,9 +58,9 @@ export interface ContentIdea {
   hashtags: string[];
   coachingTips: string;
   editingEffects: string[];
-  fontStyle: string; // Recommended font style for text overlays
-  editingEffectsContext: string; // Contextual explanation for editing effects
-  videoDuration?: number; // Nullish if generated as Image or older version
+  fontStyle: string;
+  editingEffectsContext: string;
+  segmentLength?: number; // seconds per segment (undefined in fixed/dynamic mode)
 }
 
 export interface ProductionWorkflow {
@@ -87,6 +102,16 @@ export interface HistoryItem {
   analysis: TrendAnalysis;
 }
 
+/**
+ * A user-defined character injected into all AI generation prompts.
+ * Must have a name and a detailed description (≥50 words).
+ */
+export interface CustomCharacter {
+  name: string;
+  description: string;
+  type: 'image' | 'video' | 'both';
+}
+
 export interface RetentionLeak {
   timestamp: number; // seconds (0-60)
   issue: string;
@@ -97,8 +122,7 @@ export interface ScriptCritique {
   viralityScore: number;
   hookSuggestions: string[];
   overallFeedback: string;
-  improvedScript?: ScriptSegment[];
-  improvedImagePrompts?: { frame: string; prompt: string }[];
+  improvedTimeline?: TimelineSegment[];
   improvedHook?: string;
   improvedCaption?: string;
   improvedHashtags?: string[];
@@ -118,10 +142,13 @@ export interface AppState {
   error: string | null;
   selectedVisualStyle: string;
   visualGenerationType: 'image' | 'video';
-  videoDuration: number;
-  customVideoDuration: number | null;
+  segmentLength: number;
+  customSegmentLength: number | null;
   history: HistoryItem[];
   searchQuery: string;
+  // Custom Character System
+  useCustomCharacter: boolean;
+  customCharacter: CustomCharacter;
 }
 
 export type ToastType = 'success' | 'error' | 'info';

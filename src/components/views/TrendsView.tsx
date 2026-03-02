@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
-import { Search, BarChart, Zap, MessageSquare, Music, Hash, Check, X, ImageIcon, Video, RefreshCw, Sliders } from 'lucide-react';
+import { Search, BarChart, Zap, MessageSquare, Music, Hash, Check, X, ImageIcon, Video, RefreshCw, Sliders, User, AlertCircle } from 'lucide-react';
 import { ResponsiveContainer, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell } from 'recharts';
 import { VISUAL_STYLES } from '../../types';
 import { cn } from '../../lib/utils';
@@ -28,16 +28,42 @@ export function TrendsView() {
         setVisualStyle,
         visualGenerationType,
         setVisualGenerationType,
-        videoDuration,
-        setVideoDuration,
-        customVideoDuration,
-        setCustomVideoDuration,
+        segmentLength,
+        setSegmentLength,
+        customSegmentLength,
+        setCustomSegmentLength,
         segmentMode,
-        setSegmentMode
+        setSegmentMode,
+        useCustomCharacter,
+        customCharacter,
+        setUseCustomCharacter,
+        setCustomCharacter
     } = useAppStore();
     const theme = useTheme();
     const [selectedTrendForModal, setSelectedTrendForModal] = React.useState<string | null>(null);
     const [sortBy, setSortBy] = React.useState<'velocity' | 'competition'>('velocity');
+    const [charError, setCharError] = React.useState<string | null>(null);
+
+    const wordCount = customCharacter.description.trim().split(/\s+/).filter(Boolean).length;
+    const isCharacterValid = !useCustomCharacter || (
+        customCharacter.name.trim().length > 0 && wordCount >= 50
+    );
+
+    const handleGenerateWithValidation = (trend: string) => {
+        if (useCustomCharacter) {
+            if (!customCharacter.name.trim()) {
+                setCharError('Character name is required.');
+                return;
+            }
+            if (wordCount < 50) {
+                setCharError(`Custom Character requires a detailed description (minimum 50 words). You have ${wordCount}.`);
+                return;
+            }
+        }
+        setCharError(null);
+        handleGenerate(trend);
+        setSelectedTrendForModal(null);
+    };
 
     if (isLoading || !analysis) {
         return (
@@ -472,13 +498,13 @@ export function TrendsView() {
                                             <>
                                                 <select
                                                     className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
-                                                    value={customVideoDuration !== null ? 'custom' : videoDuration}
+                                                    value={customSegmentLength !== null ? 'custom' : segmentLength}
                                                     onChange={(e) => {
                                                         if (e.target.value === 'custom') {
-                                                            setCustomVideoDuration(10);
+                                                            setCustomSegmentLength(10);
                                                         } else {
-                                                            setCustomVideoDuration(null);
-                                                            setVideoDuration(Number(e.target.value));
+                                                            setCustomSegmentLength(null);
+                                                            setSegmentLength(Number(e.target.value));
                                                         }
                                                     }}
                                                 >
@@ -488,7 +514,7 @@ export function TrendsView() {
                                                     <option value="custom">Customize Your Duration...</option>
                                                 </select>
 
-                                                {customVideoDuration !== null && (
+                                                {customSegmentLength !== null && (
                                                     <motion.div
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: 'auto' }}
@@ -498,12 +524,12 @@ export function TrendsView() {
                                                             type="number"
                                                             min="2"
                                                             max="30"
-                                                            value={customVideoDuration}
+                                                            value={customSegmentLength}
                                                             onChange={(e) => {
                                                                 const val = parseInt(e.target.value);
                                                                 // Bug 2 Fix: Cap at 30 to match server-side validation.
                                                                 // Previously allowed up to 120, causing silent 400 errors.
-                                                                setCustomVideoDuration(isNaN(val) ? 6 : Math.max(2, Math.min(30, val)));
+                                                                setCustomSegmentLength(isNaN(val) ? 6 : Math.max(2, Math.min(30, val)));
                                                             }}
                                                             placeholder="Enter custom duration (2–30s)"
                                                             className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-emerald-500/50 focus:border-emerald-500 outline-none min-h-[48px]"
@@ -531,14 +557,82 @@ export function TrendsView() {
                                 />
                             </div>
 
-                            <div className="pt-2 mt-auto">
+                            {/* ── Custom Character System ── */}
+                            <div className="space-y-3 col-span-1 md:col-span-2 pt-4 border-t border-white/10">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
+                                        <User className="w-3 h-3" /> Custom Character
+                                    </label>
+                                    <button
+                                        onClick={() => { setUseCustomCharacter(!useCustomCharacter); setCharError(null); }}
+                                        className={cn(
+                                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none",
+                                            useCustomCharacter ? "bg-emerald-500" : "bg-white/20"
+                                        )}
+                                        aria-label="Toggle custom character"
+                                    >
+                                        <span className={cn(
+                                            "inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform",
+                                            useCustomCharacter ? "translate-x-[18px]" : "translate-x-[3px]"
+                                        )} />
+                                    </button>
+                                </div>
+
+                                {useCustomCharacter && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="space-y-3"
+                                    >
+                                        <input
+                                            type="text"
+                                            value={customCharacter.name}
+                                            onChange={e => setCustomCharacter({ ...customCharacter, name: e.target.value })}
+                                            placeholder="Character name (e.g. Zyro, Dr. Nova)..."
+                                            className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[48px] bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none"
+                                        />
+                                        <div className="relative">
+                                            <textarea
+                                                value={customCharacter.description}
+                                                onChange={e => setCustomCharacter({ ...customCharacter, description: e.target.value })}
+                                                placeholder="Describe appearance, personality, tone, voice, clothing, energy, camera presence, quirks. Be extremely specific. Minimum 50 words."
+                                                rows={4}
+                                                className={cn(
+                                                    "w-full px-4 py-3 text-xs font-mono border transition-all bg-[#1a1a1a] text-white outline-none resize-none",
+                                                    wordCount >= 50
+                                                        ? "border-emerald-500/50 focus:border-emerald-500"
+                                                        : "border-white/10 focus:border-yellow-500"
+                                                )}
+                                            />
+                                            <span className={cn(
+                                                "absolute bottom-2 right-3 text-[9px] font-mono uppercase tracking-widest pointer-events-none",
+                                                wordCount >= 50 ? "text-emerald-400" : "text-yellow-400"
+                                            )}>{wordCount}/50 words</span>
+                                        </div>
+                                        <select
+                                            value={customCharacter.type}
+                                            onChange={e => setCustomCharacter({ ...customCharacter, type: e.target.value as 'image' | 'video' | 'both' })}
+                                            className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
+                                        >
+                                            <option value="image" className="bg-[#1a1a1a]">Image Prompts Only</option>
+                                            <option value="video" className="bg-[#1a1a1a]">Video Prompts Only</option>
+                                            <option value="both" className="bg-[#1a1a1a]">Both (Image &amp; Video)</option>
+                                        </select>
+                                        {charError && (
+                                            <div className="flex items-start gap-2 p-3 border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono">
+                                                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                                <span>{charError}</span>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </div>
+
+                            <div className="pt-2 mt-auto col-span-1 md:col-span-2">
                                 <button
-                                    onClick={() => {
-                                        handleGenerate(selectedTrendForModal);
-                                        setSelectedTrendForModal(null);
-                                    }}
-                                    disabled={isLoading}
-                                    className="w-full px-4 py-4 font-mono text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:translate-y-0.5 active:shadow-none min-h-[56px] bg-emerald-500 text-[#0a0a0a] border-emerald-500 hover:bg-emerald-400"
+                                    onClick={() => handleGenerateWithValidation(selectedTrendForModal!)}
+                                    disabled={isLoading || !isCharacterValid}
+                                    className="w-full px-4 py-4 font-mono text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:translate-y-0.5 active:shadow-none min-h-[56px] bg-emerald-500 text-[#0a0a0a] border-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isLoading ? (
                                         <RefreshCw className="w-4 h-4 animate-spin" />

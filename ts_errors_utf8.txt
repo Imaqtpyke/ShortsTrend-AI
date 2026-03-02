@@ -1,1 +1,0 @@
-src/store/useAppStore.ts(116,59): error TS2741: Property 'toggleDarkMode' is missing in type '{ analysis: TrendAnalysis; contentIdea: ContentIdea; workflow: ProductionWorkflow; critique: ScriptCritique; isLoading: false; ... 38 more ...; clearHistory: () => void; }' but required in type 'AppStore'.

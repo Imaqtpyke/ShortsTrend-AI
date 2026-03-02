@@ -1,5 +1,4 @@
-import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique, ScriptSegment } from "../types";
-import { parse } from 'partial-json';
+import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique, CustomCharacter } from "../types";
 
 // B5 FIX: Never hardcode localhost. In production this must be the deployed server URL.
 // Set VITE_API_BASE_URL in your deployment environment (Vercel, Netlify, etc.).
@@ -46,12 +45,29 @@ async function fetchFromBackend<T>(endpoint: string, body: any, retries = 0, del
   }
 }
 
-export async function critiqueScript(script: string, hook: string): Promise<ScriptCritique> {
-  return fetchFromBackend<ScriptCritique>("/critique", { script, hook });
+// Optional character param — when provided, the server injects it into AI prompts
+// for generate, improve, and critique endpoints.
+
+export async function critiqueScript(
+  script: string,
+  hook: string,
+  character?: CustomCharacter
+): Promise<ScriptCritique> {
+  return fetchFromBackend<ScriptCritique>("/critique", { script, hook, character });
 }
 
-export async function generateImprovement(script: string, critique: string, visualStyle: string, visualGenerationType: 'image' | 'video', videoDuration?: number): Promise<Partial<ScriptCritique>> {
-  return fetchFromBackend<Partial<ScriptCritique>>("/improve", { script, critique, visualStyle, visualGenerationType, videoDuration });
+export async function generateImprovement(
+  script: string,
+  critique: string,
+  visualStyle: string,
+  visualGenerationType: 'image' | 'video',
+  segmentLength?: number,
+  totalDuration = 60,
+  character?: CustomCharacter
+): Promise<Partial<ScriptCritique>> {
+  return fetchFromBackend<Partial<ScriptCritique>>("/improve", {
+    script, critique, visualStyle, visualGenerationType, segmentLength, totalDuration, character
+  });
 }
 
 export async function analyzeTrends(niche?: string, bypassCache?: boolean): Promise<TrendAnalysis> {
@@ -62,10 +78,14 @@ export async function generateContentIdea(
   trend: string,
   visualStyle: string,
   visualGenerationType: 'image' | 'video',
-  videoDuration?: number,
+  segmentLength?: number,
+  totalDuration = 60,
+  character?: CustomCharacter,
   onProgress?: (partial: Partial<ContentIdea>) => void
 ): Promise<ContentIdea> {
-  const result = await fetchFromBackend<ContentIdea>("/generate", { trend, visualStyle, visualGenerationType, videoDuration });
+  const result = await fetchFromBackend<ContentIdea>("/generate", {
+    trend, visualStyle, visualGenerationType, segmentLength, totalDuration, character
+  });
 
   if (onProgress) {
     onProgress(result);
