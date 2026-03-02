@@ -183,7 +183,7 @@ export function TrendsView() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
                     <Section title="Trend Velocity Analysis" icon={<BarChart className="w-5 h-5" />}>
                         <div className="h-48 md:h-64 w-full p-2 md:p-4 border bg-[#0a0a0a] border-white/10" style={{ minHeight: '180px' }}>
-                            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+                            <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
                                 <ReBarChart data={analysis.trendingTopics}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
                                     <XAxis dataKey="name" hide />

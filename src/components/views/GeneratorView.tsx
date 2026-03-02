@@ -185,7 +185,9 @@ export function GeneratorView() {
                                                 <span className="opacity-40 text-[9px]">–</span>
                                                 <span>{formatTime(seg.endTime)}</span>
                                                 {isOverLimit && (
-                                                    <AlertTriangle className="w-3 h-3 text-orange-400 mt-1" title={`Word limit exceeded: ${wordCount}/${maxWords}`} />
+                                                    <span title={`Word limit exceeded: ${wordCount}/${maxWords}`}>
+                                                        <AlertTriangle className="w-3 h-3 text-orange-400 mt-1" />
+                                                    </span>
                                                 )}
                                             </div>
 

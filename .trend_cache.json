@@ -567,89 +567,76 @@
     "data": {
       "trendingTopics": [
         {
-          "name": "Alternate History Scenarios",
-          "velocity": 78,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "History enthusiasts, speculative fiction fans, curious learners",
-          "exampleIdea": "Imagine if dinosaurs never went extinct and evolved alongside humans, what would daily life look like?"
-        },
-        {
-          "name": "Futuristic Daily Life & Tech",
+          "name": "Relatable 'Imagine If' Scenarios",
           "velocity": 85,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Sci-fi fans, futurists, tech enthusiasts, Gen Z exploring future trends",
-          "exampleIdea": "Imagine waking up in 2077 where AI manages all your chores and you only pursue hobbies."
-        },
-        {
-          "name": "Philosophical Paradoxes & Dilemmas",
-          "velocity": 65,
-          "growth": "steady",
-          "competition": "Low",
-          "targetAudience": "Critical thinkers, philosophy students, those who enjoy intellectual challenges",
-          "exampleIdea": "Imagine if you could only remember one memory from each day, which one would you choose to save?"
-        },
-        {
-          "name": "Fantastical World-Building Elements",
-          "velocity": 72,
           "growth": "steady",
           "competition": "Medium",
-          "targetAudience": "Fantasy readers/gamers, aspiring writers, artists, dreamers",
-          "exampleIdea": "Imagine a world where islands float in the sky and people travel by airships powered by crystals."
+          "targetAudience": "Young Adults, Everyday Humor Seekers",
+          "exampleIdea": "Imagine if your phone's autocorrect always revealed your deepest, most embarrassing thoughts during important conversations."
         },
         {
-          "name": "Everyday Hypotheticals",
+          "name": "Aesthetic 'Main Character' POVs",
           "velocity": 90,
           "growth": "exploding",
           "competition": "High",
-          "targetAudience": "General audience, relatable content seekers, meme enthusiasts",
-          "exampleIdea": "Imagine if every time you said a specific word, a random animal appeared, what word would you choose?"
+          "targetAudience": "Gen Z, Aspirational Content Lovers, Romantics",
+          "exampleIdea": "POV: You're walking through a magical, bustling city at dusk, just arrived for your new mystical apprenticeship."
+        },
+        {
+          "name": "Fantasy/Sci-Fi World-Building Prompts",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Fantasy/Sci-Fi Enthusiasts, Gamers, Creative Writers",
+          "exampleIdea": "Imagine that every time you read a book, you temporarily gain one skill from the main character, but only until you finish the story."
+        },
+        {
+          "name": "Philosophical 'What If' Thought Experiments",
+          "velocity": 65,
+          "growth": "declining",
+          "competition": "Low",
+          "targetAudience": "Thinkers, Curious Minds, Existentialists",
+          "exampleIdea": "Imagine if laughter was the universal language and all negotiations, debates, and greetings had to be conveyed through different types of chuckles."
         }
       ],
       "viralFormats": [
-        "Text-on-screen with captivating AI-generated visuals or stock footage montages",
-        "Voiceover explaining a complex 'what if' scenario with minimalist animation",
-        "POV style where the creator poses a hypothetical question to the camera",
-        "Short documentary-style clips exploring an imagined concept",
-        "Interactive 'Choose Your Own Adventure' prompts within the comments"
+        "POV (Point of View) Narratives with text overlays",
+        "Quick cuts of aesthetic B-roll footage accompanied by a voiceover",
+        "On-screen text scenarios with character reactions or short skits",
+        "Animated short clips illustrating the imaginative concept",
+        "Interactive prompts asking viewers to continue the scenario in comments"
       ],
       "hooks": [
-        "Imagine a world where...",
-        "What if you woke up tomorrow and...",
-        "Picture this:",
-        "Your brain won't comprehend this...",
-        "Ever wondered what life would be like if...",
-        "The craziest thought experiment yet:"
+        "Imagine this for a second...",
+        "POV: What if...",
+        "Ever wondered what it would be like if...",
+        "Picture this...",
+        "Your brain on this scenario:",
+        "Let's play a game of 'imagine that'..."
       ],
       "videoStructures": [
-        "Hook -> Premise set up -> Scenario elaboration -> Open-ended question for comments",
-        "Hook -> Visual journey into imagined world -> Key features explained -> Reflective question",
-        "Hook -> Paradox presented -> Brief explanation of implications -> Challenge for viewer interpretation",
-        "Hook -> Everyday scenario twist -> Humorous/serious consequence -> Audience response prompt"
+        "Engaging Hook -> Scenario Setup (visual/text) -> Immersive Scene -> Open-ended question/Call to comment",
+        "POV Hook -> Visual/Auditory Immersion -> Conflict/Twist -> Contemplative/Emotional Ending",
+        "Direct Question Hook -> Scenario Explanation -> Creative Visualization -> Audience Interaction Prompt",
+        "Narrated Hook -> Build-up of 'Imagine' concept -> Show, don't just tell -> Relatable or Mind-bending Conclusion"
       ],
       "popularMusic": [
-        "Ethereal and atmospheric ambient tracks",
-        "Mysterious, slightly suspenseful cinematic scores",
-        "Uplifting and inspiring orchestral pieces",
-        "Subtle, dreamy lo-fi beats",
-        "Futuristic synthwave or chillwave"
+        "Ethereal, dreamy instrumental tracks",
+        "Upbeat, whimsical acoustic tunes for lighthearted scenarios",
+        "Cinematic, dramatic scores for epic fantasy or sci-fi concepts",
+        "Trending sounds that evoke nostalgia, wonder, or calm (e.g., 'Aesthetic' or 'Main Character' playlists)"
       ],
       "hashtagPatterns": [
         "#ImagineIf",
+        "#POV",
         "#WhatIf",
+        "#DreamScenario",
         "#Hypothetical",
-        "#Scifi",
-        "#Fantasy",
+        "#ShortStory",
+        "#CreativeImagination",
+        "#FantasyShorts",
         "#MindBlown",
-        "#Philosophy",
-        "#ThoughtExperiment",
-        "#Future",
-        "#AlternateReality",
-        "#Worldbuilding",
-        "#DreamCore",
-        "#CreativeThinking",
-        "#Dilemma"
+        "#AlternateReality"
       ],
       "nicheDNA": [
         {
@@ -657,27 +644,27 @@
           "value": 95
         },
         {
-          "subject": "Intrigue",
+          "subject": "Escapism",
           "value": 90
         },
         {
-          "subject": "Thought-Provoking",
-          "value": 88
-        },
-        {
-          "subject": "Escapism",
+          "subject": "Narrative",
           "value": 80
         },
         {
-          "subject": "Aesthetic",
-          "value": 75
+          "subject": "Wonder",
+          "value": 85
         },
         {
-          "subject": "Curiosity",
-          "value": 92
+          "subject": "Relatability",
+          "value": 70
+        },
+        {
+          "subject": "Contemplation",
+          "value": 65
         }
       ]
     },
-    "expiresAt": 1772450305393
+    "expiresAt": 1772457986837
   }
 }

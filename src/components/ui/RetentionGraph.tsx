@@ -32,7 +32,7 @@ export function RetentionGraph({ leaks }: { leaks: RetentionLeak[] }) {
 
     return (
         <div className="h-64 w-full" style={{ minHeight: '250px' }}>
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
                 <LineChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis
