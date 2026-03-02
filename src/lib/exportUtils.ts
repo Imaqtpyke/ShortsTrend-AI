@@ -16,13 +16,14 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
     md += `\n`;
 
     md += `## 🎬 Storyboard Timeline\n`;
-    contentIdea.timeline.forEach(seg => {
-        md += `### [${formatTime(seg.startTime)}–${formatTime(seg.endTime)}]\n`;
+    contentIdea.segments.forEach(seg => {
+        md += `### [${seg.timestamp || formatTime(seg.startTime)}]\n`;
         md += `**AUDIO:** ${seg.audio}\n`;
         md += `*VISUAL: ${seg.visual}*\n\n`;
     });
 
     md += `## 🎨 Design & Post-Production\n`;
+    if (contentIdea.hook) md += `- **Primary Hook:** ${contentIdea.hook}\n`;
     md += `- **Visual Style Model:** ${contentIdea.visualStyle}\n`;
     md += `- **Font Typography:** ${contentIdea.fontStyle}\n`;
     md += `- **Editing FX:** ${contentIdea.editingEffects.join(', ')}\n`;
@@ -40,11 +41,11 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
     }
     md += `- **Hashtags:** ${contentIdea.hashtags.map(h => '#' + h.replace('#', '')).join(' ')}\n\n`;
 
-    if (critique?.improvedTimeline) {
+    if (critique?.improvedSegments) {
         md += `---\n\n## ✨ AI Improved Storyboard\n\n`;
         md += `*Rebuilt to maximize retention against a ${critique.viralityScore}/100 baseline score.*\n\n`;
-        critique.improvedTimeline.forEach(seg => {
-            md += `### [${formatTime(seg.startTime)}–${formatTime(seg.endTime)}]\n`;
+        critique.improvedSegments.forEach(seg => {
+            md += `### [${seg.timestamp || formatTime(seg.startTime)}]\n`;
             md += `**AUDIO:** ${seg.audio}\n`;
             md += `*VISUAL: ${seg.visual}*\n\n`;
         });

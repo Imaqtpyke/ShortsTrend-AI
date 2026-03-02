@@ -567,104 +567,106 @@
     "data": {
       "trendingTopics": [
         {
-          "name": "Relatable 'Imagine If' Scenarios",
+          "name": "Hypothetical Scenarios",
           "velocity": 85,
-          "growth": "steady",
+          "growth": "exploding",
           "competition": "Medium",
-          "targetAudience": "Young Adults, Everyday Humor Seekers",
-          "exampleIdea": "Imagine if your phone's autocorrect always revealed your deepest, most embarrassing thoughts during important conversations."
+          "targetAudience": "Curious minds, Sci-Fi/Fantasy enthusiasts, philosophical thinkers",
+          "exampleIdea": "Imagine if you woke up one day and could understand the secret language of trees, but only when it rained."
         },
         {
-          "name": "Aesthetic 'Main Character' POVs",
-          "velocity": 90,
+          "name": "Dreamcore & Liminal Spaces",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z, aesthetic enthusiasts, those seeking nostalgia or surrealism",
+          "exampleIdea": "Imagine wandering through an endlessly repeating empty mall, knowing you've been there before but can't remember why."
+        },
+        {
+          "name": "Emotional 'What If' Moments",
+          "velocity": 78,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Individuals seeking emotional connection, solace, or wish-fulfillment fantasies",
+          "exampleIdea": "Imagine a moment where all your past regrets are suddenly erased, and you have a clean slate to begin again."
+        },
+        {
+          "name": "POV Creative Prompts",
+          "velocity": 80,
           "growth": "exploding",
           "competition": "High",
-          "targetAudience": "Gen Z, Aspirational Content Lovers, Romantics",
-          "exampleIdea": "POV: You're walking through a magical, bustling city at dusk, just arrived for your new mystical apprenticeship."
+          "targetAudience": "Creative writers, artists, role-players, and visual storytellers",
+          "exampleIdea": "POV: You find an ancient, ornate key that opens any door, but only once."
         },
         {
-          "name": "Fantasy/Sci-Fi World-Building Prompts",
-          "velocity": 75,
-          "growth": "steady",
-          "competition": "Low",
-          "targetAudience": "Fantasy/Sci-Fi Enthusiasts, Gamers, Creative Writers",
-          "exampleIdea": "Imagine that every time you read a book, you temporarily gain one skill from the main character, but only until you finish the story."
-        },
-        {
-          "name": "Philosophical 'What If' Thought Experiments",
+          "name": "Fantasy World Immersion",
           "velocity": 65,
-          "growth": "declining",
-          "competition": "Low",
-          "targetAudience": "Thinkers, Curious Minds, Existentialists",
-          "exampleIdea": "Imagine if laughter was the universal language and all negotiations, debates, and greetings had to be conveyed through different types of chuckles."
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Fantasy readers, D&D players, escapists, and world-building enthusiasts",
+          "exampleIdea": "Imagine discovering a hidden village nestled high in the clouds, powered by forgotten magic."
         }
       ],
       "viralFormats": [
-        "POV (Point of View) Narratives with text overlays",
-        "Quick cuts of aesthetic B-roll footage accompanied by a voiceover",
-        "On-screen text scenarios with character reactions or short skits",
-        "Animated short clips illustrating the imaginative concept",
-        "Interactive prompts asking viewers to continue the scenario in comments"
+        "Text-on-screen with atmospheric B-roll footage",
+        "POV style acting/cosplay with voiceover",
+        "Animated short scenes depicting the 'imagine' scenario",
+        "Voiceover narration over captivating stock footage or original art",
+        "Short, quick-cut visuals with a dramatic build-up to a hypothetical question"
       ],
       "hooks": [
         "Imagine this for a second...",
-        "POV: What if...",
-        "Ever wondered what it would be like if...",
-        "Picture this...",
-        "Your brain on this scenario:",
-        "Let's play a game of 'imagine that'..."
+        "What if everything you thought you knew wasn't true?",
+        "Close your eyes and picture this...",
+        "You won't believe this scenario...",
+        "If you could imagine anything, would it be this?"
       ],
       "videoStructures": [
-        "Engaging Hook -> Scenario Setup (visual/text) -> Immersive Scene -> Open-ended question/Call to comment",
-        "POV Hook -> Visual/Auditory Immersion -> Conflict/Twist -> Contemplative/Emotional Ending",
-        "Direct Question Hook -> Scenario Explanation -> Creative Visualization -> Audience Interaction Prompt",
-        "Narrated Hook -> Build-up of 'Imagine' concept -> Show, don't just tell -> Relatable or Mind-bending Conclusion"
+        "Opening hook -> Scenario description (visuals/text) -> Open-ended question/feeling",
+        "POV setup (visuals/character) -> Problem/Discovery -> Viewer's imagined reaction",
+        "Ambient intro -> Narrated prompt -> Engaging visual sequence -> Call to imagine further",
+        "Text-based story progression with quick cuts and music -> Final thought-provoking statement",
+        "Dramatic visual/sound bite -> 'Imagine if' statement -> Cinematic montage of the scenario"
       ],
       "popularMusic": [
-        "Ethereal, dreamy instrumental tracks",
-        "Upbeat, whimsical acoustic tunes for lighthearted scenarios",
-        "Cinematic, dramatic scores for epic fantasy or sci-fi concepts",
-        "Trending sounds that evoke nostalgia, wonder, or calm (e.g., 'Aesthetic' or 'Main Character' playlists)"
+        "Ethereal/Ambient soundscapes (e.g., 'Sleepwalker' by RIIZE type ambient tracks)",
+        "Lo-fi beats with dreamy undertones",
+        "Dramatic orchestral scores (for high fantasy/sci-fi scenarios)",
+        "Slightly melancholic or nostalgic instrumental pieces",
+        "Sound effects that enhance the imagined environment (e.g., rain, wind, distant echoes)"
       ],
       "hashtagPatterns": [
-        "#ImagineIf",
-        "#POV",
-        "#WhatIf",
-        "#DreamScenario",
-        "#Hypothetical",
-        "#ShortStory",
-        "#CreativeImagination",
-        "#FantasyShorts",
-        "#MindBlown",
-        "#AlternateReality"
+        "#ImagineThis #WhatIf #Scenario #Fantasy #Dreams #Storytelling #CreativePrompt",
+        "#POV #LiminalSpaces #Dreamcore #Hypothetical #Escapism #MindBender",
+        "#Shorts #YouTubeShorts #ForYou #FYP #Trending #Viral"
       ],
       "nicheDNA": [
         {
-          "subject": "Creativity",
-          "value": 95
+          "subject": "Imagination",
+          "value": 100
         },
         {
           "subject": "Escapism",
           "value": 90
         },
         {
-          "subject": "Narrative",
-          "value": 80
-        },
-        {
-          "subject": "Wonder",
+          "subject": "Thought-provoking",
           "value": 85
         },
         {
-          "subject": "Relatability",
+          "subject": "Aesthetic",
+          "value": 75
+        },
+        {
+          "subject": "Emotional Resonance",
           "value": 70
         },
         {
-          "subject": "Contemplation",
-          "value": 65
+          "subject": "Community Interaction",
+          "value": 60
         }
       ]
     },
-    "expiresAt": 1772457986837
+    "expiresAt": 1772458539542
   }
 }

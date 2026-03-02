@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppState, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES } from '../types';
+import { AppState, ContentIdea, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES } from '../types';
 import { analyzeTrends, generateContentIdea, critiqueScript, generateImprovement } from '../services/geminiService';
 import localforage from 'localforage';
 
@@ -52,7 +52,7 @@ interface AppStore extends AppState {
     // Phase 5: UX Improvements
     loadingMessage: string;
     setLoadingMessage: (msg: string) => void;
-    updateTimelineAudio: (index: number, newAudio: string) => void;
+    updateSegmentAudio: (index: number, newAudio: string) => void;
 
     // Actions
     resetApp: () => void;
@@ -174,7 +174,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     copyAllForProduction: () => {
         const { contentIdea, copyToClipboard } = get();
         if (!contentIdea) return;
-        const { title, timeline, hookVariations, seoMetadata, hashtags, musicStyle, soundEffects, visualStyle, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
+        const { title, hook, segments, hookVariations, seoMetadata, hashtags, musicStyle, soundEffects, visualStyle, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
 
         const formatTime = (secs: number) => {
             const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -182,7 +182,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             return `${m}:${s}`;
         };
 
-        const text = `TITLE: ${title}\n\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSTORYBOARD TIMELINE:\n${timeline.map(seg => `[${formatTime(seg.startTime)}–${formatTime(seg.endTime)}]\nAUDIO: ${seg.audio}\nVISUAL: ${seg.visual}`).join('\n\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
+        const text = `TITLE: ${title}\n${hook ? `PRIMARY HOOK: ${hook}\n` : ''}\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSTORYBOARD TIMELINE:\n${segments.map(seg => `[${seg.timestamp || formatTime(seg.startTime)}]\nAUDIO: ${seg.audio}\nVISUAL: ${seg.visual}`).join('\n\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
 
         copyToClipboard(text, 'all');
     },
@@ -210,11 +210,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
     loadingMessage: '',
     setLoadingMessage: (msg: string) => set({ loadingMessage: msg }),
 
-    updateTimelineAudio: (index: number, newAudio: string) => set(state => {
+    updateSegmentAudio: (index: number, newAudio: string) => set(state => {
         if (!state.contentIdea) return state;
-        const newTimeline = [...state.contentIdea.timeline];
-        newTimeline[index] = { ...newTimeline[index], audio: newAudio };
-        return { contentIdea: { ...state.contentIdea, timeline: newTimeline } };
+        const newSegments = [...state.contentIdea.segments];
+        newSegments[index] = { ...newSegments[index], audio: newAudio };
+        return { contentIdea: { ...state.contentIdea, segments: newSegments } };
     }),
 
     // Actions
@@ -235,17 +235,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
             }
 
             // ── Migration Guard ───────────────────────────────────────────────────
-            // If the restored contentIdea uses the old schema (has .script but no .timeline),
-            // drop it silently. Crashing would be worse than a fresh start.
+            // Drop old-schema contentIdea (missing .segments)
             let contentIdea = session.contentIdea ?? null;
-            if (contentIdea && !contentIdea.timeline) {
-                console.warn('[Session] Dropping old-schema contentIdea (missing .timeline). User will need to regenerate.');
+            if (contentIdea && !contentIdea.segments) {
+                console.warn('[Session] Dropping old-schema contentIdea (missing .segments). User will need to regenerate.');
                 contentIdea = null;
             }
             // Same guard for critique improved fields
             let critique = session.critique ?? null;
-            if (critique && (critique as any).improvedScript && !critique.improvedTimeline) {
-                console.warn('[Session] Dropping old-schema critique (has .improvedScript, no .improvedTimeline).');
+            if (critique && (critique as any).improvedTimeline && !critique.improvedSegments) {
+                console.warn('[Session] Dropping old-schema critique (has .improvedTimeline, no .improvedSegments).');
                 critique = null;
             }
 
@@ -345,9 +344,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
                     // B3 FIX: Only update state if this request is still the current one.
                     if (get()._generateRequestId !== requestId) return;
 
-                    const partialIdea = {
+                    const partialIdea: ContentIdea = {
                         title: partial.title || "Drafting Idea...",
-                        timeline: partial.timeline || [],
+                        hook: partial.hook || "",
+                        segments: partial.segments || [],
                         musicStyle: partial.musicStyle || "Processing...",
                         soundEffects: partial.soundEffects || [],
                         visualStyle: partial.visualStyle || state.selectedVisualStyle,
@@ -358,7 +358,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
                         editingEffects: partial.editingEffects || [],
                         fontStyle: partial.fontStyle || "...",
                         editingEffectsContext: partial.editingEffectsContext || "",
-                        segmentLength: finalSegmentLength
+                        segmentLength: finalSegmentLength,
+                        metadata: partial.metadata || { music: "", sfx: [], tags: [] }
                     };
 
                     set({ contentIdea: partialIdea, activeTab: 'generator', critique: null });
@@ -409,9 +410,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
 
     handleCritique: async () => {
+        const requestId = get()._generateRequestId + 1;
         const state = get();
         if (!state.contentIdea) return;
-        set({ isLoading: true, error: null, loadingMessage: "Running script against viral retention frameworks..." });
+        set({ _generateRequestId: requestId, isLoading: true, error: null, loadingMessage: "Running script against viral retention frameworks..." });
 
         const timers: NodeJS.Timeout[] = [];
 
@@ -420,28 +422,40 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 if (get().isLoading) set({ loadingMessage: "Evaluating hooks and audience retention drops..." });
             }, 3000));
 
-            const scriptText = state.contentIdea.timeline.map(seg => {
-                const m = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
-                return `[${m(seg.startTime)}–${m(seg.endTime)}] ${seg.audio}`;
+            const formatTimeLocal = (secs: number) => {
+                const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                const s = Math.floor(secs % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+            const scriptText = state.contentIdea.segments.map(seg => {
+                return `[${seg.timestamp || formatTimeLocal(seg.startTime)}] ${seg.audio}`;
             }).join('\n');
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
-            const firstHook = state.contentIdea.hookVariations[0]?.text || '';
+            const firstHook = state.contentIdea.hook || state.contentIdea.hookVariations[0]?.text || '';
             const critique = await critiqueScript(scriptText, firstHook, character);
+
+            if (get()._generateRequestId !== requestId) return;
+
             set({ critique, isLoading: false, activeTab: 'critique' });
             persistSession({ critique });
         } catch (err: any) {
+            if (get()._generateRequestId !== requestId) return;
             console.error(err);
             set({ isLoading: false, error: err?.message || 'Failed to critique script. Please try again.' });
         } finally {
             timers.forEach(clearTimeout);
+            if (get()._generateRequestId === requestId) {
+                set({ isLoading: false });
+            }
         }
     },
 
     handleImprove: async () => {
+        const requestId = get()._generateRequestId + 1;
         const state = get();
         if (!state.contentIdea || !state.critique) return;
 
-        set({ isLoading: true, error: null, loadingMessage: "Rewriting script to fix weaknesses..." });
+        set({ _generateRequestId: requestId, isLoading: true, error: null, loadingMessage: "Rewriting script to fix weaknesses..." });
 
         const timers: NodeJS.Timeout[] = [];
 
@@ -456,8 +470,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 return `${m}:${s}`;
             };
 
-            const scriptText = state.contentIdea.timeline.map(seg =>
-                `[${formatTime(seg.startTime)}–${formatTime(seg.endTime)}] ${seg.audio}`
+            const scriptText = state.contentIdea.segments.map(seg =>
+                `[${seg.timestamp || formatTime(seg.startTime)}] ${seg.audio}`
             ).join('\n');
             const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
             const builtSegmentLength = state.segmentMode === 'fixed'
@@ -470,12 +484,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 builtSegmentLength, 60, character
             );
 
-            const improvedScriptText = improvement.improvedTimeline!.map(seg =>
-                `[${formatTime(seg.startTime)}–${formatTime(seg.endTime)}] ${seg.audio}`
+            const improvedScriptText = improvement.improvedSegments!.map(seg =>
+                `[${seg.timestamp || formatTime(seg.startTime)}] ${seg.audio}`
             ).join('\n');
             const newCritique = await critiqueScript(
                 improvedScriptText,
-                improvement.improvedHook || state.contentIdea.hookVariations[0]?.text || '',
+                improvement.improvedHook || state.contentIdea.hook || state.contentIdea.hookVariations[0]?.text || '',
                 character
             );
 
@@ -483,24 +497,32 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 ...newCritique,
                 ...improvement
             };
+
+            if (get()._generateRequestId !== requestId) return;
+
             set({ isLoading: false, critique: finalCritique });
             persistSession({ critique: finalCritique });
             get().addToast('AI has generated and critiqued an improved version of your script!', 'success');
         } catch (err: any) {
+            if (get()._generateRequestId !== requestId) return;
             console.error(err);
             set({ isLoading: false, error: err?.message || 'Failed to generate improvement. Please try again.' });
         } finally {
             timers.forEach(clearTimeout);
+            if (get()._generateRequestId === requestId) {
+                set({ isLoading: false });
+            }
         }
     },
 
     applyImprovedScript: () => {
         const state = get();
-        if (!state.contentIdea || !state.critique || !state.critique.improvedTimeline) return;
+        if (!state.contentIdea || !state.critique || !state.critique.improvedSegments) return;
 
         const updated = {
             ...state.contentIdea,
-            timeline: state.critique.improvedTimeline,
+            segments: state.critique.improvedSegments,
+            hook: state.critique.improvedHook || state.contentIdea.hook,
             hookVariations: state.critique.improvedHook
                 ? [{ type: 'Improved', text: state.critique.improvedHook }]
                 : state.contentIdea.hookVariations,

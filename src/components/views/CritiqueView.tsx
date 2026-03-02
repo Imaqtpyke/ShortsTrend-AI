@@ -125,10 +125,10 @@ export function CritiqueView() {
             )}
             <div className="border-b pb-6 border-white/10">
                 <span className="font-mono text-xs uppercase tracking-widest opacity-50 mb-2 block">
-                    {critique.improvedTimeline ? "Improved Storyboard Critique" : "AI Critique Result"}
+                    {critique.improvedSegments ? "Improved Storyboard Critique" : "AI Critique Result"}
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    {critique.improvedTimeline ? "New Roast Results" : "Script Roast"}
+                    {critique.improvedSegments ? "New Roast Results" : "Script Roast"}
                 </h2>
             </div>
 
@@ -155,10 +155,10 @@ export function CritiqueView() {
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full" />
                             <span className="font-mono text-[10px] uppercase opacity-60">
-                                {critique.improvedTimeline ? "Improved Script" : "Original Script"}
+                                {critique.improvedSegments ? "Improved Script" : "Original Script"}
                             </span>
                         </div>
-                        {!critique.improvedTimeline && (
+                        {!critique.improvedSegments && (
                             <div className="flex items-center gap-2">
                                 <div className={cn("w-3 h-3 border border-dashed rounded-full", `${theme.border}`)} />
                                 <span className="font-mono text-[10px] uppercase opacity-60">Improved (Predicted)</span>
@@ -219,7 +219,7 @@ export function CritiqueView() {
                 </div>
             </div>
 
-            {!critique.improvedTimeline ? (
+            {!critique.improvedSegments ? (
                 <div className="pt-8 flex flex-col items-center justify-center text-center space-y-6 border-t border-dashed border-white/10">
                     <div className="space-y-2">
                         <h3 className="text-xl md:text-2xl font-bold tracking-tight">Ready to level up?</h3>
@@ -254,10 +254,10 @@ export function CritiqueView() {
                             </button>
                         </div>
                         <div className="space-y-6">
-                            {critique.improvedTimeline.map((improvedSeg, i) => {
-                                const originalSeg = contentIdea.timeline.find(s => s.index === improvedSeg.index)
-                                    || contentIdea.timeline[i]
-                                    || { index: i, startTime: improvedSeg.startTime, endTime: improvedSeg.endTime, audio: 'No original mapped', visual: '' };
+                            {critique.improvedSegments.map((improvedSeg, i) => {
+                                const originalSeg = contentIdea.segments.find(s => s.index === improvedSeg.index)
+                                    || contentIdea.segments[i]
+                                    || { index: i, startTime: improvedSeg.startTime, endTime: improvedSeg.endTime, audio: 'No original mapped', visual: '', timestamp: '' };
 
                                 return (
                                     <div key={i} className="flex flex-col md:flex-row border border-white/10 overflow-hidden bg-[#1a1a1a]">
@@ -266,7 +266,7 @@ export function CritiqueView() {
                                             <div className="p-2 border-b border-white/10 flex justify-between items-center opacity-60">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-mono text-xs font-bold text-white px-1.5 py-0.5 rounded-sm">
-                                                        {formatTime(originalSeg.startTime)}–{formatTime(originalSeg.endTime)}
+                                                        {improvedSeg.timestamp || formatTime(originalSeg.startTime)}
                                                     </span>
                                                     <span className="text-[10px] font-mono uppercase">Original</span>
                                                 </div>
@@ -292,7 +292,7 @@ export function CritiqueView() {
                                             <div className="p-2 border-b border-purple-500/20 flex justify-between items-center bg-purple-500/10">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-mono text-xs font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-sm">
-                                                        {formatTime(improvedSeg.startTime)}–{formatTime(improvedSeg.endTime)}
+                                                        {improvedSeg.timestamp || formatTime(improvedSeg.startTime)}
                                                     </span>
                                                     <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">Improved Revision</span>
                                                 </div>

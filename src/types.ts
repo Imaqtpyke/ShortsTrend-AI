@@ -39,15 +39,26 @@ export interface TimelineSegment {
   index: number;
   startTime: number;   // seconds from start (e.g. 0, 4, 8...)
   endTime: number;     // seconds from start (e.g. 4, 8, 12...)
+  timestamp: string;   // MM:SS format
   audio: string;       // spoken script for this segment
   visual: string;      // image/video generation prompt (incl. --ar 9:16)
 }
 
-export interface ContentIdea {
+export interface ProductionTimeline {
   title: string;
-  timeline: TimelineSegment[];
+  hook: string;
+  segments: TimelineSegment[];
+  metadata: {
+    music: string;
+    sfx: string[];
+    tags: string[];
+  }
+}
+
+export interface ContentIdea extends ProductionTimeline {
   musicStyle: string;
   soundEffects: string[];
+  hashtags: string[];
   visualStyle: string;
   hookVariations: { type: string; text: string }[];
   seoMetadata: {
@@ -55,7 +66,6 @@ export interface ContentIdea {
     youtubeDescription: string;
     pinnedCommentIdea: string;
   };
-  hashtags: string[];
   coachingTips: string;
   editingEffects: string[];
   fontStyle: string;
@@ -122,7 +132,7 @@ export interface ScriptCritique {
   viralityScore: number;
   hookSuggestions: string[];
   overallFeedback: string;
-  improvedTimeline?: TimelineSegment[];
+  improvedSegments?: TimelineSegment[];
   improvedHook?: string;
   improvedCaption?: string;
   improvedHashtags?: string[];

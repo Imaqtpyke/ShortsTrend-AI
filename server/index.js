@@ -382,11 +382,13 @@ TIMING RULES (MANDATORY — DO NOT DEVIATE):
 - Each "audio" field MUST NOT exceed ${maxWordsPerSegment} words${shortSegmentNote}`;
         } else {
             timingRules = `
-TIMING RULES (DYNAMIC MODE):
-- totalDuration = ${totalDuration}s total
-- You MUST generate between 10 and 20 segments.
-- No segment shorter than 3 seconds or longer than 8 seconds.
-- Keep audio word count proportional to segment duration.`;
+TIMING RULES (HIGH-RETENTION MODE):
+- totalDuration = 60s
+- You MUST break this 60-second video into 18–25 distinct segments (The 3-Second Refresh Rule).
+- Every sentence, major comma, or change in emotional "beat" must have its own segment.
+- NEVER group more than 4 seconds of audio under one visual.
+- The Hook (0-5 seconds): Change visual every 1.5 seconds. The hook MUST be visually aggressive and fast-paced.
+- Extreme Granularity: Treat every pause as a cut point. If a sentence is 5 seconds long, split it into two segments.`;
         }
 
         // ── Character Block ──────────────────────────────────────────────────
@@ -417,26 +419,23 @@ Applies to: ${charType === 'both' ? 'audio AND visual prompts' : charType === 'v
             try {
                 const response = await generateWithFallback({
                     model: "gemini-2.5-flash",
-                    contents: `You are a short-form vertical content production engine.
-Generate a scroll-stopping storyboard timeline for a YouTube Short about: "${trend}".
+                    contents: `ROLE: You are a High-Retention Short-Form Video Director for TikTok, Reels, and YouTube Shorts.
+Goal: Convert a content idea into a perfectly synced, high-energy production timeline.
+
+Niche: "${trend}"
+Visual Style: "${visualStyle}"
+Visual Generation Type: ${visualGenerationType === 'video' ? 'VIDEO (cinematic motion descriptions)' : 'IMAGE (still-frame composition)'}
+
 ${timingRules}
 
-HOOK PRIORITY RULE — SEGMENT index=0 MUST:
-- Create immediate tension or curiosity
-- Target audience pain or desire directly
-- Be emotionally sharp — NO intros like "Today we'll talk about..."
-- Start mid-action or with a bold, controversial, or relatable statement
+CRITICAL PRODUCTION INSTRUCTIONS:
+1. THE 3-SECOND REFRESH: Viewers scroll away if a visual stays static for more than 3 seconds.
+2. THE HOOK (0-5s): Visually aggressive, fast-paced (visual change every ~1.5s).
+3. EXTREME GRANULARITY: Every sentence fragment or emotional "beat" must have its own timestamp and unique visual.
+4. VISUAL DENSITY: Focus on clear, high-resolution snapshots of specific actions ("Beat-Based" logic) rather than long, vague atmospheric descriptions.
+5. NO RANGES: Only use the start timestamp for each segment.
 
-VISUAL INTENSITY — EVERY "visual" prompt MUST include:
-- Strong subject focus (extreme close-up or powerful framing)
-- Clear emotional trigger (fear, desire, shock, curiosity)
-- Dynamic lighting (cinematic, dramatic, high contrast)
-- Action, tension, or curiosity element
-AVOID: empty wide landscapes, neutral expressions, "A person standing..."
-
-PROMPT TYPE: ${visualGenerationType === 'video' ? 'VIDEO generation (Veo, Runway) — use cinematic motion language' : 'IMAGE generation (Midjourney, Flux) — use still-frame composition language'}
-ASPECT RATIO: Append "--ar 9:16" to the END of EVERY visual prompt
-VISUAL STYLE: Every prompt MUST strictly match the "${visualStyle}" style
+ASPECT RATIO: Append "--ar 9:16" to the END of EVERY visual prompt.
 ${characterBlock}
 
 Also generate:
@@ -452,20 +451,29 @@ Also generate:
                             type: Type.OBJECT,
                             properties: {
                                 title: { type: Type.STRING },
-                                timeline: {
+                                segments: {
                                     type: Type.ARRAY,
                                     items: {
                                         type: Type.OBJECT,
                                         properties: {
                                             index: { type: Type.NUMBER, description: "Zero-based segment index" },
-                                            startTime: { type: Type.NUMBER, description: "Segment start in seconds from video start" },
-                                            endTime: { type: Type.NUMBER, description: "Segment end in seconds from video start" },
-                                            audio: { type: Type.STRING, description: "Spoken narration/dialogue for this segment" },
-                                            visual: { type: Type.STRING, description: `9:16 vertical ${visualGenerationType} prompt with --ar 9:16` }
+                                            startTime: { type: Type.NUMBER, description: "Segment start in seconds" },
+                                            timestamp: { type: Type.STRING, description: "Start point in MM:SS format" },
+                                            audio: { type: Type.STRING, description: "A short, punchy sentence fragment" },
+                                            visual: { type: Type.STRING, description: "Detailed, high-action prompt with --ar 9:16" }
                                         },
-                                        required: ["index", "startTime", "endTime", "audio", "visual"]
+                                        required: ["index", "startTime", "timestamp", "audio", "visual"]
                                     },
                                     description: "Storyboard timeline — one entry per segment"
+                                },
+                                metadata: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        music: { type: Type.STRING },
+                                        sfx: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                        tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+                                    },
+                                    required: ["music", "sfx", "tags"]
                                 },
                                 musicStyle: { type: Type.STRING },
                                 soundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -496,7 +504,7 @@ Also generate:
                                 fontStyle: { type: Type.STRING },
                                 editingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["title", "timeline", "musicStyle", "soundEffects", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
+                            required: ["title", "segments", "metadata", "musicStyle", "soundEffects", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
                         }
                     }
                 });
@@ -506,12 +514,12 @@ Also generate:
 
                 // ── Structural Validation ─────────────────────────────────────
                 if (expectedSegments > 0) {
-                    if (parsed.timeline.length !== expectedSegments) {
-                        throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.timeline.length}.`);
+                    if (parsed.segments.length !== expectedSegments) {
+                        throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.segments.length}.`);
                     }
                 } else {
-                    if (parsed.timeline.length < 10 || parsed.timeline.length > 20) {
-                        throw new Error(`Validation failed: Dynamic mode expected 10–20 segments, got ${parsed.timeline.length}.`);
+                    if (parsed.segments.length < 18 || parsed.segments.length > 25) {
+                        throw new Error(`Validation failed: High-retention mode expected 18–25 segments, got ${parsed.segments.length}.`);
                     }
                 }
 
@@ -531,27 +539,78 @@ Also generate:
 
         // ── Mathematically Enforce Timestamps ────────────────────────────────
         // Override LLM timestamps with exact arithmetic — clock-perfect every time.
-        if (result.timeline && result.timeline.length > 0) {
-            const count = result.timeline.length;
-            result.timeline = result.timeline.map((seg, i) => {
-                let start, end;
+        if (result.segments && result.segments.length > 0) {
+            const count = result.segments.length;
+            result.segments = result.segments.map((seg, i) => {
+                let start;
                 if (segmentLength) {
-                    // Fixed mode: evenly spaced, last segment clamped to totalDuration
                     start = i * segmentLength;
-                    end = Math.min((i + 1) * segmentLength, totalDuration);
                 } else {
-                    // Dynamic mode: preserve LLM proportions, clamp to valid range
-                    start = Math.max(0, Math.min(Number(seg.startTime) || 0, totalDuration - 1));
-                    end = Math.max(start + 1, Math.min(Number(seg.endTime) || start + 4, totalDuration));
-                    if (i === count - 1) end = totalDuration;
+                    // Try to parse timestamp (MM:SS) if startTime is missing or invalid
+                    if (seg.timestamp && typeof seg.timestamp === 'string') {
+                        const parts = seg.timestamp.split(':');
+                        if (parts.length === 2) {
+                            start = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                        }
+                    }
+                    if (start === undefined) {
+                        start = Math.max(0, Math.min(Number(seg.startTime) || 0, totalDuration - 1));
+                    }
                 }
+
+                // Strictly enforce 3-second refresh by calculating end as the next segment's start or totalDuration
+                let end;
+                if (i < count - 1) {
+                    const nextSeg = result.segments[i + 1];
+                    if (segmentLength) {
+                        end = (i + 1) * segmentLength;
+                    } else if (nextSeg.timestamp && typeof nextSeg.timestamp === 'string') {
+                        const nextParts = nextSeg.timestamp.split(':');
+                        if (nextParts.length === 2) {
+                            end = parseInt(nextParts[0], 10) * 60 + parseInt(nextParts[1], 10);
+                        }
+                    }
+                    if (end === undefined) {
+                        end = Math.max(start + 1, Math.min(Number(nextSeg.startTime) || start + 3, totalDuration));
+                    }
+                } else {
+                    end = totalDuration;
+                }
+
+                // Fallback for timestamp string if LLM missed it or we need to normalize
+                const formatTime = (secs) => {
+                    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                    const s = Math.floor(secs % 60).toString().padStart(2, '0');
+                    return `${m}:${s}`;
+                };
 
                 let visual = (seg.visual || '').trim();
                 if (!visual.includes('--ar 9:16')) visual = `${visual} --ar 9:16`;
 
-                return { index: i, startTime: start, endTime: end, audio: seg.audio || '', visual };
+                return {
+                    index: i,
+                    startTime: start,
+                    endTime: end,
+                    timestamp: formatTime(start),
+                    audio: seg.audio || '',
+                    visual
+                };
             });
         }
+
+        // Ensure metadata exists for frontend mapping if LLM missed it
+        if (!result.metadata) {
+            result.metadata = {
+                music: result.musicStyle || 'Trending Phonk',
+                sfx: result.soundEffects || ['Whoosh', 'Glitch'],
+                tags: result.hashtags || ['#shorts', '#viral']
+            };
+        }
+
+        // Also map metadata back to root fields for backward compatibility if needed
+        result.musicStyle = result.metadata.music;
+        result.soundEffects = result.metadata.sfx;
+        result.hashtags = result.metadata.tags;
 
         res.json(result);
 
@@ -666,18 +725,18 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
                         responseSchema: {
                             type: Type.OBJECT,
                             properties: {
-                                improvedTimeline: {
+                                improvedSegments: {
                                     type: Type.ARRAY,
                                     items: {
                                         type: Type.OBJECT,
                                         properties: {
                                             index: { type: Type.NUMBER },
                                             startTime: { type: Type.NUMBER },
-                                            endTime: { type: Type.NUMBER },
+                                            timestamp: { type: Type.STRING },
                                             audio: { type: Type.STRING },
                                             visual: { type: Type.STRING }
                                         },
-                                        required: ["index", "startTime", "endTime", "audio", "visual"]
+                                        required: ["index", "startTime", "timestamp", "audio", "visual"]
                                     }
                                 },
                                 improvedHook: { type: Type.STRING, description: "First 1 line maximum" },
@@ -689,7 +748,7 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
                                 improvedFontStyle: { type: Type.STRING },
                                 improvedEditingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["improvedTimeline", "improvedHook", "improvedCaption", "improvedHashtags", "improvedMusicStyle", "improvedSoundEffects", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"]
+                            required: ["improvedSegments", "improvedHook", "improvedCaption", "improvedHashtags", "improvedMusicStyle", "improvedSoundEffects", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"]
                         }
                     }
                 });
@@ -697,8 +756,8 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
                 if (!response.text) throw new Error("No response text from Gemini API");
                 const parsed = JSON.parse(response.text);
 
-                if (parsed.improvedTimeline.length !== expectedSegments) {
-                    throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.improvedTimeline.length}.`);
+                if (parsed.improvedSegments.length !== expectedSegments) {
+                    throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.improvedSegments.length}.`);
                 }
 
                 result = parsed;
@@ -712,22 +771,59 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
         }
 
         // ── Re-enforce Timestamps Mathematically ─────────────────────────────
-        if (result && result.improvedTimeline && result.improvedTimeline.length === expectedSegments) {
-            result.improvedTimeline = result.improvedTimeline.map((seg, i) => {
-                let start, end;
+        if (result && result.improvedSegments && result.improvedSegments.length === expectedSegments) {
+            result.improvedSegments = result.improvedSegments.map((seg, i) => {
+                let start;
                 if (segmentLength) {
                     start = i * segmentLength;
-                    end = Math.min((i + 1) * segmentLength, totalDuration);
                 } else {
-                    start = Math.max(0, Math.min(Number(seg.startTime) || 0, totalDuration - 1));
-                    end = Math.max(start + 1, Math.min(Number(seg.endTime) || start + 4, totalDuration));
-                    if (i === expectedSegments - 1) end = totalDuration;
+                    if (seg.timestamp && typeof seg.timestamp === 'string') {
+                        const parts = seg.timestamp.split(':');
+                        if (parts.length === 2) {
+                            start = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                        }
+                    }
+                    if (start === undefined) {
+                        start = Math.max(0, Math.min(Number(seg.startTime) || 0, totalDuration - 1));
+                    }
                 }
+
+                // Strictly enforce 3-second refresh by calculating end as the next segment's start or totalDuration
+                let end;
+                if (i < expectedSegments - 1) {
+                    const nextSeg = result.improvedSegments[i + 1];
+                    if (segmentLength) {
+                        end = (i + 1) * segmentLength;
+                    } else if (nextSeg.timestamp && typeof nextSeg.timestamp === 'string') {
+                        const nextParts = nextSeg.timestamp.split(':');
+                        if (nextParts.length === 2) {
+                            end = parseInt(nextParts[0], 10) * 60 + parseInt(nextParts[1], 10);
+                        }
+                    }
+                    if (end === undefined) {
+                        end = Math.max(start + 1, Math.min(Number(nextSeg.startTime) || start + 3, totalDuration));
+                    }
+                } else {
+                    end = totalDuration;
+                }
+
+                const formatTime = (secs) => {
+                    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                    const s = Math.floor(secs % 60).toString().padStart(2, '0');
+                    return `${m}:${s}`;
+                };
 
                 let visual = (seg.visual || '').trim();
                 if (!visual.includes('--ar 9:16')) visual = `${visual} --ar 9:16`;
 
-                return { index: i, startTime: start, endTime: end, audio: seg.audio || '', visual };
+                return {
+                    index: i,
+                    startTime: start,
+                    endTime: end,
+                    timestamp: formatTime(start),
+                    audio: seg.audio || '',
+                    visual
+                };
             });
         }
 

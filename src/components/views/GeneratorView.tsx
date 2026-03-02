@@ -26,7 +26,7 @@ export function GeneratorView() {
         setVisualGenerationType,
         analysis,
         critique,
-        updateTimelineAudio
+        updateSegmentAudio
     } = useAppStore();
     const theme = useTheme();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -118,6 +118,12 @@ export function GeneratorView() {
                 <div className="space-y-1">
                     <span className="font-mono text-[10px] uppercase tracking-widest opacity-60 block">Generated Content for: {selectedTrend}</span>
                     <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">{contentIdea.title}</h2>
+                    {contentIdea.hook && (
+                        <div className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 w-fit">
+                            <Zap className="w-4 h-4 text-emerald-400" />
+                            <p className="text-sm font-bold text-emerald-400 italic">"{contentIdea.hook}"</p>
+                        </div>
+                    )}
                 </div>
                 <div className="flex flex-wrap w-full md:w-auto gap-2 justify-end">
                     <button
@@ -162,7 +168,7 @@ export function GeneratorView() {
                                 {/* Vertical Timeline Line */}
                                 <div className="absolute left-[15px] top-2 bottom-2 w-[2px] opacity-10 bg-white" />
 
-                                {contentIdea.timeline.map((seg, i) => {
+                                {contentIdea.segments.map((seg, i) => {
                                     const wordCount = seg.audio.trim().split(/\s+/).filter(w => w.length > 0).length;
                                     const segDuration = seg.endTime - seg.startTime;
                                     const maxWords = Math.floor(segDuration * 2.7);
@@ -180,10 +186,8 @@ export function GeneratorView() {
                                             )} />
 
                                             {/* Timestamp */}
-                                            <div className="md:w-28 flex-shrink-0 p-4 border-b md:border-b-0 md:border-r flex flex-col items-center justify-center font-mono text-xs font-bold bg-[#0a0a0a] border-white/10 text-white/40">
-                                                <span>{formatTime(seg.startTime)}</span>
-                                                <span className="opacity-40 text-[9px]">–</span>
-                                                <span>{formatTime(seg.endTime)}</span>
+                                            <div className="md:w-20 flex-shrink-0 p-3 border-b md:border-b-0 md:border-r flex flex-col items-center justify-center font-mono text-[10px] font-bold bg-[#0a0a0a] border-white/10 text-white/40">
+                                                <span>{seg.timestamp || formatTime(seg.startTime)}</span>
                                                 {isOverLimit && (
                                                     <span title={`Word limit exceeded: ${wordCount}/${maxWords}`}>
                                                         <AlertTriangle className="w-3 h-3 text-orange-400 mt-1" />
@@ -224,7 +228,7 @@ export function GeneratorView() {
                                                 </div>
                                                 <textarea
                                                     value={seg.audio}
-                                                    onChange={(e) => updateTimelineAudio(i, e.target.value)}
+                                                    onChange={(e) => updateSegmentAudio(i, e.target.value)}
                                                     className={cn(
                                                         "text-sm leading-relaxed w-full min-h-[80px] bg-transparent border p-2 text-white resize-y rounded-sm transition-colors outline-none",
                                                         "border-transparent focus:border-emerald-500/50 focus:bg-white/5"
