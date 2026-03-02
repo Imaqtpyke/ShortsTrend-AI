@@ -60,6 +60,7 @@ interface AppStore extends AppState {
     applyImprovedScript: () => void;
     loadFromHistory: (item: HistoryItem) => void;
     clearHistory: () => void;
+    _generateRequestId: number;  // B3 FIX: tracks in-flight generate requests for dedup
 }
 
 // ─── Persistence Helpers ───────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ interface PersistedSession {
     critique: AppState['critique'];
     workflow: AppState['workflow'];
     searchQuery: string;
+    segmentMode: 'adjustable' | 'fixed'; // Bug 6 Fix: persist user's mode preference
     savedAt: number;
 }
 
@@ -88,6 +90,7 @@ async function persistSession(partial: Partial<PersistedSession>) {
             critique: partial.critique !== undefined ? partial.critique : current.critique ?? null,
             workflow: partial.workflow !== undefined ? partial.workflow : current.workflow ?? null,
             searchQuery: partial.searchQuery !== undefined ? partial.searchQuery : current.searchQuery ?? '',
+            segmentMode: partial.segmentMode !== undefined ? partial.segmentMode : (current.segmentMode ?? 'adjustable'),
             savedAt: Date.now(),
         };
         await localforage.setItem(SESSION_KEY, JSON.stringify(next));
@@ -112,6 +115,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     segmentMode: 'adjustable',
     history: [],
     searchQuery: '',
+    _generateRequestId: 0,
 
     // Initial UI/Feature State
     activeTab: 'trends',
@@ -173,7 +177,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
     setVideoDuration: (duration) => set({ videoDuration: duration }),
     setCustomVideoDuration: (duration) => set({ customVideoDuration: duration }),
-    setSegmentMode: (mode) => set({ segmentMode: mode }),
+    setSegmentMode: (mode) => {
+        set({ segmentMode: mode });
+        // Bug 6 Fix: Persist segmentMode immediately when user changes it
+        persistSession({ segmentMode: mode });
+    },
 
     // Phase 5: Progressive Loading & Interactive UI
     loadingMessage: '',
@@ -210,6 +218,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 workflow: session.workflow ?? null,
                 critique: session.critique ?? null,
                 searchQuery: session.searchQuery ?? '',
+                // Bug 6 Fix: Restore persisted segmentMode so Fixed/Adjustable survives page refresh
+                segmentMode: session.segmentMode ?? 'adjustable',
                 isHydrated: true
             });
         } catch (e) {
@@ -262,9 +272,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
 
     handleGenerate: async (trend: string) => {
-        const state = get();
-        set({ selectedTrend: trend, isLoading: true, error: null, loadingMessage: "Analyzing virality potential for " + trend + "..." });
+        // B3 FIX: Prevent concurrent generate calls from racing each other.
+        // Each call gets a unique requestId. If the user triggers a new generate
+        // before the previous one completes, the stale response is silently discarded.
+        const requestId = get()._generateRequestId + 1;
+        set({ _generateRequestId: requestId, selectedTrend: trend, isLoading: true, error: null, loadingMessage: "Analyzing virality potential for " + trend + "..." });
 
+        const state = get();
         const timers: NodeJS.Timeout[] = [];
 
         try {
@@ -279,18 +293,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 ? undefined
                 : (state.customVideoDuration || state.videoDuration);
 
-            let startedStreaming = false;
-
             const ideaPromise = generateContentIdea(
                 trend,
                 state.selectedVisualStyle,
                 state.visualGenerationType,
                 finalVideoDuration,
                 (partial) => {
-                    if (!startedStreaming) {
-                        startedStreaming = true;
-                        set({ isLoading: false, activeTab: 'generator', critique: null });
-                    }
+                    // B3 FIX: Only update state if this request is still the current one.
+                    // If the user clicked Regenerate again, requestId will no longer match
+                    // and we discard this stale in-flight update entirely.
+                    if (get()._generateRequestId !== requestId) return;
 
                     const partialIdea = {
                         title: partial.title || "Drafting Idea...",
@@ -309,11 +321,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
                         videoDuration: state.visualGenerationType === 'image' ? undefined : finalVideoDuration
                     };
 
-                    set({ contentIdea: partialIdea });
+                    set({ contentIdea: partialIdea, activeTab: 'generator', critique: null });
                 }
             );
 
             const idea = await ideaPromise;
+
+            // B3 FIX: Final guard — if a newer request started during the await, abort.
+            if (get()._generateRequestId !== requestId) return;
+
             const builtIdea = { ...idea, videoDuration: state.visualGenerationType === 'image' ? undefined : finalVideoDuration };
 
             const hardcodedWorkflow = {
@@ -339,10 +355,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
             set({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null, isLoading: false, completedSteps: [], activeTab: 'generator' });
             persistSession({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null });
         } catch (err: any) {
+            // B3 FIX: Only surface the error if this is still the active request.
+            if (get()._generateRequestId !== requestId) return;
             console.error(err);
             set({ isLoading: false, error: err?.message || 'Failed to generate content. Please try again.' });
         } finally {
             timers.forEach(clearTimeout);
+            // B3 FIX: Only clear isLoading if we are still the active request.
+            // (The success path above sets isLoading: false directly.)
+            if (get()._generateRequestId === requestId) {
+                set({ isLoading: false });
+            }
         }
     },
 
@@ -471,8 +494,11 @@ export const useTheme = () => {
     if (!topic) return defaultTheme;
 
     switch (topic.growth) {
-        case 'exploding': return { ...defaultTheme, primary: 'red-500', ring: 'focus:ring-red-500', hoverBorder: 'hover:border-red-500', textAccent: 'text-red-400', borderAccent: 'border-red-500/30', bgAccent: 'bg-red-500/10', hoverBgAccent: 'hover:bg-red-500/20', borderAccent2: 'border-red-500/20', accent: 'red', focusBorder: 'focus:border-red-500', border: 'border-red-500', hoverBg: 'hover:bg-red-400', groupHoverBg: 'group-hover:bg-red-500', groupHoverBorder: 'group-hover:border-red-500' };
-        case 'steady': return { ...defaultTheme, primary: 'blue-500', ring: 'focus:ring-blue-500', hoverBorder: 'hover:border-blue-500', textAccent: 'text-blue-400', borderAccent: 'border-blue-500/30', bgAccent: 'bg-blue-500/10', hoverBgAccent: 'hover:bg-blue-500/20', borderAccent2: 'border-blue-500/20', accent: 'blue', focusBorder: 'focus:border-blue-500', border: 'border-blue-500', hoverBg: 'hover:bg-blue-400', groupHoverBg: 'group-hover:bg-blue-500', groupHoverBorder: 'group-hover:border-blue-500' };
+        case 'exploding': return { ...defaultTheme, primary: 'red-500', ring: 'focus:ring-red-500', hoverBorder: 'hover:border-red-500', textAccent: 'text-red-400', borderAccent: 'border-red-500/30', bgAccent: 'bg-red-500/10', hoverBgAccent: 'hover:bg-red-500/20', borderAccent2: 'border-red-500/20', accent: 'red', focusBorder: 'focus:border-red-500', border: 'border-red-500', hoverBg: 'hover:bg-red-400', bg: 'bg-red-500', bgOpacity: 'bg-red-500/5', shadowAccent: 'shadow-red-500/10', groupHoverBg: 'group-hover:bg-red-500', groupHoverBorder: 'group-hover:border-red-500' };
+        case 'steady': return { ...defaultTheme, primary: 'blue-500', ring: 'focus:ring-blue-500', hoverBorder: 'hover:border-blue-500', textAccent: 'text-blue-400', borderAccent: 'border-blue-500/30', bgAccent: 'bg-blue-500/10', hoverBgAccent: 'hover:bg-blue-500/20', borderAccent2: 'border-blue-500/20', accent: 'blue', focusBorder: 'focus:border-blue-500', border: 'border-blue-500', hoverBg: 'hover:bg-blue-400', bg: 'bg-blue-500', bgOpacity: 'bg-blue-500/5', shadowAccent: 'shadow-blue-500/10', groupHoverBg: 'group-hover:bg-blue-500', groupHoverBorder: 'group-hover:border-blue-500' };
+        // Bug 7 Fix: Added 'declining' case — previously fell through to green default,
+        // causing inconsistency between App.tsx (slate) and all other themed components (green).
+        case 'declining': return { ...defaultTheme, primary: 'slate-500', ring: 'focus:ring-slate-500', hoverBorder: 'hover:border-slate-500', textAccent: 'text-slate-400', borderAccent: 'border-slate-500/30', bgAccent: 'bg-slate-500/10', hoverBgAccent: 'hover:bg-slate-500/20', borderAccent2: 'border-slate-500/20', accent: 'slate', focusBorder: 'focus:border-slate-500', border: 'border-slate-500', hoverBg: 'hover:bg-slate-400', bg: 'bg-slate-500', bgOpacity: 'bg-slate-500/5', shadowAccent: 'shadow-slate-500/10', groupHoverBg: 'group-hover:bg-slate-500', groupHoverBorder: 'group-hover:border-slate-500' };
         default: return defaultTheme;
     }
 };

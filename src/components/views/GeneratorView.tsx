@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Wand2, ArrowLeft, ImageIcon, Video, RefreshCw, Copy, Check, Clock, Zap, Hash, Volume2, Music, Layers, AlertTriangle, Scissors, Play, Square, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { normalizeTs } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { useAppStore, useTheme } from '../../store/useAppStore';
 import { FloatingScrollButton } from '../ui/FloatingScrollButton';
@@ -158,10 +159,8 @@ export function GeneratorView() {
                                 <div className="absolute left-[15px] top-2 bottom-2 w-[2px] opacity-10 bg-white" />
 
                                 {contentIdea.script.map((segment, i) => {
-                                    // BUG FIX #5: Strict string equality on timestamps is fragile — a single
-                                    // character difference (em-dash vs hyphen, extra space) causes all visual
-                                    // prompts to silently not render. Normalize both sides before comparing.
-                                    const normalizeTs = (ts: string) => ts.replace(/[\u2013\u2014\-]/g, '-').replace(/\s+/g, '').toLowerCase();
+                                    // Use shared normalizeTs from utils for robust timestamp matching.
+                                    // Handles em-dash vs hyphen variants between generate calls.
                                     const visualPrompt = contentIdea?.imagePrompts?.find(
                                         p => normalizeTs(p.frame) === normalizeTs(segment.timestamp)
                                     );

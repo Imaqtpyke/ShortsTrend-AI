@@ -61,7 +61,7 @@ import { SoftwareCard } from './components/ui/SoftwareCard';
 import { NicheDNARadar } from './components/ui/NicheDNARadar';
 import { RetentionGraph } from './components/ui/RetentionGraph';
 import { ToastContainer } from './components/ui/ToastContainer';
-import { useAppStore } from './store/useAppStore';
+import { useAppStore, useTheme } from './store/useAppStore';
 
 // Code-split the heavy view components so only the visible tab's code is loaded
 const TrendsView = lazy(() => import('./components/views/TrendsView').then(m => ({ default: m.TrendsView })));
@@ -220,49 +220,9 @@ export default function App() {
     loadingMessage, isHydrated, initStore
   } = useAppStore();
 
-  const theme = (() => {
-    const defaultTheme = {
-      primary: 'emerald-500', secondary: 'emerald-400', border: 'border-emerald-500', bg: 'bg-emerald-500',
-      text: 'text-emerald-500', glow: 'shadow-emerald-500/20', hoverBg: 'hover:bg-emerald-400', hoverBorder: 'hover:border-emerald-500',
-      ring: 'focus:ring-emerald-500', focusBorder: 'focus:border-emerald-500', accent: 'emerald', bgOpacity: 'bg-emerald-500/5',
-      textAccent: 'text-emerald-400', borderAccent: 'border-emerald-500/30', bgAccent: 'bg-emerald-500/10',
-      hoverBgAccent: 'hover:bg-emerald-500/20', borderAccent2: 'border-emerald-500/20', shadowAccent: 'shadow-emerald-500/10'
-    };
-
-    if (!selectedTrend || !analysis) return defaultTheme;
-
-    const topic = analysis.trendingTopics.find(t => t.name === selectedTrend);
-    if (!topic) return defaultTheme;
-
-    switch (topic.growth) {
-      case 'exploding':
-        return {
-          primary: 'red-500', secondary: 'red-400', border: 'border-red-500', bg: 'bg-red-500',
-          text: 'text-red-500', glow: 'shadow-red-500/20', hoverBg: 'hover:bg-red-400', hoverBorder: 'hover:border-red-500',
-          ring: 'focus:ring-red-500', focusBorder: 'focus:border-red-500', accent: 'red', bgOpacity: 'bg-red-500/5',
-          textAccent: 'text-red-400', borderAccent: 'border-red-500/30', bgAccent: 'bg-red-500/10',
-          hoverBgAccent: 'hover:bg-red-500/20', borderAccent2: 'border-red-500/20', shadowAccent: 'shadow-red-500/10'
-        };
-      case 'steady':
-        return {
-          primary: 'blue-500', secondary: 'blue-400', border: 'border-blue-500', bg: 'bg-blue-500',
-          text: 'text-blue-500', glow: 'shadow-blue-500/20', hoverBg: 'hover:bg-blue-400', hoverBorder: 'hover:border-blue-500',
-          ring: 'focus:ring-blue-500', focusBorder: 'focus:border-blue-500', accent: 'blue', bgOpacity: 'bg-blue-500/5',
-          textAccent: 'text-blue-400', borderAccent: 'border-blue-500/30', bgAccent: 'bg-blue-500/10',
-          hoverBgAccent: 'hover:bg-blue-500/20', borderAccent2: 'border-blue-500/20', shadowAccent: 'shadow-blue-500/10'
-        };
-      case 'declining':
-        return {
-          primary: 'slate-500', secondary: 'slate-400', border: 'border-slate-500', bg: 'bg-slate-500',
-          text: 'text-slate-500', glow: 'shadow-slate-500/20', hoverBg: 'hover:bg-slate-400', hoverBorder: 'hover:border-slate-500',
-          ring: 'focus:ring-slate-500', focusBorder: 'focus:border-slate-500', accent: 'slate', bgOpacity: 'bg-slate-500/5',
-          textAccent: 'text-slate-400', borderAccent: 'border-slate-500/30', bgAccent: 'bg-slate-500/10',
-          hoverBgAccent: 'hover:bg-slate-500/20', borderAccent2: 'border-slate-500/20', shadowAccent: 'shadow-slate-500/10'
-        };
-      default:
-        return defaultTheme;
-    }
-  })();
+  // Bug 3 Fix: Use the shared useTheme hook instead of a duplicate inline theme object.
+  // The previous inline version was missing 'declining' and other keys, causing inconsistency.
+  const theme = useTheme();
 
   const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -459,7 +419,11 @@ export default function App() {
                 </div>
               }>
                 <AnimatePresence mode="wait">
-                  {isLoading && activeTab !== 'trends' ? (
+                  {/* Bug 1+5 Fix: Only show the full-page loading skeleton when on the Trends tab.
+                      The Generator and Critique tabs manage their own loading states internally
+                      (spinner on their action buttons). Replacing them with a skeleton hid the
+                      UI entirely, making Roast/Improve/Regenerate appear broken with no feedback. */}
+                  {isLoading && activeTab === 'trends' ? (
                     <motion.div
                       key="loading"
                       initial="hidden"

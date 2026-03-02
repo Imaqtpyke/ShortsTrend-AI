@@ -497,15 +497,18 @@ export function TrendsView() {
                                                         <input
                                                             type="number"
                                                             min="2"
-                                                            max="120"
+                                                            max="30"
                                                             value={customVideoDuration}
                                                             onChange={(e) => {
                                                                 const val = parseInt(e.target.value);
-                                                                setCustomVideoDuration(isNaN(val) ? 6 : Math.max(2, Math.min(120, val)));
+                                                                // Bug 2 Fix: Cap at 30 to match server-side validation.
+                                                                // Previously allowed up to 120, causing silent 400 errors.
+                                                                setCustomVideoDuration(isNaN(val) ? 6 : Math.max(2, Math.min(30, val)));
                                                             }}
-                                                            placeholder="Enter custom duration (s)"
+                                                            placeholder="Enter custom duration (2–30s)"
                                                             className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-emerald-500/50 focus:border-emerald-500 outline-none min-h-[48px]"
                                                         />
+                                                        <p className="text-[9px] font-mono uppercase tracking-widest opacity-40">Range: 2–30 seconds per segment</p>
                                                     </motion.div>
                                                 )}
                                             </>

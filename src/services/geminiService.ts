@@ -1,9 +1,17 @@
 import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique, ScriptSegment } from "../types";
 import { parse } from 'partial-json';
 
-const API_BASE_URL = "http://localhost:3001/api";
+// B5 FIX: Never hardcode localhost. In production this must be the deployed server URL.
+// Set VITE_API_BASE_URL in your deployment environment (Vercel, Netlify, etc.).
+// Falls back to localhost:3001 for local development only.
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL ?? "http://localhost:3001/api";
 
-async function fetchFromBackend<T>(endpoint: string, body: any, retries = 3, delay = 1000): Promise<T> {
+// B2 FIX: Client-side retries are DISABLED (retries = 0 default).
+// The server already retries up to 3 times internally for each Gemini call.
+// Having BOTH client and server retry independently caused a worst-case of
+// 27 Gemini API calls per single user action (3 client × 3 server × 3 Gemini).
+// The server is the single source of retry truth. The client propagates errors immediately.
+async function fetchFromBackend<T>(endpoint: string, body: any, retries = 0, delay = 1000): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",

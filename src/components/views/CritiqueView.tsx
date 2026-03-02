@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { BarChart, ArrowLeft, Zap, Loader2, TrendingUp, AlertTriangle, ThumbsUp, Wand2, Copy, Check, ImageIcon, Lightbulb, Play, Square, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { normalizeTs } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { RetentionGraph } from '../ui/RetentionGraph';
 import { useAppStore, useTheme } from '../../store/useAppStore';
@@ -108,6 +109,19 @@ export function CritiqueView() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full space-y-12 text-left"
         >
+            {/* Bug 1+5 Fix: Inline loading banner so the user sees feedback while Roast/Improve
+                runs. The full-page skeleton no longer replaces this view, so we show a subtle
+                top banner with the current loading message instead. */}
+            {isLoading && (
+                <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 px-4 py-3 border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-mono uppercase tracking-widest"
+                >
+                    <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                    <span>AI is working on your script — this may take 30–45 seconds...</span>
+                </motion.div>
+            )}
             <div className="border-b pb-6 border-white/10">
                 <span className="font-mono text-xs uppercase tracking-widest opacity-50 mb-2 block">
                     {critique.improvedScript ? "Improved Script Critique" : "AI Critique Result"}
@@ -240,7 +254,11 @@ export function CritiqueView() {
                         </div>
                         <div className="space-y-6">
                             {critique.improvedScript.map((improvedSegment, i) => {
-                                const originalSegment = contentIdea.script.find(s => s.timestamp === improvedSegment.timestamp) || { timestamp: improvedSegment.timestamp, text: "No original mapped" };
+                                const originalSegment = contentIdea.script.find(
+                                    // Bug 4 Fix: Use shared normalizeTs so em-dash vs hyphen
+                                    // differences don't cause "No original mapped" for every row.
+                                    s => normalizeTs(s.timestamp) === normalizeTs(improvedSegment.timestamp)
+                                ) || { timestamp: improvedSegment.timestamp, text: "No original mapped" };
 
                                 return (
                                     <div key={i} className="flex flex-col md:flex-row border border-white/10 overflow-hidden bg-[#1a1a1a]">

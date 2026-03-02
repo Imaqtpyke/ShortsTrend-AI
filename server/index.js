@@ -2,14 +2,42 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
+import { rateLimit } from 'express-rate-limit'; // Rate limiting to protect API credits
 import fs from 'fs';
 import path from 'path';
 
 dotenv.config();
 
 const app = express();
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+// Protect your Gemini API credits from bot spam or accidental infinite loops.
+
+// 1. General Limiter: Prevent basic DDoS/scraping on all endpoints.
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100,               // Limit each IP to 100 requests per window
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: "Too many requests. Please try again in 15 minutes." }
+});
+
+// 2. Expensive Limiter: Higher friction for LLM generation (costs real money).
+const expensiveLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    limit: 5,                // Limit each IP to 5 script generations per 10 mins
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: "Generation limit reached. Script generation is expensive; please wait 10 minutes before creating more." }
+});
+
+app.use(generalLimiter);
 app.use(cors());
 app.use(express.json({ limit: '16kb' })); // Prevent oversized payloads
+
+// Applied to expensive endpoints below
+app.post('/api/generate', expensiveLimiter);
+app.post('/api/improve', expensiveLimiter);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -90,7 +118,7 @@ function setCachedAnalysis(key, data) {
 // If the primary model is rate-limited or unavailable, automatically fallback
 // through the cascade until a model succeeds.
 const MODEL_CASCADE = [
-    'gemini-2.5-flash',
+    'gemini-1.5-flash',
 ];
 
 // Retryable HTTP status codes
@@ -177,7 +205,10 @@ async function generateStreamWithFallback(requestConfig, res) {
 
 app.post('/api/critique', async (req, res) => {
     try {
-        const script = sanitizeInput(req.body.script);
+        // B4 FIX: A full 60s script is 2000-3000 chars. sanitizeInput's 500-char cap
+        // was silently truncating the script so that Gemini only saw the first ~3 segments.
+        // Using the high-cap sanitizer ensures the full script is always critiqued.
+        const script = sanitizeScriptInput(req.body.script);
         const hook = sanitizeInput(req.body.hook);
         if (!script) return res.status(400).json({ error: 'Script is required.' });
         const response = await generateWithFallback({
@@ -232,11 +263,27 @@ app.post('/api/critique', async (req, res) => {
 
 app.post('/api/improve', async (req, res) => {
     try {
-        const script = sanitizeScriptInput(req.body.script);    // FIX #4: use high-cap sanitizer for scripts
-        const critique = sanitizeScriptInput(req.body.critique);  // FIX #4: critique can also be long
+        const script = sanitizeScriptInput(req.body.script);
+        const critique = sanitizeScriptInput(req.body.critique);
         const visualStyle = sanitizeInput(req.body.visualStyle) || 'Default';
-        const { visualGenerationType, videoDuration } = req.body;
+        const { visualGenerationType } = req.body;
         if (!script) return res.status(400).json({ error: 'Script is required.' });
+
+        // B1 FIX: Strictly validate videoDuration to prevent arithmetic failures and prompt injection.
+        let videoDuration = undefined;
+        if (req.body.videoDuration !== undefined && req.body.videoDuration !== null) {
+            videoDuration = Number(req.body.videoDuration);
+            if (!Number.isFinite(videoDuration) || videoDuration < 2 || videoDuration > 30) {
+                return res.status(400).json({ error: 'videoDuration must be a finite number between 2 and 30 seconds.' });
+            }
+            videoDuration = Math.floor(videoDuration); // Force integer to make modulo reliable
+        }
+
+        // B1 FIX: Validate visualGenerationType against an allowlist.
+        const ALLOWED_GEN_TYPES = ['image', 'video'];
+        if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
+            return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
+        }
 
         let extraInstructions = "";
         let originalTimeline = "";
@@ -483,8 +530,24 @@ app.post('/api/generate', async (req, res) => {
     try {
         const trend = sanitizeInput(req.body.trend);
         const visualStyle = sanitizeInput(req.body.visualStyle);
-        const { visualGenerationType, videoDuration } = req.body;
+        const { visualGenerationType } = req.body;
         if (!trend) return res.status(400).json({ error: 'Trend is required.' });
+
+        // B1 FIX: Validate videoDuration to prevent NaN/negative arithmetic and prompt injection.
+        let videoDuration = undefined;
+        if (req.body.videoDuration !== undefined && req.body.videoDuration !== null) {
+            videoDuration = Number(req.body.videoDuration);
+            if (!Number.isFinite(videoDuration) || videoDuration < 2 || videoDuration > 30) {
+                return res.status(400).json({ error: 'videoDuration must be a finite number between 2 and 30 seconds.' });
+            }
+            videoDuration = Math.floor(videoDuration); // Force integer — modulo arithmetic requires this
+        }
+
+        // B1 FIX: Validate visualGenerationType against an explicit allowlist.
+        const ALLOWED_GEN_TYPES = ['image', 'video'];
+        if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
+            return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
+        }
 
         let extraInstructions = "";
         let durationInstruction = "      3. The script must be exactly 1 minute long when read at a normal pace. Break the script down into segments with precise timestamps.";
@@ -659,31 +722,30 @@ app.post('/api/generate', async (req, res) => {
 
         // Mathematically enforce exact timestamps so we don't rely on LLM formatting
         if (result.script && result.script.length > 0) {
-            let currentStartSecs = 0;
             const totalScriptLength = result.script.reduce((acc, s) => acc + s.text.length, 0);
+            // B6 FIX: Accumulate exact float positions first, THEN round each boundary independently.
+            // This prevents floating-point drift from causing the second-to-last segment to round
+            // UP to 60s, making the final segment zero-duration (01:00 – 01:00).
+            // Strategy: pre-calculate all float boundaries, then quantize as a separate pass.
+            const floatBoundaries = [];
+            let acc = 0;
+            for (let i = 0; i < result.script.length; i++) {
+                const start = acc;
+                if (videoDuration) {
+                    acc = Math.min(start + videoDuration, 60);
+                } else {
+                    const proportionalDuration = (result.script[i].text.length / totalScriptLength) * 60;
+                    acc = start + proportionalDuration;
+                }
+                floatBoundaries.push({ start, end: acc });
+            }
+            // Force last boundary to exactly 60 regardless of float accumulation
+            floatBoundaries[floatBoundaries.length - 1].end = 60;
 
             result.script = result.script.map((segment, index) => {
-                let startTimeSecs, endTimeSecs;
+                const { start: startTimeSecs, end: endTimeSecs } = floatBoundaries[index];
 
-                if (videoDuration) {
-                    startTimeSecs = index * videoDuration;
-                    endTimeSecs = Math.min(startTimeSecs + videoDuration, 60);
-                } else {
-                    // Start at the accumulated current start time
-                    startTimeSecs = currentStartSecs;
-                    // Calculate optimal pacing mathematically based on specific text density
-                    const proportionalDuration = (segment.text.length / totalScriptLength) * 60;
-                    endTimeSecs = currentStartSecs + proportionalDuration;
-                    currentStartSecs = endTimeSecs; // Advance pointer
-                }
-
-                // Force ultimate bound to exactly 60
-                if (index === result.script.length - 1) {
-                    endTimeSecs = 60;
-                }
-
-                // FIX #3: Use floor/ceil + enforce minimum 1s gap to prevent zero-duration segments
-                // Math.round can cause two adjacent floats (e.g. 4.5 and 5.4) to both become 5
+                // Round independently with a guaranteed minimum 1-second gap.
                 const roundedStart = Math.max(0, Math.floor(startTimeSecs));
                 const roundedEnd = Math.min(60, Math.max(roundedStart + 1, Math.ceil(endTimeSecs)));
 
