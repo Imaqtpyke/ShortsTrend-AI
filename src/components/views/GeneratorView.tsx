@@ -150,7 +150,7 @@ export function GeneratorView() {
                         onClick={copyAllForProduction}
                         className={cn(
                             "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none",
-                            `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
+                            theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                         )}
                     >
                         {copiedId === 'all' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -239,7 +239,7 @@ export function GeneratorView() {
                                             {/* Visual Prompt */}
                                             <div className={cn(
                                                 "flex-1 p-4 min-w-0",
-                                                `${theme.bgOpacity} ${theme.textAccent}`
+                                                theme.bgOpacity + " " + theme.textAccent
                                             )}>
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className="text-[10px] font-mono uppercase opacity-60">Visual Prompt</span>
@@ -321,7 +321,7 @@ export function GeneratorView() {
                                                 onClick={() => copyToClipboard(tag, `tag-${i}`)}
                                                 className={cn(
                                                     "text-[10px] font-mono tracking-wider uppercase px-2 py-1 rounded-sm border transition-colors flex items-center gap-1",
-                                                    `${theme.textAccent} ${theme.borderAccent} ${theme.bgAccent}`
+                                                    theme.textAccent + " " + theme.borderAccent + " " + theme.bgAccent
                                                 )}
                                             >
                                                 {copiedId === `tag-${i}` ? <Check className="w-3 h-3" /> : null}
@@ -357,7 +357,7 @@ export function GeneratorView() {
                             {contentIdea.editingEffects.map((effect, i) => (
                                 <div key={i} className={cn(
                                     "flex items-start gap-2 p-3 text-sm border",
-                                    `${theme.bgOpacity} ${theme.borderAccent2} ${theme.textAccent}`
+                                    theme.bgOpacity + " " + theme.borderAccent2 + " " + theme.textAccent
                                 )}>
                                     <Zap className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                     <span>{effect}</span>
@@ -384,7 +384,7 @@ export function GeneratorView() {
                             disabled={isLoading}
                             className={cn(
                                 "w-full flex items-center justify-center gap-3 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-all shadow-lg active:translate-y-1 active:shadow-none",
-                                `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
+                                theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                             )}
                         >
                             <Zap className="w-5 h-5" />

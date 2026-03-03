@@ -68,7 +68,7 @@ export function FloatingScrollButton({ containerRef }: { containerRef?: React.Re
                     onClick={handleClick}
                     className={cn(
                         "absolute bottom-8 right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300",
-                        `${theme.bg} text-[#0a0a0a] hover:scale-110 active:scale-95`
+                        theme.bg + " text-[#0a0a0a] hover:scale-110 active:scale-95"
                     )}
                     aria-label={isAtBottom ? "Scroll to top" : "Scroll to bottom"}
                 >

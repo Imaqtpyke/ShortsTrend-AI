@@ -131,8 +131,8 @@ function AnimatedGrid({ theme }: { theme: any }) {
       </div>
 
       {/* Subtle Ambient Glows */}
-      <div className={cn("absolute top-[-10%] left-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full -z-10 pointer-events-none", `${theme.bg}`)} />
-      <div className={cn("absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full -z-10 pointer-events-none", `${theme.bg}`)} />
+      <div className={cn("absolute top-[-10%] left-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full -z-10 pointer-events-none", theme.bg)} />
+      <div className={cn("absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] blur-[120px] opacity-10 rounded-full -z-10 pointer-events-none", theme.bg)} />
     </div>
   );
 }
@@ -260,7 +260,7 @@ export default function App() {
             <div className="flex items-center gap-2 cursor-pointer" onClick={resetApp}>
               <div className={cn(
                 "w-8 h-8 rounded-sm flex items-center justify-center transition-colors",
-                `${theme.bg}`
+                theme.bg
               )}>
                 <TrendingUp className="w-5 h-5 text-[#0a0a0a]" />
               </div>
@@ -281,7 +281,7 @@ export default function App() {
                 disabled={isLoading}
                 className={cn(
                   "hidden sm:flex items-center gap-2 px-4 py-2 rounded-sm font-mono text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] focus-ring text-[#0a0a0a]",
-                  `${theme.bg} ${theme.hoverBg}`
+                  theme.bg + " " + theme.hoverBg
                 )}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
@@ -335,7 +335,7 @@ export default function App() {
                     disabled={isLoading}
                     className={cn(
                       "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring disabled:opacity-50 disabled:cursor-not-allowed",
-                      `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
+                      theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                     )}
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}

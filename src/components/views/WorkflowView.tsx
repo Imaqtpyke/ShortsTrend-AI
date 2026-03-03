@@ -33,7 +33,7 @@ export function WorkflowView() {
                     onClick={() => setActiveTab('trends')}
                     className={cn(
                         "w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-all shadow-lg active:translate-y-1 active:shadow-none focus-ring",
-                        `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
+                        theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                     )}
                 >
                     <ArrowLeft className="w-5 h-5" />
@@ -102,15 +102,15 @@ export function WorkflowView() {
                                     theme.ring,
                                     "border-white/10",
                                     completedSteps.includes(i)
-                                        ? `${theme.bgAccent} opacity-60`
-                                        : `bg-[#0a0a0a] ${theme.hoverBorder}`
+                                        ? theme.bgAccent + " opacity-60"
+                                        : "bg-[#0a0a0a] " + theme.hoverBorder
                                 )}
                             >
                                 <div className={cn(
                                     "w-6 h-6 border flex items-center justify-center flex-shrink-0 transition-colors border-white/20",
                                     completedSteps.includes(i)
-                                        ? `${theme.bg} ${theme.border} text-[#0a0a0a]`
-                                        : `bg-[#0a0a0a] group-hover:${theme.border}`
+                                        ? theme.bg + " " + theme.border + " text-[#0a0a0a]"
+                                        : "bg-[#0a0a0a] group-hover:" + theme.border
                                 )}>
                                     {completedSteps.includes(i) && <Check className="w-4 h-4" />}
                                 </div>
