@@ -1,12 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Wand2, ArrowLeft, ImageIcon, Video, RefreshCw, Copy, Check, Clock, Zap, Hash, Volume2, Music, Layers, AlertTriangle, Scissors, Play, Square, Download } from 'lucide-react';
+import { Wand2, ArrowLeft, ImageIcon, Video, RefreshCw, Copy, Check, Clock, Zap, Hash, Layers, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { useAppStore, useTheme } from '../../store/useAppStore';
 import { FloatingScrollButton } from '../ui/FloatingScrollButton';
 import { VISUAL_STYLES } from '../../types';
-import { useTTS } from '../../hooks/useTTS';
 import { downloadAsMarkdown } from '../../lib/exportUtils';
 
 export function GeneratorView() {
@@ -30,7 +29,6 @@ export function GeneratorView() {
     } = useAppStore();
     const theme = useTheme();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-    const { speak, stop, isPlaying, activeText } = useTTS();
 
     if (!contentIdea) {
         const steps = [
@@ -199,24 +197,12 @@ export function GeneratorView() {
                                             <div className="flex-1 p-4 border-b md:border-b-0 md:border-r relative min-w-0 border-white/10">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-mono uppercase opacity-60">Audio</span>
+                                                        <span className="text-[10px] font-mono uppercase opacity-60">Audio (Voiceover Script)</span>
                                                         <span className={cn("text-[9px] font-mono", isOverLimit ? "text-orange-400" : "text-white/30")}>
                                                             {wordCount}/{maxWords}w
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => isPlaying && activeText === seg.audio ? stop() : speak(seg.audio)}
-                                                            aria-label="Play audio"
-                                                            className={cn(
-                                                                "p-1.5 rounded transition-colors",
-                                                                isPlaying && activeText === seg.audio
-                                                                    ? "bg-emerald-500 text-black border-transparent"
-                                                                    : "hover:bg-white/10 border border-transparent hover:border-white/10"
-                                                            )}
-                                                        >
-                                                            {isPlaying && activeText === seg.audio ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                                                        </button>
                                                         <button
                                                             onClick={() => copyToClipboard(seg.audio, `audio-${i}`)}
                                                             aria-label="Copy audio"
