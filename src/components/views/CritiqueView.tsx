@@ -1,14 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BarChart, ArrowLeft, Zap, Loader2, TrendingUp, AlertTriangle, ThumbsUp, Wand2, Copy, Check, ImageIcon, Lightbulb, Play, Square, Download } from 'lucide-react';
+import { BarChart, ArrowLeft, Zap, Loader2, TrendingUp, AlertTriangle, ThumbsUp, Wand2, Copy, Check, Lightbulb, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { RetentionGraph } from '../ui/RetentionGraph';
 import { useAppStore, useTheme } from '../../store/useAppStore';
-import { useTTS } from '../../hooks/useTTS';
 import { downloadAsMarkdown } from '../../lib/exportUtils';
-
-
 
 export function CritiqueView() {
     const {
@@ -28,7 +25,6 @@ export function CritiqueView() {
         visualGenerationType
     } = useAppStore();
     const theme = useTheme();
-    const { speak, stop, isPlaying, activeText } = useTTS();
 
     const formatTime = (secs: number) => {
         const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -270,17 +266,6 @@ export function CritiqueView() {
                                                     </span>
                                                     <span className="text-[10px] font-mono uppercase">Original</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => isPlaying && activeText === originalSeg.audio ? stop() : speak(originalSeg.audio)}
-                                                        className={cn(
-                                                            "p-1 rounded transition-colors",
-                                                            isPlaying && activeText === originalSeg.audio ? "bg-emerald-500 text-black border-transparent" : "hover:bg-white/10 border border-transparent hover:border-white/10"
-                                                        )}
-                                                    >
-                                                        {isPlaying && activeText === originalSeg.audio ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                                                    </button>
-                                                </div>
                                             </div>
                                             <div className="p-4 font-mono text-xs leading-relaxed text-white/60">
                                                 {originalSeg.audio}
@@ -297,15 +282,6 @@ export function CritiqueView() {
                                                     <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">Improved Revision</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => isPlaying && activeText === improvedSeg.audio ? stop() : speak(improvedSeg.audio)}
-                                                        className={cn(
-                                                            "p-1 rounded transition-colors",
-                                                            isPlaying && activeText === improvedSeg.audio ? "bg-purple-600 text-white border-transparent" : "hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
-                                                        )}
-                                                    >
-                                                        {isPlaying && activeText === improvedSeg.audio ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                                                    </button>
                                                     <button
                                                         onClick={() => copyToClipboard(improvedSeg.audio, `improved-${i}`)}
                                                         className="p-1 rounded transition-colors hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"

@@ -1,12 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Wand2, ArrowLeft, ImageIcon, Video, RefreshCw, Copy, Check, Clock, Zap, Hash, Volume2, Music, Layers, AlertTriangle, Scissors, Play, Square, Download } from 'lucide-react';
+import { Wand2, ArrowLeft, ImageIcon, Video, RefreshCw, Copy, Check, Clock, Zap, Hash, Layers, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { useAppStore, useTheme } from '../../store/useAppStore';
 import { FloatingScrollButton } from '../ui/FloatingScrollButton';
 import { VISUAL_STYLES } from '../../types';
-import { useTTS } from '../../hooks/useTTS';
 import { downloadAsMarkdown } from '../../lib/exportUtils';
 
 export function GeneratorView() {
@@ -30,7 +29,6 @@ export function GeneratorView() {
     } = useAppStore();
     const theme = useTheme();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-    const { speak, stop, isPlaying, activeText } = useTTS();
 
     if (!contentIdea || !contentIdea.segments || !Array.isArray(contentIdea.segments)) {
         const steps = [
@@ -150,7 +148,7 @@ export function GeneratorView() {
                         onClick={copyAllForProduction}
                         className={cn(
                             "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none",
-                            `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
+                            theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                         )}
                     >
                         {copiedId === 'all' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -199,24 +197,12 @@ export function GeneratorView() {
                                             <div className="flex-1 p-4 border-b md:border-b-0 md:border-r relative min-w-0 border-white/10">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-mono uppercase opacity-60">Audio</span>
+                                                        <span className="text-[10px] font-mono uppercase opacity-60">Audio (Voiceover Script)</span>
                                                         <span className={cn("text-[9px] font-mono", isOverLimit ? "text-orange-400" : "text-white/30")}>
                                                             {wordCount}/{maxWords}w
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => isPlaying && activeText === seg.audio ? stop() : speak(seg.audio)}
-                                                            aria-label="Play audio"
-                                                            className={cn(
-                                                                "p-1.5 rounded transition-colors",
-                                                                isPlaying && activeText === seg.audio
-                                                                    ? "bg-emerald-500 text-black border-transparent"
-                                                                    : "hover:bg-white/10 border border-transparent hover:border-white/10"
-                                                            )}
-                                                        >
-                                                            {isPlaying && activeText === seg.audio ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                                                        </button>
                                                         <button
                                                             onClick={() => copyToClipboard(seg.audio, `audio-${i}`)}
                                                             aria-label="Copy audio"
@@ -239,7 +225,7 @@ export function GeneratorView() {
                                             {/* Visual Prompt */}
                                             <div className={cn(
                                                 "flex-1 p-4 min-w-0",
-                                                `${theme.bgOpacity} ${theme.textAccent}`
+                                                theme.bgOpacity + " " + theme.textAccent
                                             )}>
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className="text-[10px] font-mono uppercase opacity-60">Visual Prompt</span>
@@ -321,7 +307,7 @@ export function GeneratorView() {
                                                 onClick={() => copyToClipboard(tag, `tag-${i}`)}
                                                 className={cn(
                                                     "text-[10px] font-mono tracking-wider uppercase px-2 py-1 rounded-sm border transition-colors flex items-center gap-1",
-                                                    `${theme.textAccent} ${theme.borderAccent} ${theme.bgAccent}`
+                                                    theme.textAccent + " " + theme.borderAccent + " " + theme.bgAccent
                                                 )}
                                             >
                                                 {copiedId === `tag-${i}` ? <Check className="w-3 h-3" /> : null}
@@ -357,7 +343,7 @@ export function GeneratorView() {
                             {contentIdea.editingEffects.map((effect, i) => (
                                 <div key={i} className={cn(
                                     "flex items-start gap-2 p-3 text-sm border",
-                                    `${theme.bgOpacity} ${theme.borderAccent2} ${theme.textAccent}`
+                                    theme.bgOpacity + " " + theme.borderAccent2 + " " + theme.textAccent
                                 )}>
                                     <Zap className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                     <span>{effect}</span>
@@ -384,7 +370,7 @@ export function GeneratorView() {
                             disabled={isLoading}
                             className={cn(
                                 "w-full flex items-center justify-center gap-3 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-all shadow-lg active:translate-y-1 active:shadow-none",
-                                `${theme.bg} text-[#0a0a0a] ${theme.hoverBg}`
+                                theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                             )}
                         >
                             <Zap className="w-5 h-5" />

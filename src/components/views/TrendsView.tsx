@@ -259,7 +259,10 @@ export function TrendsView() {
                                             "px-3 py-2.5 text-[10px] font-mono uppercase tracking-widest border transition-all focus-visible:ring-2 focus-visible:outline-none min-h-[44px]",
                                             theme.ring,
                                             trendFilter === filter
-                                                ? `bg-${theme.primary} text-[#0a0a0a] border-${theme.primary}`
+                                                ? theme.primary === 'emerald-500' ? 'bg-emerald-500 text-[#0a0a0a] border-emerald-500'
+                                                : theme.primary === 'red-500' ? 'bg-red-500 text-[#0a0a0a] border-red-500'
+                                                : theme.primary === 'blue-500' ? 'bg-blue-500 text-[#0a0a0a] border-blue-500'
+                                                : 'bg-purple-500 text-[#0a0a0a] border-purple-500'
                                                 : `bg-[#1a1a1a] text-white border-white/10 ${theme.hoverBorder}`
                                         )}
                                     >
