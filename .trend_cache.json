@@ -469,70 +469,323 @@
     },
     "expiresAt": 1772445750886
   },
+  "imagine": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Alternate Realities & 'What If' Scenarios",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Curious Minds, Fantasy Enthusiasts, Sci-Fi Fans, Thinkers (16-35)",
+          "exampleIdea": "Imagine a world where gravity briefly reverses every Tuesday for one hour, and show a montage of people adapting with creative solutions."
+        },
+        {
+          "name": "Fantasy Worldbuilding Lore Snippets",
+          "velocity": 88,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Aspiring Writers, D&D Players, Gamers, Fantasy Readers (18-40)",
+          "exampleIdea": "Reveal a 'lost page' from an ancient grimoire describing a magical city powered by captured starlight, with stunning visual effects."
+        },
+        {
+          "name": "Dreamcore & Liminal Space Aesthetics",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Aesthetic Enthusiasts, Gen Z, Art Lovers, Those seeking nostalgia or surrealism (15-28)",
+          "exampleIdea": "Show a POV journey through an eerily familiar yet empty shopping mall at night, with distorted reflections and soft, melancholic music."
+        },
+        {
+          "name": "Future Tech & Societal Concepts",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Tech Enthusiasts, Innovators, Futurists, Students (20-45)",
+          "exampleIdea": "Visualize a day in the life where personal AI companions are fully integrated into daily decision-making, from fashion to finance."
+        },
+        {
+          "name": "Historical 'What If' Reimaginations",
+          "velocity": 70,
+          "growth": "declining",
+          "competition": "Low",
+          "targetAudience": "History Buffs, Educators, Creative Writers, Thinkers (25-50)",
+          "exampleIdea": "Present a short animation depicting what cities would look like if dinosaurs never went extinct and coexisted with modern civilization."
+        }
+      ],
+      "viralFormats": [
+        "POV Narratives with Text Overlays",
+        "Visually Rich Montages with Epic/Ethereal Music",
+        "Short Animated/CGI Scenes",
+        "Green Screen Transformations of Ordinary Scenes",
+        "AI Art Generation Reveals (e.g., 'I asked AI to imagine...')"
+      ],
+      "hooks": [
+        "Imagine a world where...",
+        "What if [unlikely scenario]?",
+        "POV: You just discovered...",
+        "This will make you rethink everything.",
+        "The secret history of...",
+        "You won't believe how this plays out..."
+      ],
+      "videoStructures": [
+        "Question/Premise -> Visual Explanation -> Thought-Provoking Conclusion",
+        "Setup of Normality -> Sudden Imaginative Twist/Reveal",
+        "Short Narrative Arc with a Fantastical Element Introduced",
+        "Guided Visual Journey with Ethereal Voiceover/Text",
+        "Quick Cuts Montage Building to an 'Aha!' Moment"
+      ],
+      "popularMusic": [
+        "Ethereal Ambient Tracks (e.g., 'A Quiet Place' style)",
+        "Cinematic Orchestral Scores (epic/fantasy feel)",
+        "Dreamy Lo-Fi Beats with synth undertones",
+        "Mystical World Music Fusions",
+        "Trending 'Sadboi' or Reflective Pop Songs"
+      ],
+      "hashtagPatterns": [
+        "#imagine #whatif #fantasy #scifi #alternateuniverse",
+        "#worldbuilding #lore #dreamcore #liminalspaces #aesthetic",
+        "#futurism #tech #history #thoughtexperiment #mindblown",
+        "#shorts #viral #fyp #creative #storytelling #foryou",
+        "#art #animation #conceptart #visionary"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Creativity",
+          "value": 95
+        },
+        {
+          "subject": "Aesthetics",
+          "value": 90
+        },
+        {
+          "subject": "Story-driven",
+          "value": 85
+        },
+        {
+          "subject": "Thought-provoking",
+          "value": 90
+        },
+        {
+          "subject": "Escapism",
+          "value": 92
+        },
+        {
+          "subject": "Surrealism",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1772536503754
+  },
+  "pov": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "POV: Fantasy/Sci-Fi Immersion",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Fantasy & Sci-Fi Enthusiasts, Gamers, Role-players",
+          "exampleIdea": "POV: You've just awakened a dormant magical ability in a steampunk city, and the local guards are already on your tail."
+        },
+        {
+          "name": "POV: Hyper-Relatable Everyday Scenarios",
+          "velocity": 95,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z & Millennials experiencing common social/personal situations",
+          "exampleIdea": "POV: You're trying to look busy at work so your boss doesn't give you another task."
+        },
+        {
+          "name": "POV: Aesthetic/Dreamy Escapism",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Aesthetically-minded individuals, Travelers, Wellness Community",
+          "exampleIdea": "POV: You're on a spontaneous road trip through a moonlit desert with your favorite playlist on."
+        },
+        {
+          "name": "POV: Character Play/Persona Acting",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Drama/Comedy Fans, Role-play Enthusiasts, Cosplayers",
+          "exampleIdea": "POV: You're the overly dramatic side character who always knows how to stir the pot in any group."
+        },
+        {
+          "name": "POV: Nostalgic/Retro Moments",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Nostalgia Seekers, Millennials, Gen X, History Buffs",
+          "exampleIdea": "POV: It's 1999, you just finished school, and you're rushing home to get on dial-up internet."
+        }
+      ],
+      "viralFormats": [
+        "Text overlays setting the POV scene",
+        "Quick cuts and immersive camera movements (e.g., shaky cam, POV shot from phone)",
+        "Green screen backgrounds for fantastical or exotic settings",
+        "Lip-syncing to specific audio clips that enhance the scenario's mood or humor",
+        "Duets/Stitches reacting to another POV, continuing the narrative",
+        "Before and after transformations within a POV scenario"
+      ],
+      "hooks": [
+        "POV: You just...",
+        "When you're the main character and...",
+        "Imagine this: you're finally experiencing...",
+        "This is what it feels like to...",
+        "Only [specific group] will get this POV.",
+        "You thought it was a normal day, but then..."
+      ],
+      "videoStructures": [
+        "Quick Setup (text/visuals) -> Implied Reaction/Emotional Payoff",
+        "Narrative Snippet: Micro-story with beginning, middle, and end within the POV",
+        "Problem -> Exaggerated POV Reaction -> Humorous Resolution",
+        "Atmospheric Immersion: Focus on visuals and sound to create a specific feeling (less dialogue)",
+        "Interactive POV: Asking the viewer to imagine their choice or reaction within the scenario"
+      ],
+      "popularMusic": [
+        "Upbeat, sped-up pop tracks (e.g., 'Makeba' - Jain, 'What Was I Made For?' - Billie Eilish slowed)",
+        "Cinematic/Orchestral scores for dramatic or fantasy POVs",
+        "Lo-fi beats or ambient sounds for aesthetic/dreamy POVs",
+        "Nostalgic 80s/90s synth-wave or pop hits for retro themes",
+        "Trending meme sounds or short vocal snippets that fit comedic POVs",
+        "Sound effects that create atmosphere (e.g., rain, city bustle, magical chimes)"
+      ],
+      "hashtagPatterns": [
+        "#POV",
+        "#pov[specific_topic] (e.g., #povfantasy, #povrelatable, #povaesthetic)",
+        "#shortfilm",
+        "#acting",
+        "#skit",
+        "#comedyshorts",
+        "#foryoupage",
+        "#fyp",
+        "#relatable",
+        "#storytime",
+        "#[target_audience_tag] (e.g., #gamertok, #booktok, #traveltiktok)"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Immersive",
+          "value": 95
+        },
+        {
+          "subject": "Relatable",
+          "value": 80
+        },
+        {
+          "subject": "Story-driven",
+          "value": 75
+        },
+        {
+          "subject": "Creative",
+          "value": 85
+        },
+        {
+          "subject": "Emotional Resonance",
+          "value": 70
+        },
+        {
+          "subject": "Visual Aesthetic",
+          "value": 70
+        }
+      ]
+    },
+    "expiresAt": 1772549921881
+  },
   "__general__": {
     "data": {
       "trendingTopics": [
         {
-          "name": "AI Tool Demos & Quick Tutorials",
+          "name": "Clever Life Hacks & DIYs",
           "velocity": 85,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Tech Enthusiasts, Small Business Owners, Students, Creative Professionals seeking efficiency.",
-          "exampleIdea": "Watch me generate a full marketing campaign in 60 seconds using this new AI writing tool."
-        },
-        {
-          "name": "Aesthetic Mini-Vlogs & Routines",
-          "velocity": 70,
           "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Gen Z & Millennials interested in lifestyle, fashion, home decor, self-care, and aspirational content.",
-          "exampleIdea": "My calming evening routine after a busy day, featuring soft lighting, herbal tea, and journaling."
+          "competition": "Medium",
+          "targetAudience": "Homeowners, students, budget-conscious individuals, anyone looking for practical solutions.",
+          "exampleIdea": "Transforming an old jar into a stylish desk organizer in 30 seconds with this simple trick!"
         },
         {
-          "name": "Relatable 'POV' Comedy Skits",
+          "name": "AI & Productivity Boosters",
           "velocity": 90,
           "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Tech enthusiasts, young professionals, students, small business owners, knowledge workers.",
+          "exampleIdea": "I used ChatGPT to write my entire email sequence, here's how it saved me hours."
+        },
+        {
+          "name": "Speedy Recipe Hacks",
+          "velocity": 80,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Foodies, busy individuals, beginners in cooking, college students.",
+          "exampleIdea": "Making gourmet pasta in under 5 minutes with only 4 ingredients!"
+        },
+        {
+          "name": "Epic Gaming Moments & Fails",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gamers across various platforms (console, PC, mobile), esports fans, Gen Z.",
+          "exampleIdea": "Watch this insane 1v5 clutch in Valorant you won't believe!"
+        },
+        {
+          "name": "Aesthetic Daily Mini-Vlogs",
+          "velocity": 70,
+          "growth": "steady",
           "competition": "Medium",
-          "targetAudience": "Broad audience, especially Gen Z & Millennials who appreciate internet humor, memes, and observational comedy.",
-          "exampleIdea": "POV: You're trying to explain a niche internet joke to your parents and they just don't get it."
+          "targetAudience": "Lifestyle enthusiasts, Gen Z and Millennials interested in self-care, routines, and visual aesthetics.",
+          "exampleIdea": "My calming evening routine for unwinding after a long day."
+        },
+        {
+          "name": "Mind-Blowing Short Facts",
+          "velocity": 65,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Curious individuals, students, general knowledge seekers, those looking for quick educational content.",
+          "exampleIdea": "Did you know that humans share 50% of their DNA with bananas?"
         }
       ],
       "viralFormats": [
-        "Short-form tutorials (15-60 sec)",
-        "\"POV\" (Point of View) skits",
-        "\"Day in the Life\" or \"Routine\" montages",
-        "Visual before-and-after transformations",
-        "Talking head with engaging text overlays and quick cuts",
-        "Challenge participation/recreation"
+        "Before-and-after transformations",
+        "POV (Point of View) skits and scenarios",
+        "\"Satisfying\" loops (e.g., cleaning, organizing, ASMR-like processes)",
+        "Quick tutorials/How-tos with text overlays",
+        "Challenge participation (often dance or sound-based)",
+        "Product reviews/recommendations (quick demos)",
+        "\"Story time\" condensed into short impactful clips"
       ],
       "hooks": [
-        "STOP scrolling if you want to [achieve X]...",
-        "I tried the viral [trend/product] and here's what happened.",
-        "The secret to [desirable outcome] in 60 seconds.",
-        "You're doing [common activity] WRONG.",
-        "Wait for the [shocking/satisfying] reveal!",
-        "This changed my life, and it will change yours too."
+        "Stop scrolling if...",
+        "You NEED to try this...",
+        "I found a secret...",
+        "The one thing nobody tells you about...",
+        "Watch until the end to see...",
+        "Unexpected or surprising visual/sound",
+        "Direct questions to the viewer"
       ],
       "videoStructures": [
-        "Hook-Problem-Solution-Loop (tutorials/hacks)",
-        "POV-Setup-Punchline-Relatable reaction (comedy)",
-        "Aesthetic intro-Montage-Text overlay explanation-Satisfying outro (lifestyle)",
-        "Question-Quick Answer-Demonstration-Summary (informative)",
-        "Intrigue (first 3s)-Content dump-Engagement prompt"
+        "AIDA (Attention, Interest, Desire, Action) in 15-60 seconds: Strong hook, quick build-up, reveal/solution, subtle call to action.",
+        "Problem-Solution-Proof: Present a common problem, show a quick solution, demonstrate its effectiveness.",
+        "Montage with Text Overlay: Fast cuts synced to music, key information delivered via text.",
+        "Narrated Demonstration: Clear, concise voiceover guiding through a process.",
+        "Reaction + Original Clip: Creator reacts to popular/viral content, adding their own take."
       ],
       "popularMusic": [
-        "Upbeat, optimistic pop tracks (often sped-up versions)",
-        "Cinematic, emotional background scores (for aesthetic content)",
-        "Short, punchy audio memes/soundbites with vocal phrases",
-        "Lo-fi chill beats (for routine/study content)",
-        "Dramatic reveal sounds (for before/after transitions)"
+        "Sped-up versions of trending pop songs",
+        "Upbeat, high-energy electronic tracks",
+        "Nostalgic pop hits from the 90s/00s remixed",
+        "Dramatic, suspenseful background music for reveals",
+        "Lo-fi, chill beats for aesthetic/calm content",
+        "Specific trending audio meme sounds (e.g., certain dialogue snippets)"
       ],
       "hashtagPatterns": [
-        "#Shorts #[Niche] #Viral #[MicroNiche]",
-        "Question-based tags like #WhyIsThisTrending #HowTo_[X]",
-        "Emotional/relatable tags such as #Relatable #LifeHacks #Motivation",
-        "Challenge/Trend participation: #_[TrendName]Challenge #POV #[SoundName]",
-        "Concise, high-volume tags: #YouTubeShorts #Trending #FYP #ForYou"
+        "Mix of broad (#Shorts, #Viral, #FYP, #Trending)",
+        "Niche-specific (#GamingShorts, #DIYProjects, #RecipeHack, #Productivity)",
+        "Call-to-action/Engagement (#CommentBelow, #ShareThis)",
+        "Seasonal/Event-based (#SummerVibes, #Halloween)",
+        "Emotional/Relatable (#Relatable, #LifeLessons)"
       ],
       "nicheDNA": [
         {
@@ -540,133 +793,542 @@
           "value": 90
         },
         {
+          "subject": "Concise",
+          "value": 95
+        },
+        {
+          "subject": "Visually Engaging",
+          "value": 88
+        },
+        {
           "subject": "Entertaining",
-          "value": 85
+          "value": 82
         },
         {
-          "subject": "Relatable",
-          "value": 80
-        },
-        {
-          "subject": "Informative",
-          "value": 70
-        },
-        {
-          "subject": "Humorous",
+          "subject": "Informative/Practical",
           "value": 75
         },
         {
-          "subject": "Aesthetic",
-          "value": 65
+          "subject": "Relatable/Authentic",
+          "value": 70
         }
       ]
     },
-    "expiresAt": 1772450072574
+    "expiresAt": 1772717465444
   },
-  "imagine": {
+  "talking objects": {
     "data": {
       "trendingTopics": [
         {
-          "name": "Hypothetical Scenarios",
+          "name": "Sentient Snacks",
           "velocity": 85,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Curious minds, Sci-Fi/Fantasy enthusiasts, philosophical thinkers",
-          "exampleIdea": "Imagine if you woke up one day and could understand the secret language of trees, but only when it rained."
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z & Millennials, foodies, people seeking lighthearted humor and relatable everyday observations.",
+          "exampleIdea": "A partially eaten cookie dramatically complains about its impending doom and the questionable dietary choices of its human owner."
         },
         {
-          "name": "Dreamcore & Liminal Spaces",
+          "name": "Domestic Monologues",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Homeowners, parents, young adults, individuals who appreciate observational comedy about household life and chores.",
+          "exampleIdea": "A disgruntled coffee maker narrates its morning ritual, judging the specific brew preferences and grumbling about the lack of cleaning."
+        },
+        {
+          "name": "Pet Pundits",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Pet owners, animal lovers, people looking for heartwarming, funny, or sassy content featuring their beloved companions.",
+          "exampleIdea": "A cat, from its high perch, dryly critiques its human's attempt at productive work, constantly hinting at nap time and demanding treats."
+        },
+        {
+          "name": "Gadget Gossip",
           "velocity": 70,
           "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Gen Z, aesthetic enthusiasts, those seeking nostalgia or surrealism",
-          "exampleIdea": "Imagine wandering through an endlessly repeating empty mall, knowing you've been there before but can't remember why."
-        },
-        {
-          "name": "Emotional 'What If' Moments",
-          "velocity": 78,
-          "growth": "exploding",
           "competition": "Medium",
-          "targetAudience": "Individuals seeking emotional connection, solace, or wish-fulfillment fantasies",
-          "exampleIdea": "Imagine a moment where all your past regrets are suddenly erased, and you have a clean slate to begin again."
-        },
-        {
-          "name": "POV Creative Prompts",
-          "velocity": 80,
-          "growth": "exploding",
-          "competition": "High",
-          "targetAudience": "Creative writers, artists, role-players, and visual storytellers",
-          "exampleIdea": "POV: You find an ancient, ornate key that opens any door, but only once."
-        },
-        {
-          "name": "Fantasy World Immersion",
-          "velocity": 65,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Fantasy readers, D&D players, escapists, and world-building enthusiasts",
-          "exampleIdea": "Imagine discovering a hidden village nestled high in the clouds, powered by forgotten magic."
+          "targetAudience": "Tech enthusiasts, gamers, young adults, anyone amused or frustrated by their digital devices and modern technology.",
+          "exampleIdea": "A smartphone, with a dramatically low battery, passive-aggressively shames its owner for hours of continuous scrolling."
         }
       ],
       "viralFormats": [
-        "Text-on-screen with atmospheric B-roll footage",
-        "POV style acting/cosplay with voiceover",
-        "Animated short scenes depicting the 'imagine' scenario",
-        "Voiceover narration over captivating stock footage or original art",
-        "Short, quick-cut visuals with a dramatic build-up to a hypothetical question"
+        "Voiceover Skits (object with animated mouth overlay or still image with voiceover)",
+        "Puppetry (either literal or implied with object movement)",
+        "Stop-motion animation with object expressions",
+        "Confessional Style (object 'speaks' directly to the camera)",
+        "Dialogue between two or more inanimate objects"
       ],
       "hooks": [
-        "Imagine this for a second...",
-        "What if everything you thought you knew wasn't true?",
-        "Close your eyes and picture this...",
-        "You won't believe this scenario...",
-        "If you could imagine anything, would it be this?"
+        "You won't believe what my [object] just said!",
+        "My [object] has a secret life you never knew about.",
+        "If [object] could talk, they'd say THIS about you.",
+        "The untold story of a [object] living in your home...",
+        "Why does my [object] always complain about [relatable situation]?"
       ],
       "videoStructures": [
-        "Opening hook -> Scenario description (visuals/text) -> Open-ended question/feeling",
-        "POV setup (visuals/character) -> Problem/Discovery -> Viewer's imagined reaction",
-        "Ambient intro -> Narrated prompt -> Engaging visual sequence -> Call to imagine further",
-        "Text-based story progression with quick cuts and music -> Final thought-provoking statement",
-        "Dramatic visual/sound bite -> 'Imagine if' statement -> Cinematic montage of the scenario"
+        "Object Monologue: The object narrates its daily life, struggles, or observations.",
+        "Object Offers Advice/Critique: An object observes human behavior and gives humorous (often sarcastic) advice.",
+        "Dialogue/Interaction: Object interacts with another object or a human (who may not understand but reacts).",
+        "POV (Point of View): The video is shot from the object's perspective, with its internal monologue."
       ],
       "popularMusic": [
-        "Ethereal/Ambient soundscapes (e.g., 'Sleepwalker' by RIIZE type ambient tracks)",
-        "Lo-fi beats with dreamy undertones",
-        "Dramatic orchestral scores (for high fantasy/sci-fi scenarios)",
-        "Slightly melancholic or nostalgic instrumental pieces",
-        "Sound effects that enhance the imagined environment (e.g., rain, wind, distant echoes)"
+        "Upbeat, quirky, or comedic instrumental background music (often royalty-free)",
+        "Short, punchy sound effects for emphasis (e.g., 'boing', 'wah-wah', 'gasp')",
+        "Trending short audio clips or vocal snippets that convey humor or drama, often sped up or pitched",
+        "Lighthearted, slightly melancholic tunes for 'woe-is-me' object monologues"
       ],
       "hashtagPatterns": [
-        "#ImagineThis #WhatIf #Scenario #Fantasy #Dreams #Storytelling #CreativePrompt",
-        "#POV #LiminalSpaces #Dreamcore #Hypothetical #Escapism #MindBender",
-        "#Shorts #YouTubeShorts #ForYou #FYP #Trending #Viral"
+        "#Talking[Object]",
+        "#[Object]Life",
+        "#ShortsComedy",
+        "#FunnyVoices",
+        "#POV[Object]",
+        "#PetHumor (for talking pets)",
+        "#RelatableShorts",
+        "#Voiceover"
       ],
       "nicheDNA": [
         {
-          "subject": "Imagination",
-          "value": 100
+          "subject": "Humor",
+          "value": 95
         },
         {
-          "subject": "Escapism",
+          "subject": "Creativity",
           "value": 90
         },
         {
-          "subject": "Thought-provoking",
+          "subject": "Relatability",
           "value": 85
         },
         {
-          "subject": "Aesthetic",
+          "subject": "Short-form Storytelling",
+          "value": 80
+        },
+        {
+          "subject": "Observational Comedy",
           "value": 75
         },
         {
-          "subject": "Emotional Resonance",
-          "value": 70
-        },
-        {
-          "subject": "Community Interaction",
-          "value": 60
+          "subject": "Personification",
+          "value": 98
         }
       ]
     },
-    "expiresAt": 1772458539542
+    "expiresAt": 1772718953022
+  },
+  "humorous cat": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Cat Mischief & Destruction",
+          "velocity": 90,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Cat owners, general animal lovers, people seeking lighthearted humor",
+          "exampleIdea": "My cat 'redecorating' the Christmas tree by systematically batting off ornaments, ending with a proud look."
+        },
+        {
+          "name": "Cat Reactions to Unusual Stimuli",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Meme enthusiasts, pet parents, viewers who enjoy unexpected comedic timing",
+          "exampleIdea": "Filming my cat's exaggerated, startled jump after seeing their reflection in a new mirror for the first time."
+        },
+        {
+          "name": "Cats with Human-like Behaviors/Voiceovers",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Younger audiences, people who enjoy anthropomorphic pet content and relatable humor",
+          "exampleIdea": "A voiceover of my cat dramatically complaining about their food bowl being half empty while staring intently at me."
+        },
+        {
+          "name": "POV: Life as a Cat",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Creative content consumers, pet owners who wonder what their pets are thinking",
+          "exampleIdea": "POV: You're a cat waking up and deciding if you want to demand breakfast, nap in a sunbeam, or attack the curtains."
+        }
+      ],
+      "viralFormats": [
+        "Short, unexpected clips with quick cuts",
+        "Reaction videos (human or cat reacting)",
+        "Voiceovers/dubbing for cat actions",
+        "Slow-motion captures of funny moments",
+        "POV (Point of View) from the cat's perspective",
+        "Before & After comparisons (e.g., calm vs. chaotic)"
+      ],
+      "hooks": [
+        "Wait for it...",
+        "My cat is broken.",
+        "You won't believe what my cat did next.",
+        "Tell me you have a cat without telling me you have a cat.",
+        "The purest form of chaos.",
+        "This is why I can't have nice things."
+      ],
+      "videoStructures": [
+        "Setup-Punchline (brief intro, funny cat action, quick cut/reaction)",
+        "Problem-Solution (failed): (e.g., Cat bored, new toy introduced, cat ignores/destroys toy)",
+        "Montage of multiple short, funny cat clips",
+        "POV Narrative (short story from cat's perspective, often with text or voiceover)",
+        "Short, single-take unexpected moment"
+      ],
+      "popularMusic": [
+        "Upbeat, quirky instrumental tracks",
+        "Exaggerated cartoon sound effects (e.g., boing, confused sound)",
+        "Soundbites from trending memes (e.g., 'Oh no, oh no, oh no no no no')",
+        "Dramatic cinematic swells for comedic reveals",
+        "Retro arcade game sounds"
+      ],
+      "hashtagPatterns": [
+        "#CatHumor #FunnyCats #CatsofYouTube #PetComedy #CatLife",
+        "#FelineFunnies #Kitten #ViralCat #PetsofYouTubeShorts #CuteCats",
+        "#CatPranks #TalkingCat #CatReactions #Relatable #PetParents",
+        "#CatMischief #CatsBeingCats #Shorts"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Humor",
+          "value": 95
+        },
+        {
+          "subject": "Relatability (for pet owners)",
+          "value": 80
+        },
+        {
+          "subject": "Unpredictability",
+          "value": 85
+        },
+        {
+          "subject": "Cuteness/Aesthetic",
+          "value": 70
+        },
+        {
+          "subject": "Fast-paced/Dynamic",
+          "value": 75
+        },
+        {
+          "subject": "Lighthearted/Escapism",
+          "value": 90
+        }
+      ]
+    },
+    "expiresAt": 1772719147184
+  },
+  "funny cat": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Cats vs. Inanimate Objects",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "General audience, cat owners, people looking for lighthearted animal humor.",
+          "exampleIdea": "A cat comically 'fighting' a roll of toilet paper, ending with the paper shredded everywhere while the cat looks bewildered."
+        },
+        {
+          "name": "Mischievous Cat Antics",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Pet owners, those who enjoy slapstick comedy and animal mischief, general viewers seeking quick laughs.",
+          "exampleIdea": "A cat deliberately knocking over a carefully stacked tower of items, then slowly looking at the camera with an 'innocent' expression."
+        },
+        {
+          "name": "Expressive & Mimicking Cats",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Cat lovers, people who anthropomorphize pets, meme enthusiasts.",
+          "exampleIdea": "A cat 'answering' a human's question with a distinct meow that sounds eerily like a human word, subtitled for comedic effect."
+        },
+        {
+          "name": "Cats Reacting to Unexpected Stimuli",
+          "velocity": 80,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "General audience, people who enjoy cute and surprising animal behavior.",
+          "exampleIdea": "A cat gets startled by its own reflection in a mirror, then comically attempts to 'fight' or investigate the 'intruder'."
+        }
+      ],
+      "viralFormats": [
+        "Short, quick-cut montage of various funny moments",
+        "POV (Point of View) from the human interacting with the cat",
+        "'Wait for it...' reveal structure with a surprising cat action",
+        "Text overlays with witty captions or the cat's 'thoughts'",
+        "Slow-motion captures of epic cat fails or clumsy jumps"
+      ],
+      "hooks": [
+        "My cat is a menace, watch this...",
+        "You won't believe what my cat did next!",
+        "The moment I knew I owned a tiny dictator.",
+        "Watch my cat's brilliant plan unfold.",
+        "Is your cat this chaotic too?"
+      ],
+      "videoStructures": [
+        "Problem-Reaction-Resolution (humorous mess)",
+        "Quick Cut Montage (multiple funny clips set to trending audio)",
+        "Single Incident Focus (build-up to one main funny event)",
+        "POV Storytelling (narrating the cat's mischief from the owner's perspective)",
+        "'Before and After' (showing cat-induced chaos)"
+      ],
+      "popularMusic": [
+        "Upbeat, quirky instrumental tracks",
+        "Sound effects like 'boing', 'cartoon fall', 'record scratch'",
+        "Human voiceovers with funny or relatable observations about cats",
+        "Short, catchy pop songs trending on platforms, used ironically",
+        "Specific cat meows or growls edited for comedic timing"
+      ],
+      "hashtagPatterns": [
+        "#FunnyCat #CatShorts #CatsofYouTube #PetHumor",
+        "#CatsAreWeird #MischievousCat #CatLife #CrazyCat",
+        "#CuteCats #CatVideos #PetsofYouTube",
+        "#FypCat #ViralCats #ShortsFeed"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Humor",
+          "value": 95
+        },
+        {
+          "subject": "Cuteness",
+          "value": 80
+        },
+        {
+          "subject": "Relatability",
+          "value": 90
+        },
+        {
+          "subject": "Surprise/Unexpected",
+          "value": 75
+        },
+        {
+          "subject": "Short-form entertainment",
+          "value": 90
+        },
+        {
+          "subject": "Animal Antics",
+          "value": 95
+        }
+      ]
+    },
+    "expiresAt": 1772719622343
+  },
+  "absurd / surreal ai images": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "AI Animals in Mundane Human Scenarios",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Gen Z & Millennials, animal lovers, internet humor enthusiasts, AI art curious.",
+          "exampleIdea": "Watch as AI generates photorealistic images of a family of bears meticulously grocery shopping, pushing tiny carts and debating organic kale."
+        },
+        {
+          "name": "AI's Unsettling Culinary Creations",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Foodies with a dark sense of humor, meme connoisseurs, AI art fans.",
+          "exampleIdea": "Experience pure horror as AI renders a 'pizza smoothie' complete with floating pepperoni chunks and a melting cheese straw."
+        },
+        {
+          "name": "Historical Figures in Absurd Modern Contexts by AI",
+          "velocity": 80,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "History buffs, meme culture followers, AI art explorers, educational entertainment seekers.",
+          "exampleIdea": "Witness Abraham Lincoln breakdancing at a cyberpunk rave, complete with glowing hat and neon-lit top hat, all generated by AI."
+        }
+      ],
+      "viralFormats": [
+        "Rapid-fire image slideshows with text overlays and energetic music",
+        "Prompt-to-image reveal videos (showing the prompt then the absurd result)",
+        "Comparison videos: 'Normal vs. AI Absurd Version'",
+        "Collection of AI-generated images around a theme with minimal commentary"
+      ],
+      "hooks": [
+        "You won't BELIEVE what AI did to [common thing]!",
+        "My brain broke watching AI generate these...",
+        "I asked AI for the most absurd [topic], here's what it gave me.",
+        "Is this art or a nightmare? You decide.",
+        "The most cursed AI images you'll see today."
+      ],
+      "videoStructures": [
+        "Hook (shocking image/question) -> 5-10 absurd AI images with short captions/music -> Engage (ask for comments, like).",
+        "Hook (prompt text) -> Short transition -> Reveal 1 absurd image -> Reveal 2-3 more related images with music -> Final thought/question.",
+        "Intro with 'challenge' (e.g., 'AI, make a cat president') -> Series of AI generated images fulfilling the challenge -> Humorous commentary."
+      ],
+      "popularMusic": [
+        "Upbeat, slightly chaotic EDM or synthwave tracks",
+        "Classic orchestral music dramatically placed over bizarre visuals",
+        "Creepy carnival or mysterious/suspenseful background music",
+        "Trending meme sounds (often instrumental versions or short clips)",
+        "Royalty-free tracks that evoke wonder, confusion, or slight unease"
+      ],
+      "hashtagPatterns": [
+        "#AIArt #AIgenerated #Midjourney #StableDiffusion #DALLE2 #SurrealArt #AbsurdArt #WeirdCore #CursedImages #AIImages",
+        "#PromptEngineering #GenerativeArt #DigitalArt #ArtificalIntelligence #FutureIsNow #Meme #Shorts #Viral #Explore #FYP",
+        "#AICreatures #AIFood #AIHistory #AIAnimals #CursedFood"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Humor",
+          "value": 90
+        },
+        {
+          "subject": "Surrealism",
+          "value": 95
+        },
+        {
+          "subject": "Creativity",
+          "value": 85
+        },
+        {
+          "subject": "Shock Value",
+          "value": 75
+        },
+        {
+          "subject": "Technology-driven",
+          "value": 90
+        },
+        {
+          "subject": "Visual Impact",
+          "value": 95
+        }
+      ]
+    },
+    "expiresAt": 1772719807319
+  },
+  "“what if history’s most powerful leaders came back to plan world war iii?”": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Napoleon's Blitzkrieg 2.0",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Military History Enthusiasts, Strategy Gamers, European History buffs",
+          "exampleIdea": "If Napoleon led WW3, his first move wouldn't be tanks, but a lightning-fast cyber blitz targeting global infrastructure before any ground forces moved an inch."
+        },
+        {
+          "name": "Sun Tzu's Invisible War",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Geopolitics Students, Business Strategists, Fans of espionage thrillers",
+          "exampleIdea": "Sun Tzu's WW3 plan: don't fight battles, win the war before it starts by collapsing enemy morale and alliances through relentless, untraceable disinformation campaigns."
+        },
+        {
+          "name": "Genghis Khan's Logistics Domination",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Logistics Professionals, World History Students, Survivalists",
+          "exampleIdea": "Genghis Khan wouldn't care about superweapons; his WW3 strategy would revolve around crippling global trade routes and seizing key rare-earth mineral mines to starve opponents of resources and technology."
+        },
+        {
+          "name": "Alexander the Great's Shock & Awe 2.0",
+          "velocity": 80,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Classical History Scholars, Leadership Enthusiasts, RPG Players",
+          "exampleIdea": "Alexander the Great's WW3 plan: don't just win battles, utterly demoralize enemies with a combination of overwhelming initial strikes and a charismatic global propaganda campaign that turns populations against their own leaders."
+        },
+        {
+          "name": "Queen Elizabeth I's Diplomatic & Naval Masterclass",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "International Relations Students, British History Enthusiasts, Chess Players",
+          "exampleIdea": "Queen Elizabeth I wouldn't fight a conventional WW3; she'd orchestrate a global network of naval blockades and proxy wars, leveraging economic sanctions and clever diplomatic maneuvers to weaken enemies without direct confrontation."
+        }
+      ],
+      "viralFormats": [
+        "Rapid-fire historical facts with quick cuts and impactful visuals",
+        "",
+        "Animated maps showing hypothetical troop movements or strategic strikes",
+        "",
+        "AI-generated voiceovers of historical leaders explaining their strategies",
+        "",
+        "",
+        "Text-on-screen narrative with dramatic background footage or imagery",
+        "",
+        "Comparison videos (e.g., 'Napoleon vs. Sun Tzu: Who Plans WW3 Better?')"
+      ],
+      "hooks": [
+        "What if [Leader Name] was planning World War 3?",
+        "",
+        "The [Leader Name] strategy for WW3 will shock you!",
+        "",
+        "You won't believe [Leader Name]'s first move in a global conflict.",
+        "",
+        "Could [Leader Name]'s ancient tactics still win a modern war?",
+        "",
+        "This is how [Leader Name] would dominate World War 3.",
+        "",
+        "Only [Leader Name] would think of THIS for WW3."
+      ],
+      "videoStructures": [
+        "Hook -> Introduce Leader & Premise -> Present 1-3 Key Strategic Points/Moves -> Quick Visual Summary/Impact -> Call to Action/Engaging Question",
+        "",
+        "Hook -> Pose a Modern Geopolitical Challenge -> Detail How a Specific Leader Would Address It Using Their Historical Philosophy -> Conclude with a 'What If' Scenario",
+        "",
+        "Hook -> Introduce Two Leaders -> Compare and Contrast Their Hypothetical WW3 Strategies in Rapid Succession -> Declare a 'Winner' or Ask Audience for Input",
+        "",
+        "Problem-Solution Format: Identify a WW3 problem -> Show how a leader uniquely solves it -> Historical parallel -> Cliffhanger for discussion."
+      ],
+      "popularMusic": [
+        "Epic orchestral scores (e.g., 'Two Steps From Hell' style)",
+        "",
+        "Tense, dramatic electronic music with heavy bass drops",
+        "",
+        "Modernized historical marching band themes",
+        "",
+        "Sound effects: Explosions, battle cries, strategic computer beeps, dramatic whooshes",
+        "",
+        "Dark, atmospheric synthwave for espionage themes"
+      ],
+      "hashtagPatterns": [
+        "#WhatIfHistory #WW3Strategy #HistoricalLeaders #Geopolitics #StrategyGaming #HistoryShorts #MilitaryHistory",
+        "",
+        "#[LeaderName]Strategy #AlternateHistory #ConspiracyTheories #WarfareTactics #WorldWar3",
+        "",
+        "#SunTzu #Napoleon #GenghisKhan #AlexanderTheGreat #QueenElizabethI",
+        "",
+        "#StrategyGames #HistoryTok #Education #ThinkAboutIt #FutureWar"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Speculative/Hypothetical",
+          "value": 95
+        },
+        {
+          "subject": "Educational",
+          "value": 80
+        },
+        {
+          "subject": "Dramatic/Epic",
+          "value": 90
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 85
+        },
+        {
+          "subject": "Thought-provoking",
+          "value": 75
+        },
+        {
+          "subject": "Strategic Analysis",
+          "value": 88
+        }
+      ]
+    },
+    "expiresAt": 1772724726715
   }
 }

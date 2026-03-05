@@ -44,12 +44,24 @@ export function TrendsView() {
     const [sortBy, setSortBy] = React.useState<'velocity' | 'competition'>('velocity');
     const [charError, setCharError] = React.useState<string | null>(null);
 
+    // Reset segment mode if video type is selected (video is always adjustable)
+    React.useEffect(() => {
+        if (visualGenerationType === 'video' && segmentMode === 'fixed') {
+            setSegmentMode('adjustable');
+        }
+    }, [visualGenerationType, segmentMode, setSegmentMode]);
+
     const wordCount = customCharacter.description.trim().split(/\s+/).filter(Boolean).length;
     const isCharacterValid = !useCustomCharacter || (
         customCharacter.name.trim().length > 0 && wordCount >= 50
     );
 
     const handleGenerateWithValidation = (trend: string) => {
+        // Force adjustable mode for video type if somehow in fixed
+        if (visualGenerationType === 'video' && segmentMode === 'fixed') {
+            setSegmentMode('adjustable');
+        }
+
         if (useCustomCharacter) {
             if (!customCharacter.name.trim()) {
                 setCharError('Character name is required.');
@@ -182,7 +194,7 @@ export function TrendsView() {
             <div className="space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
                     <Section title="Trend Velocity Analysis" icon={<BarChart className="w-5 h-5" />}>
-                        <div className="h-48 md:h-64 w-full p-2 md:p-4 border bg-[#0a0a0a] border-white/10" style={{ minHeight: '180px' }}>
+                        <div className="h-48 md:h-64 w-full p-2 md:p-4 border bg-[#0a0a0a] border-white/10" style={{ minHeight: '180px', minWidth: '0' }}>
                             <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
                                 <ReBarChart data={analysis.trendingTopics}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
@@ -386,7 +398,7 @@ export function TrendsView() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] text-white border border-white/10 p-6 sm:p-8 custom-scrollbar shadow-2xl"
+                        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] text-white border border-white/10 p-5 sm:p-6 custom-scrollbar shadow-2xl"
                     >
                         <button
                             onClick={() => setSelectedTrendForModal(null)}
@@ -395,18 +407,18 @@ export function TrendsView() {
                             <X className="w-5 h-5" />
                         </button>
 
-                        <div className="mb-6 space-y-2">
-                            <h3 className="text-xl md:text-2xl font-bold tracking-tight">Configure Generation for: {selectedTrendForModal}</h3>
-                            <p className="text-sm font-mono opacity-60">Set your visual directions before creating the script.</p>
+                        <div className="mb-5 space-y-1">
+                            <h3 className="text-lg md:text-xl font-bold tracking-tight">Configure Generation: {selectedTrendForModal}</h3>
+                            <p className="text-[11px] font-mono opacity-60">Set your visual directions before creating the script.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch pt-4 border-t border-white/10">
-                            {/* Left Column: Visual Style */}
-                            <div className="space-y-3 h-full flex flex-col">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 pt-5 border-t border-white/10 items-stretch">
+                            {/* ── Box 1: Visual Style (Primary Anchor) ── */}
+                            <div className="md:col-span-2 md:row-span-2 p-4 border bg-[#1a1a1a]/40 border-white/10 flex flex-col space-y-3">
                                 <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
                                     <ImageIcon className="w-3 h-3" /> Visual Style
                                 </label>
-                                <div className="flex flex-wrap gap-2 flex-1 items-start content-between">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 flex-1 items-start content-start">
                                     {VISUAL_STYLES.map(style => {
                                         let label = style.split(' ')[0];
                                         if (style === "Low Poly 3D") label = "LOW";
@@ -418,10 +430,10 @@ export function TrendsView() {
                                                 key={style}
                                                 onClick={() => setVisualStyle(style)}
                                                 className={cn(
-                                                    "px-3 py-2 text-[10px] sm:text-[11px] font-mono uppercase border transition-all whitespace-nowrap min-h-[44px] flex items-center justify-center flex-1 min-w-[80px]",
+                                                    "px-3 py-2 text-[10px] sm:text-[10px] font-mono uppercase border transition-all min-h-[42px] flex items-center justify-center",
                                                     selectedVisualStyle === style
                                                         ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500 font-bold"
-                                                        : "bg-[#1a1a1a] text-white border-white/10 hover:border-emerald-500"
+                                                        : "bg-[#0a0a0a] text-white border-white/10 hover:border-emerald-500"
                                                 )}
                                             >
                                                 {label}
@@ -431,119 +443,98 @@ export function TrendsView() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Type and Generate */}
-                            <div className="space-y-6 flex flex-col h-full self-stretch">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
-                                        <Video className="w-3 h-3" /> Type
-                                    </label>
-                                    <div className="flex gap-3">
-                                        {(['image', 'video'] as const).map(type => (
-                                            <button
-                                                key={type}
-                                                onClick={() => setVisualGenerationType(type)}
-                                                className={cn(
-                                                    "px-4 py-3 text-[11px] font-mono uppercase border transition-all flex items-center gap-2 whitespace-nowrap w-full justify-center min-h-[48px]",
-                                                    visualGenerationType === type
-                                                        ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500"
-                                                        : "bg-[#1a1a1a] text-white border-white/10 hover:border-emerald-500"
-                                                )}
-                                            >
-                                                {type === 'image' ? <ImageIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-                                                {type}
-                                            </button>
-                                        ))}
-                                    </div>
+                            {/* ── Box 2: Visual Type (Compact) ── */}
+                            <div className="md:col-span-1 p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-3">
+                                <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
+                                    <Video className="w-3 h-3" /> Type
+                                </label>
+                                <div className="flex flex-col gap-2">
+                                    {(['image', 'video'] as const).map(type => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setVisualGenerationType(type)}
+                                            className={cn(
+                                                "px-4 py-2.5 text-[11px] font-mono uppercase border transition-all flex items-center gap-3 w-full min-h-[40px]",
+                                                visualGenerationType === type
+                                                    ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500"
+                                                    : "bg-[#0a0a0a] text-white border-white/10 hover:border-emerald-500"
+                                            )}
+                                        >
+                                            {type === 'image' ? <ImageIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                                            {type}
+                                        </button>
+                                    ))}
                                 </div>
+                            </div>
 
-                                <div className="space-y-3 pt-2">
+                            {/* ── Box 3: Segment Length (Compact) ── */}
+                            <div className="md:col-span-1 p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-3">
+                                <div className="flex flex-col space-y-2">
                                     <div className="flex justify-between items-center">
                                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
                                             {visualGenerationType === 'video' ? <Video className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
-                                            {visualGenerationType === 'video' ? 'Clip Length (per scene)' : 'Segment Length'}
+                                            {visualGenerationType === 'video' ? 'Clip' : 'Segment'}
                                         </label>
 
-                                        <div className="flex bg-[#1a1a1a] border border-white/10 p-0.5 rounded-sm">
-                                            <button
-                                                onClick={() => setSegmentMode('fixed')}
-                                                className={cn(
-                                                    "px-2 py-1 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest transition-colors rounded-sm",
-                                                    segmentMode === 'fixed'
-                                                        ? "bg-emerald-500 text-black font-bold"
-                                                        : "text-white/50 hover:text-white"
-                                                )}
-                                            >
-                                                Fixed mode
-                                            </button>
+                                        <div className="flex bg-[#0a0a0a] border border-white/10 p-0.5 rounded-sm">
+                                            {visualGenerationType === 'image' && (
+                                                <button
+                                                    onClick={() => setSegmentMode('fixed')}
+                                                    className={cn(
+                                                        "px-2 py-1 text-[8px] font-mono uppercase tracking-widest transition-colors rounded-sm",
+                                                        segmentMode === 'fixed'
+                                                            ? "bg-emerald-500 text-black font-bold"
+                                                            : "text-white/50 hover:text-white"
+                                                    )}
+                                                >
+                                                    High-Retention
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => setSegmentMode('adjustable')}
                                                 className={cn(
-                                                    "px-2 py-1 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest transition-colors rounded-sm",
-                                                    segmentMode === 'adjustable'
+                                                    "px-2 py-1 text-[8px] font-mono uppercase tracking-widest transition-colors rounded-sm",
+                                                    (segmentMode === 'adjustable' || visualGenerationType === 'video')
                                                         ? "bg-emerald-500 text-black font-bold"
                                                         : "text-white/50 hover:text-white"
                                                 )}
                                             >
-                                                Adjustable
+                                                Adj.
                                             </button>
                                         </div>
                                     </div>
 
                                     <div className="flex flex-col space-y-2">
-                                        {segmentMode === 'fixed' ? (
-                                            <div className="p-4 border border-white/10 bg-[#1a1a1a] text-white/70 text-xs font-mono leading-relaxed">
-                                                AI will dynamically determine optimal scene lengths to pace the story, perfectly locked to 60s total runtime.
+                                        {segmentMode === 'fixed' && visualGenerationType === 'image' ? (
+                                            <div className="p-2.5 border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-[9px] font-mono leading-relaxed">
+                                                <p className="font-bold mb-0.5">Director Mode:</p>
+                                                <p>18–25 segments (3s Rule).</p>
                                             </div>
                                         ) : (
-                                            <>
-                                                <select
-                                                    className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
-                                                    value={customSegmentLength !== null ? 'custom' : segmentLength}
-                                                    onChange={(e) => {
-                                                        if (e.target.value === 'custom') {
-                                                            setCustomSegmentLength(10);
-                                                        } else {
-                                                            setCustomSegmentLength(null);
-                                                            setSegmentLength(Number(e.target.value));
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="6">6 seconds (Minimum)</option>
-                                                    <option value="8">8 seconds (Medium)</option>
-                                                    <option value="15">15 seconds (Maximum)</option>
-                                                    <option value="custom">Customize Your Duration...</option>
-                                                </select>
-
-                                                {customSegmentLength !== null && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: 'auto' }}
-                                                        className="flex flex-col space-y-2 pt-2"
-                                                    >
-                                                        <input
-                                                            type="number"
-                                                            min="2"
-                                                            max="30"
-                                                            value={customSegmentLength}
-                                                            onChange={(e) => {
-                                                                const val = parseInt(e.target.value);
-                                                                // Bug 2 Fix: Cap at 30 to match server-side validation.
-                                                                // Previously allowed up to 120, causing silent 400 errors.
-                                                                setCustomSegmentLength(isNaN(val) ? 6 : Math.max(2, Math.min(30, val)));
-                                                            }}
-                                                            placeholder="Enter custom duration (2–30s)"
-                                                            className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-emerald-500/50 focus:border-emerald-500 outline-none min-h-[48px]"
-                                                        />
-                                                        <p className="text-[9px] font-mono uppercase tracking-widest opacity-40">Range: 2–30 seconds per segment</p>
-                                                    </motion.div>
-                                                )}
-                                            </>
+                                            <select
+                                                className="w-full px-3 py-2.5 text-[11px] font-mono border transition-all bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[40px]"
+                                                value={customSegmentLength !== null ? 'custom' : segmentLength}
+                                                onChange={(e) => {
+                                                    if (e.target.value === 'custom') {
+                                                        setCustomSegmentLength(10);
+                                                    } else {
+                                                        setCustomSegmentLength(null);
+                                                        setSegmentLength(Number(e.target.value));
+                                                    }
+                                                }}
+                                            >
+                                                <option value="6">6s (Min)</option>
+                                                <option value="8">8s (Mid)</option>
+                                                <option value="15">15s (Max)</option>
+                                                <option value="custom">Custom...</option>
+                                            </select>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
+                            {/* ── Box 4: Style Prompt (Wide) ── */}
+                            <div className="md:col-span-3 p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-3">
                                 <label htmlFor="modal-custom-style-input" className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
                                     <ImageIcon className="w-3 h-3" /> Custom Style Prompt
                                 </label>
@@ -552,28 +543,27 @@ export function TrendsView() {
                                     type="text"
                                     value={VISUAL_STYLES.includes(selectedVisualStyle) ? '' : selectedVisualStyle}
                                     onChange={(e) => setVisualStyle(e.target.value)}
-                                    placeholder="Enter your own style (e.g., Neon Noir)..."
-                                    className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[48px] bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500"
+                                    placeholder="Enter your own style (e.g., Neon Noir, Retro Synthwave)..."
+                                    className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[44px] bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500"
                                 />
                             </div>
 
-                            {/* ── Custom Character System ── */}
-                            <div className="space-y-3 col-span-1 md:col-span-2 pt-4 border-t border-white/10">
+                            {/* ── Box 5: Custom Character (Wide) ── */}
+                            <div className="md:col-span-3 p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <label className="text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-2">
-                                        <User className="w-3 h-3" /> Custom Character
+                                        <User className="w-3 h-3" /> Custom Character System
                                     </label>
                                     <button
                                         onClick={() => { setUseCustomCharacter(!useCustomCharacter); setCharError(null); }}
                                         className={cn(
-                                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none",
-                                            useCustomCharacter ? "bg-emerald-500" : "bg-white/20"
+                                            "relative inline-flex h-4.5 w-9 items-center rounded-full transition-colors focus:outline-none",
+                                            useCustomCharacter ? "bg-emerald-500" : "bg-white/10"
                                         )}
-                                        aria-label="Toggle custom character"
                                     >
                                         <span className={cn(
-                                            "inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform",
-                                            useCustomCharacter ? "translate-x-[18px]" : "translate-x-[3px]"
+                                            "inline-block h-3 w-3 rounded-full bg-white shadow transition-transform",
+                                            useCustomCharacter ? "translate-x-[20px]" : "translate-x-[4px]"
                                         )} />
                                     </button>
                                 </div>
@@ -582,44 +572,46 @@ export function TrendsView() {
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
-                                        className="space-y-3"
+                                        className="space-y-3 pt-1"
                                     >
-                                        <input
-                                            type="text"
-                                            value={customCharacter.name}
-                                            onChange={e => setCustomCharacter({ ...customCharacter, name: e.target.value })}
-                                            placeholder="Character name (e.g. Zyro, Dr. Nova)..."
-                                            className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[48px] bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none"
-                                        />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <input
+                                                type="text"
+                                                value={customCharacter.name}
+                                                onChange={e => setCustomCharacter({ ...customCharacter, name: e.target.value })}
+                                                placeholder="Character name (e.g. Zyro, Dr. Nova)..."
+                                                className="w-full px-4 py-3 text-xs font-mono border transition-all min-h-[44px] bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none"
+                                            />
+                                            <select
+                                                value={customCharacter.type}
+                                                onChange={e => setCustomCharacter({ ...customCharacter, type: e.target.value as 'image' | 'video' | 'both' })}
+                                                className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[44px]"
+                                            >
+                                                <option value="image">Image Prompts Only</option>
+                                                <option value="video">Video Prompts Only</option>
+                                                <option value="both">Both (Image & Video)</option>
+                                            </select>
+                                        </div>
                                         <div className="relative">
                                             <textarea
                                                 value={customCharacter.description}
                                                 onChange={e => setCustomCharacter({ ...customCharacter, description: e.target.value })}
-                                                placeholder="Describe appearance, personality, tone, voice, clothing, energy, camera presence, quirks. Be extremely specific. Minimum 50 words."
-                                                rows={4}
+                                                placeholder="Describe appearance, personality, tone, voice, clothing, energy, camera presence, quirks. Minimum 50 words."
+                                                rows={3}
                                                 className={cn(
-                                                    "w-full px-4 py-3 text-xs font-mono border transition-all bg-[#1a1a1a] text-white outline-none resize-none",
+                                                    "w-full px-4 py-3 text-xs font-mono border transition-all bg-[#0a0a0a] text-white outline-none resize-none",
                                                     wordCount >= 50
                                                         ? "border-emerald-500/50 focus:border-emerald-500"
                                                         : "border-white/10 focus:border-yellow-500"
                                                 )}
                                             />
                                             <span className={cn(
-                                                "absolute bottom-2 right-3 text-[9px] font-mono uppercase tracking-widest pointer-events-none",
+                                                "absolute bottom-2.5 right-3 text-[9px] font-mono uppercase tracking-widest",
                                                 wordCount >= 50 ? "text-emerald-400" : "text-yellow-400"
                                             )}>{wordCount}/50 words</span>
                                         </div>
-                                        <select
-                                            value={customCharacter.type}
-                                            onChange={e => setCustomCharacter({ ...customCharacter, type: e.target.value as 'image' | 'video' | 'both' })}
-                                            className="w-full px-4 py-3 text-[11px] font-mono border transition-all bg-[#1a1a1a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[48px]"
-                                        >
-                                            <option value="image" className="bg-[#1a1a1a]">Image Prompts Only</option>
-                                            <option value="video" className="bg-[#1a1a1a]">Video Prompts Only</option>
-                                            <option value="both" className="bg-[#1a1a1a]">Both (Image &amp; Video)</option>
-                                        </select>
                                         {charError && (
-                                            <div className="flex items-start gap-2 p-3 border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono">
+                                            <div className="flex items-start gap-2 p-2.5 border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono">
                                                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                                 <span>{charError}</span>
                                             </div>
@@ -627,21 +619,21 @@ export function TrendsView() {
                                     </motion.div>
                                 )}
                             </div>
+                        </div>
 
-                            <div className="pt-2 mt-auto col-span-1 md:col-span-2">
-                                <button
-                                    onClick={() => handleGenerateWithValidation(selectedTrendForModal!)}
-                                    disabled={isLoading || !isCharacterValid}
-                                    className="w-full px-4 py-4 font-mono text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:translate-y-0.5 active:shadow-none min-h-[56px] bg-emerald-500 text-[#0a0a0a] border-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isLoading ? (
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Zap className="w-4 h-4" />
-                                    )}
-                                    <span>{isLoading ? 'Generating...' : 'Generate Content'}</span>
-                                </button>
-                            </div>
+                        <div className="pt-5 mt-5 border-t border-white/10">
+                            <button
+                                onClick={() => handleGenerateWithValidation(selectedTrendForModal!)}
+                                disabled={isLoading || !isCharacterValid}
+                                className="w-full px-4 py-3.5 font-mono text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-3 border shadow-md active:translate-y-0.5 active:shadow-none min-h-[48px] bg-emerald-500 text-[#0a0a0a] border-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? (
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Zap className="w-4 h-4" />
+                                )}
+                                <span>{isLoading ? 'Generating...' : 'Generate Content'}</span>
+                            </button>
                         </div>
                     </motion.div>
                 </div>,

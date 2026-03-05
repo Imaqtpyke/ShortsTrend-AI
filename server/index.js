@@ -384,7 +384,7 @@ TIMING RULES (MANDATORY — DO NOT DEVIATE):
             timingRules = `
 TIMING RULES (HIGH-RETENTION MODE):
 - totalDuration = 60s
-- You MUST break this 60-second video into 18–25 distinct segments (The 3-Second Refresh Rule).
+- You MUST break this 60-second video into 15–30 distinct segments (The 2-4 Second Refresh Rule).
 - Every sentence, major comma, or change in emotional "beat" must have its own segment.
 - NEVER group more than 4 seconds of audio under one visual.
 - The Hook (0-5 seconds): Change visual every 1.5 seconds. The hook MUST be visually aggressive and fast-paced.
@@ -518,8 +518,8 @@ Also generate:
                         throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.segments.length}.`);
                     }
                 } else {
-                    if (parsed.segments.length < 18 || parsed.segments.length > 25) {
-                        throw new Error(`Validation failed: High-retention mode expected 18–25 segments, got ${parsed.segments.length}.`);
+                    if (parsed.segments.length < 15 || parsed.segments.length > 30) {
+                        throw new Error(`Validation failed: High-retention mode expected 15–30 segments, got ${parsed.segments.length}.`);
                     }
                 }
 

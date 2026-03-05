@@ -119,7 +119,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     visualGenerationType: 'image',
     segmentLength: 6,
     customSegmentLength: null,
-    segmentMode: 'adjustable',
+    segmentMode: 'fixed',
     history: [],
     searchQuery: '',
     _generateRequestId: 0,
@@ -235,16 +235,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
             }
 
             // ── Migration Guard ───────────────────────────────────────────────────
-            // Drop old-schema contentIdea (missing .segments)
+            // Drop old-schema contentIdea (missing required .segments or incomplete)
             let contentIdea = session.contentIdea ?? null;
-            if (contentIdea && !contentIdea.segments) {
-                console.warn('[Session] Dropping old-schema contentIdea (missing .segments). User will need to regenerate.');
+            if (contentIdea && (!contentIdea.segments || !Array.isArray(contentIdea.segments))) {
+                console.warn('[Session] Dropping invalid/old-schema contentIdea. User will need to regenerate.');
                 contentIdea = null;
             }
-            // Same guard for critique improved fields
+            // Same guard for critique improved fields (ensure it has segments if it has timeline)
             let critique = session.critique ?? null;
             if (critique && (critique as any).improvedTimeline && !critique.improvedSegments) {
-                console.warn('[Session] Dropping old-schema critique (has .improvedTimeline, no .improvedSegments).');
+                console.warn('[Session] Dropping old-schema critique (missing .improvedSegments).');
+                critique = null;
+            }
+            if (critique && critique.improvedSegments && !Array.isArray(critique.improvedSegments)) {
                 critique = null;
             }
 

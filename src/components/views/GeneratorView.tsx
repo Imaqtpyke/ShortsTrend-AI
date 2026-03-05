@@ -32,7 +32,7 @@ export function GeneratorView() {
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
     const { speak, stop, isPlaying, activeText } = useTTS();
 
-    if (!contentIdea) {
+    if (!contentIdea || !contentIdea.segments || !Array.isArray(contentIdea.segments)) {
         const steps = [
             { num: 1, label: 'Analyze Trends', desc: 'Enter a niche & discover what\'s trending right now', done: !!analysis },
             { num: 2, label: 'Pick a Topic', desc: 'Select an exploding or steady trend from the results', done: false },
@@ -168,7 +168,7 @@ export function GeneratorView() {
                                 {/* Vertical Timeline Line */}
                                 <div className="absolute left-[15px] top-2 bottom-2 w-[2px] opacity-10 bg-white" />
 
-                                {contentIdea.segments.map((seg, i) => {
+                                {contentIdea.segments?.map((seg, i) => {
                                     const wordCount = seg.audio.trim().split(/\s+/).filter(w => w.length > 0).length;
                                     const segDuration = seg.endTime - seg.startTime;
                                     const maxWords = Math.floor(segDuration * 2.7);
@@ -268,7 +268,7 @@ export function GeneratorView() {
                 <div className="lg:col-span-5 space-y-6 sm:space-y-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto custom-scrollbar pr-0 lg:pr-2 pb-0">
                     <Section title="Viral Hook Variations" icon={<Zap className="w-5 h-5" />}>
                         <div className="space-y-4">
-                            {contentIdea.hookVariations && contentIdea.hookVariations.length > 0 ? (
+                            {contentIdea.hookVariations?.length > 0 ? (
                                 contentIdea.hookVariations.map((h, i) => (
                                     <div key={i} className="relative group p-3 bg-white/5 border border-white/10 rounded-sm">
                                         <div className="flex justify-between items-start mb-1">

@@ -4,8 +4,8 @@ import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadius
 
 export function NicheDNARadar({ data }: { data: { subject: string, value: number }[] }) {
     return (
-        <div className="h-full w-full" style={{ minHeight: '200px' }}>
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+        <div className="h-full w-full" style={{ minHeight: '200px', minWidth: '0' }}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
                     <PolarGrid stroke="rgba(255,255,255,0.1)" />
                     <PolarAngleAxis
