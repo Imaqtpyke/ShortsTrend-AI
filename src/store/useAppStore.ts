@@ -36,6 +36,7 @@ interface AppStore extends AppState {
     copiedId: string | null;
     copyToClipboard: (text: string, id: string) => void;
     copyAllForProduction: () => void;
+    _copyTimerId: NodeJS.Timeout | null;
 
     // Generation Settings
     setSearchQuery: (query: string) => void;
@@ -122,6 +123,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     segmentMode: 'fixed',
     history: [],
     searchQuery: '',
+    currentAnalyzedQuery: '',
     _generateRequestId: 0,
     // Custom Character initial state
     useCustomCharacter: false,
@@ -161,6 +163,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
 
     copiedId: null,
+    _copyTimerId: null,
     copyToClipboard: (text, id) => {
         // BUG FIX #2: Handle clipboard permission denial gracefully instead of silently failing.
         navigator.clipboard.writeText(text).then(() => {
@@ -277,6 +280,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             critique: null,
             workflow: null,
             searchQuery: '',
+            currentAnalyzedQuery: '',
             activeTab: 'trends'
         });
     },
@@ -302,6 +306,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 analysis,
                 isLoading: false,
                 history: newHistory,
+                currentAnalyzedQuery: query || '',
                 activeTab: 'trends'
             });
             persistSession({ analysis, searchQuery: query || '' });
@@ -481,10 +486,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 ? undefined
                 : (state.contentIdea.segmentLength || state.segmentLength);
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
+            const expectedSegments = state.contentIdea.segments.length;
             const improvement = await generateImprovement(
                 scriptText, critiqueText,
                 state.selectedVisualStyle, state.visualGenerationType,
-                builtSegmentLength, 60, character
+                builtSegmentLength, 60, character, expectedSegments
             );
 
             const improvedScriptText = improvement.improvedSegments!.map(seg =>

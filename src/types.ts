@@ -156,6 +156,7 @@ export interface AppState {
   customSegmentLength: number | null;
   history: HistoryItem[];
   searchQuery: string;
+  currentAnalyzedQuery: string;
   // Custom Character System
   useCustomCharacter: boolean;
   customCharacter: CustomCharacter;

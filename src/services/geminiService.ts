@@ -63,10 +63,11 @@ export async function generateImprovement(
   visualGenerationType: 'image' | 'video',
   segmentLength?: number,
   totalDuration = 60,
-  character?: CustomCharacter
+  character?: CustomCharacter,
+  expectedSegments?: number
 ): Promise<Partial<ScriptCritique>> {
   return fetchFromBackend<Partial<ScriptCritique>>("/improve", {
-    script, critique, visualStyle, visualGenerationType, segmentLength, totalDuration, character
+    script, critique, visualStyle, visualGenerationType, segmentLength, totalDuration, character, expectedSegments
   });
 }
 

@@ -654,9 +654,12 @@ app.post('/api/improve', async (req, res) => {
         }
 
         // ── Extract Original Timeline Segment Count ───────────────────────────
-        // Script text is "[MM:SS–MM:SS] audio" lines — count how many segments are expected.
-        const originalTimelineLines = script.split('\n').filter(line => line.trim().startsWith('['));
-        const expectedSegments = originalTimelineLines.length;
+        // Use client-provided expectedSegments if available, otherwise fallback to parsing script text.
+        let expectedSegments = req.body.expectedSegments;
+        if (typeof expectedSegments !== 'number' || expectedSegments <= 0) {
+            const originalTimelineLines = script.split('\n').filter(line => line.trim().startsWith('['));
+            expectedSegments = originalTimelineLines.length;
+        }
 
         if (expectedSegments === 0) {
             return res.status(400).json({ error: 'Could not extract a valid timeline from the script. Ensure it contains timestamped segments.' });

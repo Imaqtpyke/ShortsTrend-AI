@@ -2,6 +2,7 @@ import { ContentIdea, ScriptCritique } from '../types';
 
 export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCritique | null) {
     const formatTime = (secs: number) => {
+        if (secs == null || isNaN(secs)) return "00:00";
         const m = Math.floor(secs / 60).toString().padStart(2, '0');
         const s = Math.floor(secs % 60).toString().padStart(2, '0');
         return `${m}:${s}`;

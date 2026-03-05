@@ -16,6 +16,7 @@ export function TrendsView() {
         analysis,
         searchQuery,
         setSearchQuery,
+        currentAnalyzedQuery,
         trendFilter,
         setTrendFilter,
         handleAnalyze,
@@ -51,9 +52,9 @@ export function TrendsView() {
         }
     }, [visualGenerationType, segmentMode, setSegmentMode]);
 
-    const wordCount = customCharacter.description.trim().split(/\s+/).filter(Boolean).length;
+    const wordCount = (customCharacter?.description || '').trim().split(/\s+/).filter(Boolean).length;
     const isCharacterValid = !useCustomCharacter || (
-        customCharacter.name.trim().length > 0 && wordCount >= 50
+        (customCharacter?.name || '').trim().length > 0 && wordCount >= 50
     );
 
     const handleGenerateWithValidation = (trend: string) => {
@@ -63,7 +64,7 @@ export function TrendsView() {
         }
 
         if (useCustomCharacter) {
-            if (!customCharacter.name.trim()) {
+            if (!(customCharacter?.name || '').trim()) {
                 setCharError('Character name is required.');
                 return;
             }
@@ -181,7 +182,7 @@ export function TrendsView() {
                         <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 opacity-40" />
                     </div>
                     <button
-                        onClick={() => handleAnalyze(undefined, true)}
+                        onClick={() => handleAnalyze(currentAnalyzedQuery, true)}
                         disabled={isLoading}
                         title="Regenerate Trends for this Niche"
                         className="px-4 border min-h-[44px] transition-colors bg-[#1a1a1a] border-white/10 hover:border-emerald-500 text-white/80 hover:text-emerald-400 disabled:opacity-50 flex items-center justify-center focus-visible:ring-2 focus-visible:outline-none focus:ring-emerald-500"
@@ -260,9 +261,9 @@ export function TrendsView() {
                                             theme.ring,
                                             trendFilter === filter
                                                 ? theme.primary === 'emerald-500' ? 'bg-emerald-500 text-[#0a0a0a] border-emerald-500'
-                                                : theme.primary === 'red-500' ? 'bg-red-500 text-[#0a0a0a] border-red-500'
-                                                : theme.primary === 'blue-500' ? 'bg-blue-500 text-[#0a0a0a] border-blue-500'
-                                                : 'bg-purple-500 text-[#0a0a0a] border-purple-500'
+                                                    : theme.primary === 'red-500' ? 'bg-red-500 text-[#0a0a0a] border-red-500'
+                                                        : theme.primary === 'blue-500' ? 'bg-blue-500 text-[#0a0a0a] border-blue-500'
+                                                            : 'bg-purple-500 text-[#0a0a0a] border-purple-500'
                                                 : `bg-[#1a1a1a] text-white border-white/10 ${theme.hoverBorder}`
                                         )}
                                     >
