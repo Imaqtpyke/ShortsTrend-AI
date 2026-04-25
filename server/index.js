@@ -509,7 +509,9 @@ app.post('/api/analyze', async (req, res) => {
         const niche = sanitizeInput(req.body.niche);
         const platform = sanitizePlatform(req.body.platform);
         const bypassCache = req.body.bypassCache === true;
-        const cacheKey = niche ? niche.toLowerCase() : '__general__';
+        const sanitizedNiche = niche ? niche.toLowerCase() : '__general__';
+        const sanitizedPlatform = platform;
+        const cacheKey = `${sanitizedNiche}__${sanitizedPlatform}`;
         const platformAnalysisInstructions = {
             'YouTube Shorts': `Focus on topics trending specifically on YouTube Shorts.
 Prioritize topics with high search volume and strong SEO potential.
@@ -1205,7 +1207,7 @@ For each variant also provide:
                                 fontStyle: { type: Type.STRING },
                                 editingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["title", "segments", "metadata", "visualStyle", "abTestPack", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
+                            required: ["title", "segments", "metadata", "visualStyle", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
                         }
                     }
                 });
@@ -1381,8 +1383,8 @@ ENFORCEMENT:
         let totalDuration = 60;
         if (req.body.totalDuration !== undefined && req.body.totalDuration !== null) {
             totalDuration = Number(req.body.totalDuration);
-            if (!Number.isFinite(totalDuration) || totalDuration < 10 || totalDuration > 300) {
-                return res.status(400).json({ error: 'totalDuration must be a number between 10 and 300 seconds.' });
+            if (!Number.isFinite(totalDuration) || totalDuration < 5 || totalDuration > 300) {
+                return res.status(400).json({ error: 'totalDuration must be a number between 5 and 300 seconds.' });
             }
             totalDuration = Math.floor(totalDuration);
         }

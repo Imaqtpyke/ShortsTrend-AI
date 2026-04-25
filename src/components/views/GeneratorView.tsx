@@ -326,7 +326,7 @@ export function GeneratorView() {
         return activeWords.map((word, idx) => {
             const changed = word !== (otherWords[idx] || '');
             return (
-                <React.Fragment key={`${side}-${idx}-${word}`}>
+                <React.Fragment key={`${side}-${idx}`}>
                     {idx > 0 ? ' ' : ''}
                     {changed ? <mark className="bg-yellow-300/40 text-white px-0.5 rounded-sm">{word}</mark> : word}
                 </React.Fragment>
