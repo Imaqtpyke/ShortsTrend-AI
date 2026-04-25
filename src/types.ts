@@ -21,6 +21,34 @@ export type ContentGenre =
   | 'Interview'
   | 'Restoration';
 
+export type ScriptPersona = 'Narrator' | 'First-Person' | 'Character' | 'Interview';
+
+export type TargetPlatform = 'YouTube Shorts' | 'TikTok' | 'Instagram Reels' | 'Facebook Reels' | 'All Platforms';
+
+export const PLATFORM_DURATION_DEFAULTS: Record<TargetPlatform, number> = {
+  'YouTube Shorts': 60,
+  'TikTok': 15,
+  'Instagram Reels': 30,
+  'Facebook Reels': 45,
+  'All Platforms': 60,
+};
+
+export const PLATFORM_DURATION_MAX: Record<TargetPlatform, number> = {
+  'YouTube Shorts': 60,
+  'TikTok': 60,
+  'Instagram Reels': 60,
+  'Facebook Reels': 60,
+  'All Platforms': 60,
+};
+
+export const PLATFORM_DURATION_NOTES: Record<TargetPlatform, string> = {
+  'YouTube Shorts': 'YouTube Shorts maxes at 60s. 50-60s performs best for retention.',
+  'TikTok': 'TikTok sweet spot is 7-15s for virality, up to 60s for storytelling.',
+  'Instagram Reels': 'Reels sweet spot is 15-30s. Shorter clips get more replays.',
+  'Facebook Reels': 'Facebook Reels performs best at 30-45s for emotional storytelling.',
+  'All Platforms': 'Keep under 60s for cross-platform compatibility.',
+};
+
 export const CONTENT_GENRES: ContentGenre[] = [
   'Storytelling',
   'POV',
@@ -29,6 +57,13 @@ export const CONTENT_GENRES: ContentGenre[] = [
   'Motivational',
   'Restoration'
 ];
+
+export const PERSONA_DESCRIPTIONS: Record<ScriptPersona, string> = {
+  Narrator: "Third-person authoritative voice. Speaks about subjects from the outside. Cinematic and objective tone.",
+  'First-Person': "Creator speaks as themselves. Authentic, personal, direct. Uses I, me, my. Builds parasocial connection.",
+  Character: "Script is written for a fictional or recurring character persona. Consistent voice, catchphrases, and worldview across all segments.",
+  Interview: "Question and answer format. Creator poses questions then answers them. Creates natural curiosity gaps."
+};
 
 export interface TrendingTopic {
   name: string;
@@ -91,10 +126,28 @@ export interface ProductionTimeline {
   }
 }
 
+export interface ABTestVariant {
+  label: string;
+  hook: string;
+  title: string;
+  thumbnailText: string;
+  testHypothesis: string;
+  suggestedAudience: string;
+  platformFit: string;
+  testInstructions: string;
+}
+
+export interface ABTestPack {
+  variantA: ABTestVariant;
+  variantB: ABTestVariant;
+  variantC: ABTestVariant;
+}
+
 export interface ContentIdea extends ProductionTimeline {
   hashtags: string[];
   visualStyle: string;
   hookVariations: { type: string; text: string }[];
+  abTestPack?: ABTestPack;
   seoMetadata: {
     youtubeTitle: string;
     youtubeDescription: string;
@@ -144,6 +197,16 @@ export interface CustomCharacter {
   type: 'image' | 'video' | 'both';
 }
 
+export interface BrandProfile {
+  brandName: string;
+  creatorVoice: string;
+  bannedWords: string;
+  ctaStyle: string;
+  visualRules: string;
+  targetAudienceDescription: string;
+  contentPillars: string;
+}
+
 export interface RetentionLeak {
   timestamp: number; // seconds (0-60)
   issue: string;
@@ -166,12 +229,14 @@ export interface ScriptCritique {
 export interface AppState {
   analysis: TrendAnalysis | null;
   contentIdea: ContentIdea | null;
+  previousContentIdea: ContentIdea | null;
   workflow: ProductionWorkflow | null;
   critique: ScriptCritique | null;
   isLoading: boolean;
   error: string | null;
   selectedVisualStyle: string;
   visualGenerationType: 'image' | 'video' | 'image-to-video';
+  totalDuration: number;
   segmentLength: number;
   customSegmentLength: number | null;
   segmentMode: 'adjustable' | 'fixed';
@@ -181,10 +246,14 @@ export interface AppState {
   // Custom Character System
   useCustomCharacter: boolean;
   customCharacter: CustomCharacter;
+  useBrandMemory: boolean;
+  brandProfile: BrandProfile;
   // Genre System
   selectedGenre: ContentGenre;
+  selectedPlatform: TargetPlatform;
   useCustomGenre: boolean;
   customGenreString: string;
+  selectedPersona: ScriptPersona;
   // Custom Style Feature State
   useCustomStyle: boolean;
   // Direct Idea Feature State

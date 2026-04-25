@@ -243,6 +243,7 @@ export function TrendsView() {
 
                 <Section title="Trending Topics">
                     <div className="space-y-6">
+                        <p className="text-xs text-slate-500 italic">Trends are AI-estimated based on training data, not live YouTube data.</p>
                         <div className="flex flex-wrap gap-2 border-b pb-4 border-white/10">
                             {(['all', 'exploding', 'steady', 'declining'] as const).map(filter => {
                                 const count = filter === 'all'

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { X, ImageIcon, Video, Sliders, User, AlertCircle } from 'lucide-react';
-import { VISUAL_STYLES, CONTENT_GENRES, ContentGenre } from '../../types';
+import { VISUAL_STYLES, CONTENT_GENRES, ContentGenre, PERSONA_DESCRIPTIONS, ScriptPersona, TargetPlatform, PLATFORM_DURATION_DEFAULTS, PLATFORM_DURATION_NOTES, BrandProfile } from '../../types';
 import { cn } from '../../lib/utils';
 import { useAppStore } from '../../store/useAppStore';
 
@@ -19,6 +19,8 @@ export function PreGenModal() {
         setUseCustomStyle,
         visualGenerationType,
         setVisualGenerationType,
+        totalDuration,
+        setTotalDuration,
         segmentLength,
         setSegmentLength,
         customSegmentLength,
@@ -29,8 +31,16 @@ export function PreGenModal() {
         customCharacter,
         setUseCustomCharacter,
         setCustomCharacter,
+        useBrandMemory,
+        brandProfile,
+        setUseBrandMemory,
+        setBrandProfile,
         selectedGenre,
         setGenre,
+        selectedPersona,
+        setSelectedPersona,
+        selectedPlatform,
+        setSelectedPlatform,
         useCustomGenre,
         setUseCustomGenre,
         customGenreString,
@@ -83,6 +93,16 @@ export function PreGenModal() {
     if (!showPreGenModal) return null;
 
     const wordCount = (customCharacter?.description || '').trim().split(/\s+/).filter(Boolean).length;
+    const platformOptions: TargetPlatform[] = ['YouTube Shorts', 'TikTok', 'Instagram Reels', 'Facebook Reels', 'All Platforms'];
+    const handleDurationChange = (value: number) => {
+        const parsed = Number(value);
+        if (Number.isNaN(parsed)) return;
+        setTotalDuration(Math.min(60, Math.max(1, parsed)));
+    };
+    const isBrandNameMissing = useBrandMemory && !brandProfile.brandName.trim();
+    const updateBrandProfile = (patch: Partial<BrandProfile>) => {
+        setBrandProfile({ ...brandProfile, ...patch });
+    };
     
     // When editing config after a direct idea generation, searchMode might be 'idea' and directIdea is populated.
     // However, if we just generated from a trend, searchMode is 'keyword', pendingTrend is empty, but selectedTrend has the value.
@@ -312,6 +332,62 @@ export function PreGenModal() {
                         </div>
                     </div>
 
+                    {/* ── Box 3.25: Video Duration ── */}
+                    <div className="md:col-span-1 p-3 sm:p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-2 sm:space-y-3">
+                        <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5 sm:gap-2">
+                            <Sliders className="w-2.5 sm:w-3 h-2.5 sm:h-3" /> Video Duration
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                step={1}
+                                value={totalDuration}
+                                onChange={(e) => handleDurationChange(Number(e.target.value))}
+                                className="w-full px-2 sm:px-3 py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-mono border transition-all bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none min-h-[36px] sm:min-h-[40px]"
+                            />
+                            <span className="px-2.5 py-2 text-[10px] sm:text-[11px] font-mono border bg-[#0a0a0a] text-emerald-400 border-emerald-500/40 whitespace-nowrap min-h-[36px] sm:min-h-[40px] flex items-center">
+                                {totalDuration}s
+                            </span>
+                        </div>
+                        <input
+                            type="range"
+                            min={1}
+                            max={60}
+                            step={1}
+                            value={totalDuration}
+                            onChange={(e) => handleDurationChange(Number(e.target.value))}
+                            className="w-full accent-emerald-500"
+                        />
+                        <p className="text-[9px] sm:text-[10px] font-mono text-white/50 leading-relaxed">
+                            {PLATFORM_DURATION_NOTES[selectedPlatform]} (Default: {PLATFORM_DURATION_DEFAULTS[selectedPlatform]}s)
+                        </p>
+                    </div>
+
+                    {/* ── Box 3.4: Target Platform (Wide) ── */}
+                    <div className="md:col-span-2 p-3 sm:p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-2 sm:space-y-3">
+                        <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5 sm:gap-2">
+                            <Sliders className="w-2.5 sm:w-3 h-2.5 sm:h-3" /> Target Platform
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                            {platformOptions.map((platform) => (
+                                <button
+                                    key={platform}
+                                    onClick={() => setSelectedPlatform(platform)}
+                                    className={cn(
+                                        "px-2 py-2 text-[8px] sm:text-[10px] font-mono uppercase border transition-all min-h-[32px] flex items-center justify-center",
+                                        selectedPlatform === platform
+                                            ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500 font-bold"
+                                            : "bg-[#0a0a0a] text-white border-white/10 hover:border-emerald-500"
+                                    )}
+                                >
+                                    {platform}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* ── Box 3.5: Genre (Wide) ── */}
                     <div className="md:col-span-2 p-3 sm:p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-2 sm:space-y-3">
                         <div className="flex justify-between items-center">
@@ -388,6 +464,32 @@ export function PreGenModal() {
                         )}
                     </div>
 
+                    {/* ── Box 4: Script Voice (Wide) ── */}
+                    <div className="md:col-span-2 p-3 sm:p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-2 sm:space-y-3">
+                        <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5 sm:gap-2">
+                            <User className="w-2.5 sm:w-3 h-2.5 sm:h-3" /> Script Voice
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {(['Narrator', 'First-Person', 'Character', 'Interview'] as ScriptPersona[]).map((persona) => (
+                                <button
+                                    key={persona}
+                                    onClick={() => setSelectedPersona(persona)}
+                                    className={cn(
+                                        "px-2 py-2 text-[8px] sm:text-[10px] font-mono uppercase border transition-all min-h-[32px] flex items-center justify-center",
+                                        selectedPersona === persona
+                                            ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500 font-bold"
+                                            : "bg-[#0a0a0a] text-white border-white/10 hover:border-emerald-500"
+                                    )}
+                                >
+                                    {persona}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-white/70 leading-relaxed border border-white/10 bg-[#0a0a0a] p-2.5">
+                            {PERSONA_DESCRIPTIONS[selectedPersona]}
+                        </p>
+                    </div>
+
                     {/* ── Box 5: Custom Character (Wide) ── */}
                     <div className="md:col-span-2 p-3 sm:p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-2 sm:space-y-3">
                         <div className="flex items-center justify-between">
@@ -456,6 +558,118 @@ export function PreGenModal() {
                                         <span>{charError}</span>
                                     </div>
                                 )}
+                            </motion.div>
+                        )}
+                    </div>
+
+                    {/* ── Box 6: Brand Memory (Wide) ── */}
+                    <div className="md:col-span-2 p-3 sm:p-4 border bg-[#1a1a1a]/40 border-white/10 space-y-2 sm:space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                                <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1.5 sm:gap-2">
+                                    <User className="w-2.5 sm:w-3 h-2.5 sm:h-3" /> Brand Memory
+                                </label>
+                                {!useBrandMemory && (
+                                    <p className="text-[9px] sm:text-[10px] font-mono text-white/50">Inject your brand rules into every generation</p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setUseBrandMemory(!useBrandMemory)}
+                                className={cn(
+                                    "relative inline-flex h-4.5 w-9 items-center rounded-full transition-colors focus:outline-none",
+                                    useBrandMemory ? "bg-emerald-500" : "bg-white/10"
+                                )}
+                            >
+                                <span className={cn(
+                                    "inline-block h-3 w-3 rounded-full bg-white shadow transition-transform",
+                                    useBrandMemory ? "translate-x-[20px]" : "translate-x-[4px]"
+                                )} />
+                            </button>
+                        </div>
+
+                        {useBrandMemory && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="space-y-3 pt-1"
+                            >
+                                <div className="space-y-1">
+                                    <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">Brand Name</label>
+                                    <input
+                                        type="text"
+                                        value={brandProfile.brandName}
+                                        onChange={(e) => updateBrandProfile({ brandName: e.target.value })}
+                                        placeholder="Brand name..."
+                                        className={cn(
+                                            "w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all min-h-[38px] sm:min-h-[44px] bg-[#0a0a0a] text-white outline-none",
+                                            isBrandNameMissing ? "border-red-500/60 focus:border-red-500" : "border-white/10 focus:border-emerald-500"
+                                        )}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">Creator Voice & Tone</label>
+                                    <textarea
+                                        value={brandProfile.creatorVoice}
+                                        onChange={(e) => updateBrandProfile({ creatorVoice: e.target.value })}
+                                        placeholder="e.g. Direct, no-fluff, speaks to busy entrepreneurs. Never preachy."
+                                        rows={2}
+                                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none resize-none"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">Banned Words / Phrases</label>
+                                        <input
+                                            type="text"
+                                            value={brandProfile.bannedWords}
+                                            onChange={(e) => updateBrandProfile({ bannedWords: e.target.value })}
+                                            placeholder="e.g. game-changer, synergy, hustle"
+                                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all min-h-[38px] sm:min-h-[44px] bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">CTA Style</label>
+                                        <input
+                                            type="text"
+                                            value={brandProfile.ctaStyle}
+                                            onChange={(e) => updateBrandProfile({ ctaStyle: e.target.value })}
+                                            placeholder="e.g. Always end with a question. Never say 'like and subscribe'."
+                                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all min-h-[38px] sm:min-h-[44px] bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">Visual Rules</label>
+                                    <textarea
+                                        value={brandProfile.visualRules}
+                                        onChange={(e) => updateBrandProfile({ visualRules: e.target.value })}
+                                        placeholder="e.g. Always dark moody lighting. Never stock photo aesthetic."
+                                        rows={2}
+                                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none resize-none"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">Target Audience</label>
+                                        <input
+                                            type="text"
+                                            value={brandProfile.targetAudienceDescription}
+                                            onChange={(e) => updateBrandProfile({ targetAudienceDescription: e.target.value })}
+                                            placeholder="e.g. Men aged 25-40, fitness-focused, skeptical of mainstream advice"
+                                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all min-h-[38px] sm:min-h-[44px] bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-white/50">Content Pillars</label>
+                                        <input
+                                            type="text"
+                                            value={brandProfile.contentPillars}
+                                            onChange={(e) => updateBrandProfile({ contentPillars: e.target.value })}
+                                            placeholder="e.g. Mindset, Training, Nutrition, Recovery"
+                                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-mono border transition-all min-h-[38px] sm:min-h-[44px] bg-[#0a0a0a] text-white border-white/10 focus:border-emerald-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
                     </div>

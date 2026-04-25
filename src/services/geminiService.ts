@@ -1,4 +1,4 @@
-import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique, CustomCharacter } from "../types";
+import { TrendAnalysis, ContentIdea, ScriptCritique, CustomCharacter, BrandProfile } from "../types";
 
 // B5 FIX: Never hardcode localhost. In production this must be the deployed server URL.
 // Set VITE_API_BASE_URL in your deployment environment (Vercel, Netlify, etc.).
@@ -52,9 +52,12 @@ export async function critiqueScript(
   script: string,
   hook: string,
   character?: CustomCharacter,
+  brand?: BrandProfile,
+  platform?: string,
+  persona?: string,
   options?: { signal?: AbortSignal }
 ): Promise<ScriptCritique> {
-  return fetchFromBackend<ScriptCritique>("/critique", { script, hook, character }, options);
+  return fetchFromBackend<ScriptCritique>("/critique", { script, hook, character, brand, platform, persona }, options);
 }
 
 export async function generateImprovement(
@@ -65,20 +68,28 @@ export async function generateImprovement(
   segmentLength?: number,
   totalDuration = 60,
   character?: CustomCharacter,
+  brand?: BrandProfile,
+  persona?: string,
+  platform?: string,
   expectedSegments?: number,
   options?: { signal?: AbortSignal }
 ): Promise<Partial<ScriptCritique>> {
   return fetchFromBackend<Partial<ScriptCritique>>("/improve", {
-    script, critique, visualStyle, visualGenerationType, segmentLength, totalDuration, character, expectedSegments
+    script, critique, visualStyle, visualGenerationType, segmentLength, totalDuration, character, brand, persona, platform, expectedSegments
   }, options);
 }
 
-export async function analyzeTrends(niche?: string, bypassCache?: boolean, options?: { signal?: AbortSignal }): Promise<TrendAnalysis> {
-  return fetchFromBackend<TrendAnalysis>("/analyze", { niche, bypassCache }, options);
+export async function analyzeTrends(
+  niche?: string,
+  bypassCache?: boolean,
+  platform?: string,
+  options?: { signal?: AbortSignal }
+): Promise<TrendAnalysis> {
+  return fetchFromBackend<TrendAnalysis>("/analyze", { niche, bypassCache, platform }, options);
 }
 
-export async function analyzeUrl(url: string, options?: { signal?: AbortSignal }): Promise<TrendAnalysis> {
-  return fetchFromBackend<TrendAnalysis>("/analyze-url", { url }, options);
+export async function analyzeUrl(url: string, platform?: string, options?: { signal?: AbortSignal }): Promise<TrendAnalysis> {
+  return fetchFromBackend<TrendAnalysis>("/analyze-url", { url, platform }, options);
 }
 
 export async function generateContentIdea(
@@ -88,7 +99,10 @@ export async function generateContentIdea(
   segmentLength?: number,
   totalDuration = 60,
   character?: CustomCharacter,
+  brand?: BrandProfile,
   genre?: string,
+  persona?: string,
+  platform?: string,
   customGenre?: string,
   variationId?: string,
 
@@ -96,7 +110,7 @@ export async function generateContentIdea(
   options?: { signal?: AbortSignal }
 ): Promise<ContentIdea> {
   const result = await fetchFromBackend<ContentIdea>("/generate", {
-    trend, visualStyle, visualGenerationType, segmentLength, totalDuration, character, genre, customGenre, variationId
+    trend, visualStyle, visualGenerationType, segmentLength, totalDuration, character, brand, genre, persona, platform, customGenre, variationId
   }, options);
 
   if (onProgress) {
@@ -106,6 +120,3 @@ export async function generateContentIdea(
   return result;
 }
 
-export async function getWorkflow(options?: { signal?: AbortSignal }): Promise<ProductionWorkflow> {
-  return fetchFromBackend<ProductionWorkflow>("/workflow", {}, options);
-}

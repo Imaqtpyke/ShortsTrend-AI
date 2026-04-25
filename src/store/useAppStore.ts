@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppState, ContentIdea, ContentGenre, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES, TrendAnalysis, ScriptCritique, ProductionWorkflow, TimelineSegment } from '../types';
+import { AppState, ContentIdea, ContentGenre, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES, TrendAnalysis, ScriptCritique, ProductionWorkflow, TimelineSegment, TargetPlatform, ScriptPersona, PLATFORM_DURATION_DEFAULTS, BrandProfile } from '../types';
 import { analyzeTrends, analyzeUrl, generateContentIdea, critiqueScript, generateImprovement } from '../services/geminiService';
 import localforage from 'localforage';
 import { persistSession, clearSession } from '../lib/storage';
@@ -30,6 +30,8 @@ interface AppStore extends AppState {
     setCompletedSteps: (steps: number[]) => void;
     historySearch: string;
     setHistorySearch: (search: string) => void;
+    historyGenreFilter: string;
+    setHistoryGenreFilter: (genre: string) => void;
     confirmApply: boolean;
     setConfirmApply: (confirm: boolean) => void;
     confirmClearHistory: boolean;
@@ -48,6 +50,7 @@ interface AppStore extends AppState {
     setSearchQuery: (query: string) => void;
     setVisualStyle: (style: string) => void;
     setVisualGenerationType: (type: 'image' | 'video' | 'image-to-video') => void;
+    setTotalDuration: (duration: number) => void;
     setSegmentLength: (length: number) => void;
     setCustomSegmentLength: (length: number | null) => void;
 
@@ -55,10 +58,14 @@ interface AppStore extends AppState {
     // Custom Character
     setUseCustomCharacter: (enabled: boolean) => void;
     setCustomCharacter: (character: CustomCharacter) => void;
+    setUseBrandMemory: (enabled: boolean) => void;
+    setBrandProfile: (profile: BrandProfile) => void;
     // Genre
     setGenre: (genre: ContentGenre) => void;
+    setSelectedPlatform: (platform: TargetPlatform) => void;
     setUseCustomGenre: (enabled: boolean) => void;
     setCustomGenreString: (str: string) => void;
+    setSelectedPersona: (persona: ScriptPersona) => void;
     
 
     // Custom Style Toggle
@@ -93,6 +100,7 @@ interface AppStore extends AppState {
     handleCritique: () => Promise<void>;
     handleImprove: () => Promise<void>;
     applyImprovedScript: () => void;
+    clearPreviousContentIdea: () => void;
     loadFromHistory: (item: HistoryItem) => void;
     clearHistory: () => void;
     _generateRequestId: number;  // B3 FIX: tracks in-flight generate requests for dedup
@@ -112,12 +120,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
     isHydrated: false,
     analysis: null,
     contentIdea: null,
+    previousContentIdea: null,
     workflow: null,
     critique: null,
     isLoading: false,
     error: null,
     selectedVisualStyle: VISUAL_STYLES[0],
     visualGenerationType: 'image',
+    totalDuration: 60,
     segmentLength: 6,
     customSegmentLength: null,
     segmentMode: 'adjustable',
@@ -128,7 +138,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
     // Custom Character initial state
     useCustomCharacter: false,
     customCharacter: { name: '', description: '', type: 'both' as const },
+    useBrandMemory: false,
+    brandProfile: {
+        brandName: '',
+        creatorVoice: '',
+        bannedWords: '',
+        ctaStyle: '',
+        visualRules: '',
+        targetAudienceDescription: '',
+        contentPillars: ''
+    },
     selectedGenre: 'Storytelling' as ContentGenre,
+    selectedPersona: 'Narrator' as ScriptPersona,
+    selectedPlatform: 'YouTube Shorts',
     useCustomGenre: false,
     customGenreString: '',
     useCustomStyle: false,
@@ -151,6 +173,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setCompletedSteps: (steps) => set({ completedSteps: steps }),
     historySearch: '',
     setHistorySearch: (search) => set({ historySearch: search }),
+    historyGenreFilter: 'All',
+    setHistoryGenreFilter: (genre) => set({ historyGenreFilter: genre }),
     confirmApply: false,
     setConfirmApply: (confirm) => set({ confirmApply: confirm }),
     confirmClearHistory: false,
@@ -227,6 +251,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
     setVisualStyle: (style) => set({ selectedVisualStyle: style }),
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
+    setTotalDuration: (duration) => {
+        set({ totalDuration: duration });
+        persistSession({ totalDuration: duration });
+    },
     setSegmentLength: (length) => set({ segmentLength: length }),
     setCustomSegmentLength: (length) => set({ customSegmentLength: length }),
     setSegmentMode: (mode) => {
@@ -241,9 +269,22 @@ export const useAppStore = create<AppStore>((set, get) => ({
         set({ customCharacter: character });
         persistSession({ customCharacter: character });
     },
+    setUseBrandMemory: (enabled) => {
+        set({ useBrandMemory: enabled });
+        persistSession({ useBrandMemory: enabled });
+    },
+    setBrandProfile: (profile) => {
+        set({ brandProfile: profile });
+        persistSession({ brandProfile: profile });
+    },
     setGenre: (genre) => {
         set({ selectedGenre: genre });
         persistSession({ selectedGenre: genre });
+    },
+    setSelectedPlatform: (platform) => {
+        set({ selectedPlatform: platform });
+        get().setTotalDuration(PLATFORM_DURATION_DEFAULTS[platform]);
+        persistSession({ selectedPlatform: platform });
     },
     setUseCustomGenre: (enabled) => {
         set({ useCustomGenre: enabled });
@@ -252,6 +293,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     setCustomGenreString: (str) => {
         set({ customGenreString: str });
         persistSession({ customGenreString: str });
+    },
+    setSelectedPersona: (persona) => {
+        set({ selectedPersona: persona });
+        persistSession({ selectedPersona: persona });
     },
 
 
@@ -378,10 +423,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 critique,
                 searchQuery: session.searchQuery ?? '',
                 currentAnalyzedQuery: session.searchQuery ?? '',
+                totalDuration: session.totalDuration ?? 60,
                 segmentMode: session.segmentMode ?? 'adjustable',
                 useCustomCharacter: session.useCustomCharacter ?? false,
                 customCharacter: session.customCharacter ?? { name: '', description: '', type: 'both' },
+                useBrandMemory: session.useBrandMemory ?? false,
+                brandProfile: session.brandProfile ?? {
+                    brandName: '',
+                    creatorVoice: '',
+                    bannedWords: '',
+                    ctaStyle: '',
+                    visualRules: '',
+                    targetAudienceDescription: '',
+                    contentPillars: ''
+                },
                 selectedGenre: session.selectedGenre ?? 'Storytelling',
+                selectedPersona: session.selectedPersona ?? 'Narrator',
+                selectedPlatform: session.selectedPlatform ?? 'YouTube Shorts',
                 useCustomGenre: session.useCustomGenre ?? false,
                 customGenreString: session.customGenreString ?? '',
                 useCustomStyle: session.useCustomStyle ?? false,
@@ -405,12 +463,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
             contentIdea: null,
             critique: null,
             workflow: null,
+            previousContentIdea: null,
             searchQuery: '',
             currentAnalyzedQuery: '',
             activeTab: 'trends',
             searchMode: 'keyword',
             youtubeUrl: '',
             directIdea: '',
+            totalDuration: 60,
             showPreGenModal: false
         });
     },
@@ -427,8 +487,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
         try {
             const analysis = state.searchMode === 'url'
-                ? await analyzeUrl(state.youtubeUrl, { signal: analyzeAbortController.signal })
-                : await analyzeTrends(query || undefined, bypassCache, { signal: analyzeAbortController.signal });
+                ? await analyzeUrl(state.youtubeUrl, state.selectedPlatform, { signal: analyzeAbortController.signal })
+                : await analyzeTrends(query || undefined, bypassCache, state.selectedPlatform, { signal: analyzeAbortController.signal });
 
             const newHistoryItem: HistoryItem = {
                 id: Math.random().toString(36).slice(2, 11),
@@ -484,15 +544,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 : (state.customSegmentLength || state.segmentLength);
 
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
+            const brand = state.useBrandMemory && state.brandProfile.brandName.trim() ? state.brandProfile : undefined;
 
             const ideaPromise = generateContentIdea(
                 trend,
                 state.selectedVisualStyle,
                 state.visualGenerationType,
                 finalSegmentLength,
-                60, // totalDuration always 60s
+                state.totalDuration,
                 character,
+                brand,
                 state.selectedGenre,
+                state.selectedPersona,
+                state.selectedPlatform,
                 state.useCustomGenre ? state.customGenreString : undefined,
                 Math.random().toString(36).substring(2, 10), // Random variation ID to force regeneration differences
 
@@ -591,8 +655,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 return `[${seg.timestamp || formatTimeLocal(seg.startTime)}] ${seg.script}`;
             }).join('\n');
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
+            const brand = state.useBrandMemory && state.brandProfile.brandName.trim() ? state.brandProfile : undefined;
             const firstHook = state.contentIdea.hook || state.contentIdea.hookVariations[0]?.text || '';
-            const critique = await critiqueScript(scriptText, firstHook, character, { signal: critiqueAbortController.signal });
+            const critique = await critiqueScript(scriptText, firstHook, character, brand, state.selectedPlatform, state.selectedPersona, { signal: critiqueAbortController.signal });
 
             if (get()._generateRequestId !== requestId) return;
 
@@ -641,11 +706,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 ? undefined
                 : (state.contentIdea.segmentLength || state.segmentLength);
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
+            const brand = state.useBrandMemory && state.brandProfile.brandName.trim() ? state.brandProfile : undefined;
             const expectedSegments = state.contentIdea.segments.length;
             const improvement = await generateImprovement(
                 scriptText, critiqueText,
                 state.selectedVisualStyle, state.visualGenerationType,
-                builtSegmentLength, 60, character, expectedSegments,
+                builtSegmentLength, state.totalDuration, character, brand, state.selectedPersona, state.selectedPlatform, expectedSegments,
                 { signal: improveAbortController.signal }
             );
 
@@ -663,6 +729,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 improvedScriptText,
                 improvement.improvedHook || state.contentIdea.hook || state.contentIdea.hookVariations[0]?.text || '',
                 character,
+                brand,
+                state.selectedPlatform,
+                state.selectedPersona,
                 { signal: improveAbortController.signal }
             );
 
@@ -693,6 +762,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     applyImprovedScript: () => {
         const state = get();
         if (!state.contentIdea || !state.critique || !state.critique.improvedSegments) return;
+        set({ previousContentIdea: state.contentIdea });
 
         const updated = {
             ...state.contentIdea,
@@ -712,6 +782,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
         set({ contentIdea: updated, activeTab: 'generator', critique: null });
         persistSession({ contentIdea: updated, activeTab: 'generator', critique: null });
         get().addToast('Improved script and visual prompts applied!', 'success');
+    },
+
+    clearPreviousContentIdea: () => {
+        set({ previousContentIdea: null });
     },
 
     loadFromHistory: (item: HistoryItem) => {

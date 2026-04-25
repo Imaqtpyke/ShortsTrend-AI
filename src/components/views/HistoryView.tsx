@@ -24,6 +24,8 @@ export function HistoryView() {
         applyImprovedScript,
         historySearch,
         setHistorySearch,
+        historyGenreFilter,
+        setHistoryGenreFilter,
         loadFromHistory,
         confirmClearHistory,
         setConfirmClearHistory,
@@ -35,6 +37,28 @@ export function HistoryView() {
 
     // Debounce the search to avoid filtering on every keystroke
     const debouncedSearch = useDebounce(historySearch, 250);
+    const genreOptions = React.useMemo(() => {
+        const genres = new Set<string>();
+        history.forEach(item => {
+            item.analysis?.trendingTopics?.forEach(topic => {
+                const genre = (topic.name || '').trim();
+                if (genre) genres.add(genre);
+            });
+        });
+        return ['All', ...Array.from(genres)];
+    }, [history]);
+
+    const filteredHistory = React.useMemo(() => {
+        const search = debouncedSearch.trim().toLowerCase();
+        const selectedGenre = historyGenreFilter.trim().toLowerCase();
+
+        return history.filter(item => {
+            const queryMatches = item.query.toLowerCase().includes(search);
+            if (!queryMatches) return false;
+            if (historyGenreFilter === 'All') return true;
+            return (item.analysis?.trendingTopics || []).some(topic => topic.name?.toLowerCase() === selectedGenre);
+        });
+    }, [history, debouncedSearch, historyGenreFilter]);
 
     return (
         <motion.div
@@ -45,20 +69,7 @@ export function HistoryView() {
         >
             <div className="flex flex-col md:flex-row items-center justify-between border-b pb-6 gap-4 border-white/10">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Search History</h2>
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className="relative flex-grow md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
-                        <input
-                            type="text"
-                            placeholder="Filter history..."
-                            value={historySearch}
-                            onChange={(e) => setHistorySearch(e.target.value)}
-                            className={cn(
-                                "w-full pl-10 pr-4 py-3 font-mono text-xs focus:outline-none border min-h-[44px]",
-                                `bg-[#0a0a0a] border-white/10 text-white ${theme.focusBorder}`
-                            )}
-                        />
-                    </div>
+                <div className="flex items-center gap-4 w-full md:w-auto justify-end">
                     <button
                         onClick={() => {
                             if (confirmClearHistory) {
@@ -82,7 +93,39 @@ export function HistoryView() {
                 </div>
             </div>
 
-            {history.filter(item => item.query.toLowerCase().includes(debouncedSearch.toLowerCase())).length === 0 ? (
+            <div className="space-y-3">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
+                    <input
+                        type="text"
+                        placeholder="Search history..."
+                        value={historySearch}
+                        onChange={(e) => setHistorySearch(e.target.value)}
+                        className={cn(
+                            "w-full pl-10 pr-4 py-3 font-mono text-xs focus:outline-none border min-h-[44px]",
+                            `bg-[#0a0a0a] border-white/10 text-white ${theme.focusBorder}`
+                        )}
+                    />
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                    {genreOptions.map((genre) => (
+                        <button
+                            key={genre}
+                            onClick={() => setHistoryGenreFilter(genre)}
+                            className={cn(
+                                "px-3 py-2 text-[10px] font-mono uppercase tracking-widest border transition-all whitespace-nowrap min-h-[36px]",
+                                historyGenreFilter === genre
+                                    ? "bg-emerald-500 text-[#0a0a0a] border-emerald-500"
+                                    : "bg-[#1a1a1a] text-white border-white/10 hover:border-emerald-500"
+                            )}
+                        >
+                            {genre}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {history.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -90,8 +133,17 @@ export function HistoryView() {
                 >
                     <Clock className="w-12 h-12 mx-auto mb-4" />
                     <p className="font-mono text-sm uppercase tracking-widest">
-                        {history.length === 0 ? 'No recent searches found' : 'No matches for your filter'}
+                        No recent searches yet. Analyze a niche to get started.
                     </p>
+                </motion.div>
+            ) : filteredHistory.length === 0 ? (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="py-12 md:py-24 text-center opacity-60"
+                >
+                    <Clock className="w-12 h-12 mx-auto mb-4" />
+                    <p className="font-mono text-sm uppercase tracking-widest">No history matches your search.</p>
                 </motion.div>
             ) : (
                 <motion.div
@@ -99,9 +151,7 @@ export function HistoryView() {
                     initial="hidden" animate="show"
                     className="grid grid-cols-1 gap-4"
                 >
-                    {history
-                        .filter(item => item.query.toLowerCase().includes(debouncedSearch.toLowerCase()))
-                        .map((item) => (
+                    {filteredHistory.map((item) => (
                             <motion.div
                                 key={item.id}
                                 variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}

@@ -116,6 +116,60 @@ function sanitizeScriptInput(raw) {
         .trim();
 }
 
+const ALLOWED_PLATFORMS = new Set(['YouTube Shorts', 'TikTok', 'Instagram Reels', 'Facebook Reels', 'All Platforms']);
+const ALLOWED_PERSONAS = new Set(['Narrator', 'First-Person', 'Character', 'Interview']);
+
+function sanitizePlatform(raw) {
+    const platform = sanitizeInput(raw);
+    if (!ALLOWED_PLATFORMS.has(platform)) return 'YouTube Shorts';
+    return platform;
+}
+
+function buildPlatformBlock(platform) {
+    const platformInstructions = {
+        'YouTube Shorts': 'Optimize for YouTube Shorts algorithm. Duration 60s max. SEO title is critical. Use keyword-rich captions.',
+        'TikTok': 'Optimize for TikTok FYP algorithm. Hook must land in 1.5 seconds. Use trending audio references. Captions are conversational not SEO.',
+        'Instagram Reels': 'Optimize for Instagram Reels. Visual aesthetic quality is paramount. Hook must be visually striking not just verbal. Hashtags in first comment.',
+        'Facebook Reels': 'Optimize for Facebook Reels. Prioritize shareability, relatable storytelling, and emotionally resonant hooks for adult audiences.',
+        'All Platforms': 'Optimize for cross-platform performance. Balance SEO structure with visual-first hook. Keep captions platform-neutral.'
+    };
+    return `\nTARGET PLATFORM: ${platform}\nPLATFORM OPTIMIZATION RULES: ${platformInstructions[platform]}`;
+}
+
+function sanitizePersona(raw) {
+    const persona = sanitizeInput(raw || 'Narrator');
+    if (!ALLOWED_PERSONAS.has(persona)) return 'Narrator';
+    return persona;
+}
+
+function buildPersonaBlock(persona) {
+    if (persona === 'Narrator') {
+        return `\nSCRIPT VOICE — NARRATOR: Write all script lines in third-person authoritative voice. Cinematic, objective, speaks about the subject from the outside. No use of I or me.`;
+    }
+    if (persona === 'First-Person') {
+        return `\nSCRIPT VOICE — FIRST PERSON: Write all script lines as the creator speaking directly. Use I, me, my. Conversational and authentic. Build intimacy with the viewer.`;
+    }
+    if (persona === 'Character') {
+        return `\nSCRIPT VOICE — CHARACTER: Every script line must be written as a consistent fictional persona. Give this character a distinct voice, quirks, and phrasing style. Maintain it across all segments with zero deviation.`;
+    }
+    return `\nSCRIPT VOICE — INTERVIEW: Structure the script as questions followed by answers. The question creates the curiosity gap. The answer delivers the value. Each segment should feel like a natural Q&A beat.`;
+}
+
+function sanitizeBrandProfile(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const name = sanitizeInput(raw.brandName || '');
+    if (!name) return null;
+    return {
+        brandName: name,
+        creatorVoice: sanitizeInput(raw.creatorVoice || ''),
+        bannedWords: sanitizeInput(raw.bannedWords || ''),
+        ctaStyle: sanitizeInput(raw.ctaStyle || ''),
+        visualRules: sanitizeInput(raw.visualRules || ''),
+        targetAudienceDescription: sanitizeInput(raw.targetAudienceDescription || ''),
+        contentPillars: sanitizeInput(raw.contentPillars || '')
+    };
+}
+
 const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 // S4 FIX: Store cache in system temp directory instead of the app's working directory
 const CACHE_FILE = path.join(os.tmpdir(), '.shortstrend_cache.json');
@@ -322,6 +376,28 @@ app.post('/api/critique', async (req, res) => {
     try {
         const script = sanitizeScriptInput(req.body.script);
         const hook = sanitizeInput(req.body.hook);
+        const platform = sanitizePlatform(req.body.platform);
+        const platformBlock = buildPlatformBlock(platform);
+        const persona = sanitizePersona(req.body.persona);
+        const personaBlock = buildPersonaBlock(persona);
+        const brand = sanitizeBrandProfile(req.body.brand);
+        const brandBlock = brand ? `
+━━━ BRAND MEMORY (MANDATORY — override defaults with these) ━━━
+Brand Name: ${brand.brandName}
+${brand.creatorVoice ? `Creator Voice & Tone: ${brand.creatorVoice}` : ''}
+${brand.bannedWords ? `Banned Words/Phrases (NEVER use): ${brand.bannedWords}` : ''}
+${brand.ctaStyle ? `CTA Style: ${brand.ctaStyle}` : ''}
+${brand.visualRules ? `Visual Rules: ${brand.visualRules}` : ''}
+${brand.targetAudienceDescription ? `Target Audience: ${brand.targetAudienceDescription}` : ''}
+${brand.contentPillars ? `Content Pillars (stay within these): ${brand.contentPillars}` : ''}
+
+ENFORCEMENT:
+- Every script line must sound like it came from ${brand.brandName}.
+- Never use any word or phrase listed in banned words.
+- CTA must follow the specified CTA style exactly.
+- All visual prompts must respect the visual rules above.
+- All content must serve at least one of the content pillars.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '';
         if (!script) return res.status(400).json({ error: 'Script is required.' });
 
         // Custom Character: sanitize and build optional roast-voice injection block
@@ -343,17 +419,49 @@ Character Personality/Tone: ${charDesc}
         }
 
         const response = await generateWithFallback({
-            contents: `Analyze this YouTube Shorts script and hook for virality.
-      
-      Hook: "${hook}"
-      Script: "${script}"
-${characterBlock}
+            contents: `You are a short-form video retention specialist who deeply understands how TikTok, Instagram Reels, and YouTube Shorts algorithms reward watch time, rewatches, completion rate, and strong early retention.
 
-      Provide a deep critique focusing on:
-      1. Retention Leaks: Identify specific timestamps (0-60 seconds) where the audience might get bored or scroll away.
-      2. Virality Score: Rate the potential virality from 0 to 100 based on current trends and psychology.
-      3. Hook Suggestions: Suggest 3 specific, punchier alternatives to the current hook.
-      4. Overall Feedback: General advice to improve the script's performance.`,
+Analyze this short-form script and hook for virality.
+
+Hook: "${hook}"
+Script: "${script}"
+${platformBlock}
+${personaBlock}
+${characterBlock}
+${brandBlock}
+
+Definitions you must use:
+- A "retention leak" is any moment where pacing slows, the curiosity gap closes too early, the visual remains static too long, or the script loses specificity and becomes generic.
+
+Virality score rubric (0-100):
+- 0-30: Weak hook, no tension, generic script.
+- 31-55: Average - has some hooks but loses retention mid-video.
+- 56-75: Good - strong hook, mostly tight pacing, minor leaks.
+- 76-90: Viral-ready - pattern interrupt hook, relentless pacing, emotional payoff.
+- 91-100: Reserved only for scripts with a genuinely novel angle, near-perfect pacing, and a strong CTA.
+
+Hook evaluation requirements:
+- Determine whether the hook creates a curiosity gap.
+- Determine whether the hook makes a bold or controversial claim.
+- Determine whether the hook speaks directly to a clear pain point or desire.
+
+Retention leak analysis requirements:
+- Flag precise timestamps (0-60 seconds) where leaks happen.
+- For each leak, provide a specific psychology-based reason, such as:
+  - "Visual has been static for 4+ seconds."
+  - "Script becomes generic at this point."
+  - "No pattern interrupt after the hook."
+- Use concrete script evidence tied to the exact moment.
+
+Hook suggestion requirements:
+- Provide exactly 3 hook suggestions.
+- Suggestions must be niche-specific to this script's topic and audience, not generic templates.
+- Keep them punchy and engineered for early retention.
+
+Overall feedback requirements:
+- Make all feedback actionable, not generic.
+- Reference specific script lines, beats, or timestamps whenever possible.
+- Prioritize fixes that improve retention curve and completion rate.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -399,8 +507,27 @@ ${characterBlock}
 app.post('/api/analyze', async (req, res) => {
     try {
         const niche = sanitizeInput(req.body.niche);
+        const platform = sanitizePlatform(req.body.platform);
         const bypassCache = req.body.bypassCache === true;
         const cacheKey = niche ? niche.toLowerCase() : '__general__';
+        const platformAnalysisInstructions = {
+            'YouTube Shorts': `Focus on topics trending specifically on YouTube Shorts.
+Prioritize topics with high search volume and strong SEO potential.
+YouTube Shorts rewards topics with existing search demand.`,
+            'TikTok': `Focus on topics trending specifically on TikTok FYP.
+Prioritize sound-driven trends, challenge formats, and topics with strong emotional reaction potential.
+TikTok rewards novelty and emotional triggers over search volume.`,
+            'Instagram Reels': `Focus on topics trending specifically on Instagram Reels.
+Prioritize visually aesthetic content, lifestyle topics, and aspirational themes.
+Reels rewards high production quality and aspirational framing.`,
+            'Facebook Reels': `Focus on topics trending specifically on Facebook Reels.
+Prioritize topics that resonate with adults aged 25-45, community-driven content, relatable everyday scenarios, and emotionally engaging stories.
+Facebook rewards shareability and emotional resonance over novelty.`,
+            'All Platforms': `Focus on topics with cross-platform viral potential.
+Prioritize topics that work as both search-driven (YouTube) and discovery-driven (TikTok/Reels) content simultaneously.`
+        };
+        const platformAnalysisBlock = `PLATFORM CONTEXT (${platform}):
+${platformAnalysisInstructions[platform]}`;
 
         // Serve from cache if available and not explicitly bypassed
         if (!bypassCache) {
@@ -413,53 +540,156 @@ app.post('/api/analyze', async (req, res) => {
 
         console.log(`[Cache MISS] /api/analyze for: "${cacheKey}" (bypassCache: ${bypassCache})`);
         const prompt = niche
-            ? `Search for and analyze the current top YouTube Shorts trends specifically within the niche: "${niche}". Focus on trending topics, viral formats, hooks, structures, music, and hashtags relevant to this niche. For each topic, strictly define the competition level, precise target audience, and provide a single robust example video idea.`
-            : "Search for and analyze the current top YouTube Shorts trends for this week. Focus on trending topics, viral formats, hooks, structures, music, and hashtags. For each topic, strictly define the competition level, precise target audience, and provide a single robust example video idea.";
+            ? `ROLE:
+You are a YouTube Shorts trend analyst who understands Shorts algorithm behavior, audience psychology, and content saturation patterns.
 
-        const response = await generateWithFallback({
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        trendingTopics: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    velocity: { type: Type.NUMBER, description: "Trend velocity score from 0 to 100" },
-                                    growth: { type: Type.STRING, enum: ["exploding", "steady", "declining"] },
-                                    competition: { type: Type.STRING, enum: ["Low", "Medium", "High"], description: "Current market saturation" },
-                                    targetAudience: { type: Type.STRING, description: "Specific demographic (e.g. Gen Z Gamers, Tech Workers)" },
-                                    exampleIdea: { type: Type.STRING, description: "One-sentence high-impact video concept" }
-                                },
-                                required: ["name", "velocity", "growth", "competition", "targetAudience", "exampleIdea"]
-                            }
+TASK:
+Analyze current YouTube Shorts trends focused entirely on this niche: "${niche}".
+Return data only for this niche.
+
+${platformAnalysisBlock}
+
+SCORING DEFINITIONS (MANDATORY):
+For each trending topic, apply these exact definitions:
+- velocity (0-100): measures current momentum.
+  - 90-100: topic is appearing in millions of new videos this week
+  - 60-89: growing steadily with clear upward trajectory
+  - 30-59: present but not accelerating
+  - 0-29: fading or niche
+- growth status:
+  - "exploding" only if velocity >= 80 AND topic has appeared in viral videos in the last 14 days
+  - "steady" if velocity is 40-79 with consistent output
+  - "declining" if velocity < 40 OR topic peaked more than 30 days ago
+- competition:
+  - "Low" = fewer than 10k videos with this topic in the last 30 days
+  - "Medium" = 10k-100k videos in the last 30 days
+  - "High" = over 100k videos in the last 30 days
+
+OUTPUT QUALITY RULES:
+- targetAudience must be hyper-specific. Avoid broad labels like "young people". Use specific demographic + psychographic language (for example: "Gen Z males aged 16-24 interested in gym culture and self-improvement").
+- exampleIdea must be one complete sentence that includes a clear hook angle, not just a topic label.
+- viralFormats must be specific named formats actively being used right now (for example: "POV storytime with text overlay", "before/after transformation with trending audio").
+- hooks must be actual hook sentences a creator can say verbatim, not descriptions of hook styles.
+- nicheDNA must contain 5-6 characteristics that explain why content performs in this exact niche, not generic values.
+
+SCOPE:
+Focus entirely on this niche and provide trend outputs tailored to this audience and content ecosystem.`
+            : `ROLE:
+You are a YouTube Shorts trend analyst who understands Shorts algorithm behavior, audience psychology, and content saturation patterns.
+
+TASK:
+Analyze the top trending cross-niche YouTube Shorts topics for this week.
+
+${platformAnalysisBlock}
+
+SCORING DEFINITIONS (MANDATORY):
+For each trending topic, apply these exact definitions:
+- velocity (0-100): measures current momentum.
+  - 90-100: topic is appearing in millions of new videos this week
+  - 60-89: growing steadily with clear upward trajectory
+  - 30-59: present but not accelerating
+  - 0-29: fading or niche
+- growth status:
+  - "exploding" only if velocity >= 80 AND topic has appeared in viral videos in the last 14 days
+  - "steady" if velocity is 40-79 with consistent output
+  - "declining" if velocity < 40 OR topic peaked more than 30 days ago
+- competition:
+  - "Low" = fewer than 10k videos with this topic in the last 30 days
+  - "Medium" = 10k-100k videos in the last 30 days
+  - "High" = over 100k videos in the last 30 days
+
+OUTPUT QUALITY RULES:
+- targetAudience must be hyper-specific. Avoid broad labels like "young people". Use specific demographic + psychographic language (for example: "Gen Z males aged 16-24 interested in gym culture and self-improvement").
+- exampleIdea must be one complete sentence that includes a clear hook angle, not just a topic label.
+- viralFormats must be specific named formats actively being used right now (for example: "POV storytime with text overlay", "before/after transformation with trending audio").
+- hooks must be actual hook sentences a creator can say verbatim, not descriptions of hook styles.
+- nicheDNA must contain 5-6 characteristics that explain why each high-performing content cluster works, not generic values.
+
+SCOPE:
+No niche is provided, so return the strongest cross-niche topics performing this week.`;
+
+        const analyzeResponseSchema = {
+            type: Type.OBJECT,
+            properties: {
+                trendingTopics: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            name: { type: Type.STRING },
+                            velocity: { type: Type.NUMBER, description: "Trend velocity score from 0 to 100" },
+                            growth: { type: Type.STRING, enum: ["exploding", "steady", "declining"] },
+                            competition: { type: Type.STRING, enum: ["Low", "Medium", "High"], description: "Current market saturation" },
+                            targetAudience: { type: Type.STRING, description: "Specific demographic (e.g. Gen Z Gamers, Tech Workers)" },
+                            exampleIdea: { type: Type.STRING, description: "One-sentence high-impact video concept" }
                         },
-                        viralFormats: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        hooks: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        videoStructures: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        popularMusic: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        hashtagPatterns: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        nicheDNA: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    subject: { type: Type.STRING, description: "Characteristic name (e.g., Humor, Educational, Aesthetic, Fast-paced, Story-driven)" },
-                                    value: { type: Type.NUMBER, description: "Score from 0 to 100" }
-                                },
-                                required: ["subject", "value"]
-                            },
-                            description: "5-6 characteristics that define the 'vibe' of this trend/niche"
-                        }
-                    },
-                    required: ["trendingTopics", "viralFormats", "hooks", "videoStructures", "popularMusic", "hashtagPatterns", "nicheDNA"],
+                        required: ["name", "velocity", "growth", "competition", "targetAudience", "exampleIdea"]
+                    }
                 },
+                viralFormats: { type: Type.ARRAY, items: { type: Type.STRING } },
+                hooks: { type: Type.ARRAY, items: { type: Type.STRING } },
+                videoStructures: { type: Type.ARRAY, items: { type: Type.STRING } },
+                popularMusic: { type: Type.ARRAY, items: { type: Type.STRING } },
+                hashtagPatterns: { type: Type.ARRAY, items: { type: Type.STRING } },
+                nicheDNA: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            subject: { type: Type.STRING, description: "Characteristic name (e.g., Humor, Educational, Aesthetic, Fast-paced, Story-driven)" },
+                            value: { type: Type.NUMBER, description: "Score from 0 to 100" }
+                        },
+                        required: ["subject", "value"]
+                    },
+                    description: "5-6 characteristics that define the 'vibe' of this trend/niche"
+                }
             },
-        });
+            required: ["trendingTopics", "viralFormats", "hooks", "videoStructures", "popularMusic", "hashtagPatterns", "nicheDNA"],
+        };
+
+        let response;
+        try {
+            response = await generateWithFallback({
+                contents: prompt,
+                config: {
+                    tools: [{ googleSearch: {} }],
+                    responseMimeType: "application/json",
+                    responseSchema: analyzeResponseSchema,
+                },
+            });
+        } catch (groundedStructuredError) {
+            const groundedStructuredErrorMessage = String(groundedStructuredError?.message || groundedStructuredError || '').toLowerCase();
+            const shouldFallbackToTwoStep = [
+                'tool_use',
+                'grounding',
+                'response_mime_type',
+                'invalid_argument',
+                'schema',
+                'tools',
+            ].some(token => groundedStructuredErrorMessage.includes(token));
+
+            if (!shouldFallbackToTwoStep) {
+                throw groundedStructuredError;
+            }
+
+            console.warn("[Analyze] Grounded+schema conflict detected, falling back to two-step flow.");
+            const rawTrendResponse = await generateWithFallback({
+                contents: `${prompt}\n\nReturn raw trend data as detailed plain text.`,
+                config: {
+                    tools: [{ googleSearch: {} }],
+                },
+            });
+
+            if (!rawTrendResponse.text) throw new Error("No grounded raw trend data from Gemini API");
+
+            response = await generateWithFallback({
+                contents: `Structure this raw trend data into the required JSON format:\n\n${rawTrendResponse.text}`,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: analyzeResponseSchema,
+                },
+            });
+        }
 
         if (!response.text) throw new Error("No response text from Gemini API");
         let result;
@@ -592,6 +822,27 @@ app.post('/api/generate', async (req, res) => {
     try {
         const trend = sanitizeInput(req.body.trend);
         const visualStyle = sanitizeInput(req.body.visualStyle);
+        const platform = sanitizePlatform(req.body.platform);
+        const platformBlock = buildPlatformBlock(platform);
+        const rawPersona = sanitizeInput(req.body.persona || 'Narrator');
+        const brand = sanitizeBrandProfile(req.body.brand);
+        const brandBlock = brand ? `
+━━━ BRAND MEMORY (MANDATORY — override defaults with these) ━━━
+Brand Name: ${brand.brandName}
+${brand.creatorVoice ? `Creator Voice & Tone: ${brand.creatorVoice}` : ''}
+${brand.bannedWords ? `Banned Words/Phrases (NEVER use): ${brand.bannedWords}` : ''}
+${brand.ctaStyle ? `CTA Style: ${brand.ctaStyle}` : ''}
+${brand.visualRules ? `Visual Rules: ${brand.visualRules}` : ''}
+${brand.targetAudienceDescription ? `Target Audience: ${brand.targetAudienceDescription}` : ''}
+${brand.contentPillars ? `Content Pillars (stay within these): ${brand.contentPillars}` : ''}
+
+ENFORCEMENT:
+- Every script line must sound like it came from ${brand.brandName}.
+- Never use any word or phrase listed in banned words.
+- CTA must follow the specified CTA style exactly.
+- All visual prompts must respect the visual rules above.
+- All content must serve at least one of the content pillars.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '';
         const { visualGenerationType } = req.body;
         if (!trend) return res.status(400).json({ error: 'Trend is required.' });
 
@@ -608,8 +859,8 @@ app.post('/api/generate', async (req, res) => {
         let totalDuration = 60;
         if (req.body.totalDuration !== undefined && req.body.totalDuration !== null) {
             totalDuration = Number(req.body.totalDuration);
-            if (!Number.isFinite(totalDuration) || totalDuration < 10 || totalDuration > 300) {
-                return res.status(400).json({ error: 'totalDuration must be a number between 10 and 300 seconds.' });
+            if (!Number.isFinite(totalDuration) || totalDuration < 5 || totalDuration > 300) {
+                return res.status(400).json({ error: 'totalDuration must be a number between 5 and 300 seconds.' });
             }
             totalDuration = Math.floor(totalDuration);
         }
@@ -626,6 +877,8 @@ app.post('/api/generate', async (req, res) => {
         // segmentLength undefined → dynamic mode: AI picks 10-20 segments
         let segmentCount = 0;
         let maxWordsPerSegment = 0;
+        let dynamicMinSegments = Math.max(8, Math.floor(totalDuration / 2));
+        let dynamicMaxSegments = Math.min(60, Math.floor(totalDuration / 1.2));
         let timingRules = '';
 
         if (segmentLength) {
@@ -657,8 +910,8 @@ ${scriptRule}`;
 
             timingRules = `
 TIMING RULES (ULTRA HIGH-RETENTION MODE):
-- totalDuration = 60s
-- You MUST break this 60-second video into 35–45 distinct segments (Dynamic Cinematic Cut Rule).
+- totalDuration = ${totalDuration}s
+- You MUST break this ${totalDuration}-second video into ${dynamicMinSegments}-${dynamicMaxSegments} distinct segments (Dynamic Cinematic Cut Rule).
 - Every sentence, major comma, or switch in subject must have its own segment.
 - NEVER group more than 2.5 seconds of script under one visual.
 - The Hook (0-5 seconds): Change visual every 1.2 seconds.
@@ -722,6 +975,18 @@ STRICT CONSISTENCY RULES:
             genreBlock = `\nCONTENT GENRE: ${genre}\nFollow these genre-specific directives for the ENTIRE output:\n${GENRE_INSTRUCTIONS[genre]}`;
         }
 
+        const persona = ['Narrator', 'First-Person', 'Character', 'Interview'].includes(rawPersona) ? rawPersona : 'Narrator';
+        let personaBlock = '';
+        if (persona === 'Narrator') {
+            personaBlock = `\nSCRIPT VOICE — NARRATOR: Write all script lines in third-person authoritative voice. Cinematic, objective, speaks about the subject from the outside. No use of I or me.`;
+        } else if (persona === 'First-Person') {
+            personaBlock = `\nSCRIPT VOICE — FIRST PERSON: Write all script lines as the creator speaking directly. Use I, me, my. Conversational and authentic. Build intimacy with the viewer.`;
+        } else if (persona === 'Character') {
+            personaBlock = `\nSCRIPT VOICE — CHARACTER: Every script line must be written as a consistent fictional persona. Give this character a distinct voice, quirks, and phrasing style. Maintain it across all segments with zero deviation.`;
+        } else {
+            personaBlock = `\nSCRIPT VOICE — INTERVIEW: Structure the script as questions followed by answers. The question creates the curiosity gap. The answer delivers the value. Each segment should feel like a natural Q&A beat.`;
+        }
+
         const expectedSegments = segmentLength ? segmentCount : 0;
         const variationBlock = req.body.variationId ? `\n\n━━━ REGENERATION VARIANCE ━━━\nCreate a highly distinct creative variation of this concept. DO NOT simply repeat the previous output. New hooks, new visual angles, distinct narrative pacing.\nVariation Seed: ${sanitizeInput(req.body.variationId)}\n━━━━━━━━━━━━━━━━━━━━━━━` : '';
 
@@ -741,6 +1006,10 @@ Visual Generation Type: ${visualGenerationType === 'video' ? 'VIDEO (cinematic m
 
 ${timingRules}
 ${genreBlock}
+${personaBlock}
+${platformBlock}
+${characterBlock}
+${brandBlock}
 
 ━━━ VISUAL DNA REFERENCE SHEET (MANDATORY — lock this across EVERY segment) ━━━
 Visual Style: "${visualStyle}"
@@ -784,7 +1053,6 @@ NEVER write generic values like "camera pan" or "zoom" without direction, subjec
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ASPECT RATIO: Append "--ar 9:16" to the END of EVERY visual prompt.
-${characterBlock}
 
 ━━━ POST-PRODUCTION REQUIREMENTS ━━━
 Generate the following with PRODUCTION-LEVEL specificity (not generic 1-word answers):
@@ -794,12 +1062,45 @@ Generate the following with PRODUCTION-LEVEL specificity (not generic 1-word ans
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Also generate:
-- 3 hook variations (Curiosity / Direct-Aggressive / Contrarian psychological triggers)
+━━━ A/B TEST PACK (MANDATORY) ━━━
+Generate exactly 3 hook/title test variants. Each variant is a complete,
+self-contained test unit designed to isolate one psychological trigger.
+
+Variant A — CURIOSITY GAP:
+- Hook: Opens a question the viewer cannot answer without watching.
+- Title: SEO-friendly, keyword-rich, implies a secret or revelation.
+- Thumbnail text: 3-5 words max, creates unresolved tension.
+- Test hypothesis: 'This will perform best with viewers who discovered
+  the channel through search.'
+
+Variant B — PATTERN INTERRUPT / SHOCK:
+- Hook: Opens with a bold, counterintuitive, or controversial claim.
+- Title: Makes a statement that challenges a common belief.
+- Thumbnail text: 3-5 words max, provocative or surprising.
+- Test hypothesis: 'This will perform best on FYP/discovery feeds
+  where the viewer has no prior context.'
+
+Variant C — DIRECT PAIN POINT / DESIRE:
+- Hook: Speaks directly to a specific frustration or aspiration the
+  target audience feels daily.
+- Title: Addresses the viewer directly using 'you' or 'your'.
+- Thumbnail text: 3-5 words max, benefit or outcome focused.
+- Test hypothesis: 'This will perform best with returning subscribers
+  and niche community members.'
+
+For each variant also provide:
+- suggestedAudience: who this variant will resonate with most
+- platformFit: which platform this variant is optimized for
+  (YouTube Shorts / TikTok / Instagram Reels / Facebook Reels)
+- testInstructions: one sentence telling the creator exactly how
+  to run the test (e.g. 'Post variant A on Tuesday 7pm, variant B
+  on Thursday 7pm, compare CTR after 48 hours')
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - SEO title, description, and pinned comment idea
 - Hashtags (10-15)
 - Coaching tips for the creator
 
-⚠️ FINAL SEGMENT COUNT LOCK: Before you finish, count your segments array. In dynamic mode you MUST output between 35 and 45 segments. If you have fewer than 35, split more script beats and add more visual cuts until you reach the minimum. Do NOT submit fewer than 35 segments.`,
+⚠️ FINAL SEGMENT COUNT LOCK: Before you finish, count your segments array. In dynamic mode you MUST output between ${dynamicMinSegments} and ${dynamicMaxSegments} segments. If you have fewer than ${dynamicMinSegments}, split more script beats and add more visual cuts until you reach the minimum. Do NOT submit fewer than ${dynamicMinSegments} segments.`,
                     config: {
                         responseMimeType: "application/json",
                         responseSchema: {
@@ -830,6 +1131,54 @@ Also generate:
                                     required: ["tags"]
                                 },
                                 visualStyle: { type: Type.STRING },
+                                abTestPack: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        variantA: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                label: { type: Type.STRING, description: "Always 'Curiosity Gap'" },
+                                                hook: { type: Type.STRING },
+                                                title: { type: Type.STRING },
+                                                thumbnailText: { type: Type.STRING },
+                                                testHypothesis: { type: Type.STRING },
+                                                suggestedAudience: { type: Type.STRING },
+                                                platformFit: { type: Type.STRING },
+                                                testInstructions: { type: Type.STRING }
+                                            },
+                                            required: ["label", "hook", "title", "thumbnailText", "testHypothesis", "suggestedAudience", "platformFit", "testInstructions"]
+                                        },
+                                        variantB: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                label: { type: Type.STRING, description: "Always 'Pattern Interrupt'" },
+                                                hook: { type: Type.STRING },
+                                                title: { type: Type.STRING },
+                                                thumbnailText: { type: Type.STRING },
+                                                testHypothesis: { type: Type.STRING },
+                                                suggestedAudience: { type: Type.STRING },
+                                                platformFit: { type: Type.STRING },
+                                                testInstructions: { type: Type.STRING }
+                                            },
+                                            required: ["label", "hook", "title", "thumbnailText", "testHypothesis", "suggestedAudience", "platformFit", "testInstructions"]
+                                        },
+                                        variantC: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                label: { type: Type.STRING, description: "Always 'Pain Point / Desire'" },
+                                                hook: { type: Type.STRING },
+                                                title: { type: Type.STRING },
+                                                thumbnailText: { type: Type.STRING },
+                                                testHypothesis: { type: Type.STRING },
+                                                suggestedAudience: { type: Type.STRING },
+                                                platformFit: { type: Type.STRING },
+                                                testInstructions: { type: Type.STRING }
+                                            },
+                                            required: ["label", "hook", "title", "thumbnailText", "testHypothesis", "suggestedAudience", "platformFit", "testInstructions"]
+                                        }
+                                    },
+                                    required: ["variantA", "variantB", "variantC"]
+                                },
                                 hookVariations: {
                                     type: Type.ARRAY,
                                     items: {
@@ -856,7 +1205,7 @@ Also generate:
                                 fontStyle: { type: Type.STRING },
                                 editingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["title", "segments", "metadata", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
+                            required: ["title", "segments", "metadata", "visualStyle", "abTestPack", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
                         }
                     }
                 });
@@ -994,6 +1343,28 @@ app.post('/api/improve', async (req, res) => {
         const script = sanitizeScriptInput(req.body.script);
         const critique = sanitizeScriptInput(req.body.critique);
         const visualStyle = sanitizeInput(req.body.visualStyle) || 'Default';
+        const platform = sanitizePlatform(req.body.platform);
+        const platformBlock = buildPlatformBlock(platform);
+        const persona = sanitizePersona(req.body.persona);
+        const personaBlock = buildPersonaBlock(persona);
+        const brand = sanitizeBrandProfile(req.body.brand);
+        const brandBlock = brand ? `
+━━━ BRAND MEMORY (MANDATORY — override defaults with these) ━━━
+Brand Name: ${brand.brandName}
+${brand.creatorVoice ? `Creator Voice & Tone: ${brand.creatorVoice}` : ''}
+${brand.bannedWords ? `Banned Words/Phrases (NEVER use): ${brand.bannedWords}` : ''}
+${brand.ctaStyle ? `CTA Style: ${brand.ctaStyle}` : ''}
+${brand.visualRules ? `Visual Rules: ${brand.visualRules}` : ''}
+${brand.targetAudienceDescription ? `Target Audience: ${brand.targetAudienceDescription}` : ''}
+${brand.contentPillars ? `Content Pillars (stay within these): ${brand.contentPillars}` : ''}
+
+ENFORCEMENT:
+- Every script line must sound like it came from ${brand.brandName}.
+- Never use any word or phrase listed in banned words.
+- CTA must follow the specified CTA style exactly.
+- All visual prompts must respect the visual rules above.
+- All content must serve at least one of the content pillars.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '';
         const { visualGenerationType } = req.body;
         if (!script) return res.status(400).json({ error: 'Script is required.' });
 
@@ -1069,7 +1440,10 @@ ${script}
 
 CRITIQUE:
 ${critique}
+${platformBlock}
+${personaBlock}
 ${characterImproveBlock}
+${brandBlock}
 
 STRUCTURAL PRESERVATION (MANDATORY):
 - Return EXACTLY ${expectedSegments} segments — no merging, splitting, or deleting.
@@ -1248,44 +1622,6 @@ Also provide: improved hook (1 line max), caption, hashtags.`,
     }
 });
 
-
-app.post('/api/workflow', async (req, res) => {
-    try {
-        const response = await generateWithFallback({
-            contents: "Provide a step-by-step workflow for creating high-quality YouTube Shorts, including recommended software and optimization tips.",
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        software: {
-                            type: Type.OBJECT,
-                            properties: {
-                                voiceGen: { type: Type.STRING },
-                                imageGen: { type: Type.STRING },
-                                videoGen: { type: Type.STRING },
-                                editing: { type: Type.STRING },
-                            },
-                            required: ["voiceGen", "imageGen", "videoGen", "editing"],
-                        },
-                        steps: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        optimizationTips: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    },
-                    required: ["software", "steps", "optimizationTips"],
-                },
-            },
-        });
-
-        if (!response.text) throw new Error("No response text from Gemini API");
-        let workflowData;
-        try { workflowData = JSON.parse(response.text); }
-        catch { throw new Error("Gemini returned malformed JSON. Please try again."); }
-        res.json(workflowData);
-    } catch (error) {
-        console.error("Workflow error:", error);
-        res.status(error.status || 500).json({ error: safeError(error) });
-    }
-});
 
 // ─── 404 Catch-All ───────────────────────────────────────────────────────────
 // Must be registered after all other routes. Returns JSON (not HTML default)

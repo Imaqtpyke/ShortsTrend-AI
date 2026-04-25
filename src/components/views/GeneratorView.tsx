@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { useAppStore, useTheme } from '../../store/useAppStore';
 import { FloatingScrollButton } from '../ui/FloatingScrollButton';
-import { downloadAsMarkdown } from '../../lib/exportUtils';
+import { downloadAsCSV, downloadAsMarkdown } from '../../lib/exportUtils';
 import { TimelineEditorModal } from './TimelineEditorModal';
 import { TimelineSegment } from '../../types';
 
@@ -195,6 +195,8 @@ export function GeneratorView() {
     const setShowTimelineEditorModal = useAppStore(state => state.setShowTimelineEditorModal);
     const setShowPreGenModal = useAppStore(state => state.setShowPreGenModal);
     const uncheckAllSegments = useAppStore(state => state.uncheckAllSegments);
+    const previousContentIdea = useAppStore(state => state.previousContentIdea);
+    const clearPreviousContentIdea = useAppStore(state => state.clearPreviousContentIdea);
     const directIdea = useAppStore(state => state.directIdea); // B7 FIX: needed as fallback when selectedTrend is null (Direct Idea flow)
     
     // We still need the whole theme object as it's used in many places
@@ -311,6 +313,69 @@ export function GeneratorView() {
         return `${m}:${s}`;
     };
 
+    const truncateText = (text: string, max = 100) => {
+        if (!text) return '';
+        return text.length > max ? `${text.slice(0, max)}...` : text;
+    };
+
+    const renderScriptDiff = (beforeText: string, afterText: string, side: 'before' | 'after') => {
+        const beforeWords = beforeText.trim().split(/\s+/).filter(Boolean);
+        const afterWords = afterText.trim().split(/\s+/).filter(Boolean);
+        const activeWords = side === 'before' ? beforeWords : afterWords;
+        const otherWords = side === 'before' ? afterWords : beforeWords;
+        return activeWords.map((word, idx) => {
+            const changed = word !== (otherWords[idx] || '');
+            return (
+                <React.Fragment key={`${side}-${idx}-${word}`}>
+                    {idx > 0 ? ' ' : ''}
+                    {changed ? <mark className="bg-yellow-300/40 text-white px-0.5 rounded-sm">{word}</mark> : word}
+                </React.Fragment>
+            );
+        });
+    };
+
+    const diffItems = React.useMemo(() => {
+        if (!previousContentIdea || !contentIdea) return [];
+        const beforeSegments = previousContentIdea.segments || [];
+        const afterSegments = contentIdea.segments || [];
+        const sharedLength = Math.min(beforeSegments.length, afterSegments.length);
+        const items: Array<
+            | { type: 'changed'; index: number; before: TimelineSegment; after: TimelineSegment }
+            | { type: 'added'; index: number; after: TimelineSegment }
+            | { type: 'removed'; index: number; before: TimelineSegment }
+        > = [];
+
+        for (let i = 0; i < sharedLength; i++) {
+            const before = beforeSegments[i];
+            const after = afterSegments[i];
+            const scriptChanged = (before.script || '').trim() !== (after.script || '').trim();
+            const visualChanged = (before.visual || '').trim() !== (after.visual || '').trim();
+            if (scriptChanged || visualChanged) {
+                items.push({ type: 'changed', index: i, before, after });
+            }
+        }
+
+        if (afterSegments.length > sharedLength) {
+            for (let i = sharedLength; i < afterSegments.length; i++) {
+                items.push({ type: 'added', index: i, after: afterSegments[i] });
+            }
+        }
+
+        if (beforeSegments.length > sharedLength) {
+            for (let i = sharedLength; i < beforeSegments.length; i++) {
+                items.push({ type: 'removed', index: i, before: beforeSegments[i] });
+            }
+        }
+
+        return items;
+    }, [previousContentIdea, contentIdea]);
+
+    const handleUndoChanges = () => {
+        if (!previousContentIdea) return;
+        useAppStore.setState({ contentIdea: previousContentIdea });
+        clearPreviousContentIdea();
+    };
+
     return (
         <motion.div
             key="generator"
@@ -370,6 +435,15 @@ export function GeneratorView() {
                         <span>Export .MD</span>
                     </button>
                     <button
+                        onClick={() => downloadAsCSV(contentIdea)}
+                        className={cn(
+                            "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] border border-white/10 hover:bg-white/5",
+                        )}
+                    >
+                        <Download className="w-4 h-4" />
+                        <span>Export CSV</span>
+                    </button>
+                    <button
                         onClick={copyAllForProduction}
                         className={cn(
                             "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none",
@@ -385,6 +459,77 @@ export function GeneratorView() {
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {/* Left Column: Storyboard Timeline */}
                 <div className="xl:col-span-8 space-y-8 flex flex-col relative">
+                    {previousContentIdea && diffItems.length > 0 && (
+                        <Section title="What Changed" icon={<RefreshCw className="w-5 h-5" />} action={
+                            <button
+                                onClick={clearPreviousContentIdea}
+                                className="p-1.5 rounded-sm border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                                aria-label="Dismiss changes"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        }>
+                            <div className="space-y-4">
+                                <p className="text-xs font-mono uppercase tracking-widest text-white/60">
+                                    {diffItems.length} segments changed out of {contentIdea.segments.length} total
+                                </p>
+                                <div className="max-h-[420px] overflow-y-auto space-y-3 pr-1">
+                                    {diffItems.map((item) => {
+                                        if (item.type === 'changed') {
+                                            return (
+                                                <div key={`changed-${item.index}`} className="grid grid-cols-1 md:grid-cols-2 gap-3 border border-white/10 p-3 bg-[#1a1a1a]">
+                                                    <div className="space-y-2 border border-red-500/20 bg-red-500/10 p-3">
+                                                        <p className="text-[10px] font-mono uppercase tracking-widest text-red-300">Before</p>
+                                                        <p className="text-[10px] font-mono text-white/60">{item.before.timestamp || formatTime(item.before.startTime)}</p>
+                                                        <p className="text-sm leading-relaxed text-white/80">{renderScriptDiff(item.before.script || '', item.after.script || '', 'before')}</p>
+                                                        <p className="text-xs italic text-white/60">"{truncateText(item.before.visual || '')}"</p>
+                                                    </div>
+                                                    <div className="space-y-2 border border-emerald-500/20 bg-emerald-500/10 p-3">
+                                                        <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-300">After</p>
+                                                        <p className="text-[10px] font-mono text-white/60">{item.after.timestamp || formatTime(item.after.startTime)}</p>
+                                                        <p className="text-sm leading-relaxed text-white">{renderScriptDiff(item.before.script || '', item.after.script || '', 'after')}</p>
+                                                        <p className="text-xs italic text-white/70">"{truncateText(item.after.visual || '')}"</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        if (item.type === 'added') {
+                                            return (
+                                                <div key={`added-${item.index}`} className="border border-emerald-500/30 bg-emerald-500/10 p-3 space-y-2">
+                                                    <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-300">Added Segment</p>
+                                                    <p className="text-[10px] font-mono text-white/60">{item.after.timestamp || formatTime(item.after.startTime)}</p>
+                                                    <p className="text-sm text-white/90">{item.after.script}</p>
+                                                    <p className="text-xs italic text-white/70">"{truncateText(item.after.visual || '')}"</p>
+                                                </div>
+                                            );
+                                        }
+                                        return (
+                                            <div key={`removed-${item.index}`} className="border border-red-500/30 bg-red-500/10 p-3 space-y-2">
+                                                <p className="text-[10px] font-mono uppercase tracking-widest text-red-300">Removed Segment</p>
+                                                <p className="text-[10px] font-mono text-white/60">{item.before.timestamp || formatTime(item.before.startTime)}</p>
+                                                <p className="text-sm text-white/80">{item.before.script}</p>
+                                                <p className="text-xs italic text-white/60">"{truncateText(item.before.visual || '')}"</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-white/10">
+                                    <button
+                                        onClick={clearPreviousContentIdea}
+                                        className="px-4 py-2 text-[10px] font-mono uppercase tracking-widest border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                                    >
+                                        Keep Changes
+                                    </button>
+                                    <button
+                                        onClick={handleUndoChanges}
+                                        className="px-4 py-2 text-[10px] font-mono uppercase tracking-widest border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors"
+                                    >
+                                        Undo Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </Section>
+                    )}
                     <Section 
                         title="Production Timeline" 
                         icon={<Clock className="w-5 h-5" />}
@@ -412,27 +557,75 @@ export function GeneratorView() {
 
                 {/* Right Column: Details */}
                 <div className="xl:col-span-4 space-y-6 sm:space-y-8 xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto custom-scrollbar pr-0 xl:pr-2 pb-0">
-                    <Section title="Viral Hook Variations" icon={<Zap className="w-5 h-5" />}>
-                        <div className="space-y-4">
-                            {contentIdea.hookVariations?.length > 0 ? (
-                                contentIdea.hookVariations.map((h, i) => (
-                                    <div key={i} className="relative group p-3 bg-white/5 border border-white/10 rounded-sm">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">{h.type}</span>
-                                            <button
-                                                onClick={() => copyToClipboard(h.text, `hook-${i}`)}
-                                                className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-colors"
-                                            >
-                                                {copiedId === `hook-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                            </button>
+                    <Section title="A/B Test Pack" icon={<Zap className="w-5 h-5" />}>
+                        {contentIdea.abTestPack ? (
+                            <div className="space-y-4">
+                                <div className="inline-flex items-center px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest border border-emerald-500/40 bg-emerald-500/10 text-emerald-400">
+                                    Split Test Ready
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {[
+                                        contentIdea.abTestPack.variantA,
+                                        contentIdea.abTestPack.variantB,
+                                        contentIdea.abTestPack.variantC
+                                    ].map((variant, i) => (
+                                        <div key={i} className="p-3 bg-white/5 border border-white/10 rounded-sm space-y-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">{variant.label}</span>
+                                                <span className="text-[9px] font-mono uppercase px-2 py-1 border border-white/10 bg-white/5 text-white/70">{variant.platformFit}</span>
+                                            </div>
+                                            <p className="text-sm font-bold leading-snug">"{variant.hook}"</p>
+                                            <p className="text-xs text-white/80 leading-relaxed">{variant.title}</p>
+                                            <span className="inline-flex text-[9px] font-mono uppercase px-2 py-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+                                                {variant.thumbnailText}
+                                            </span>
+                                            <p className="text-[11px] text-white/60 italic leading-relaxed">{variant.testHypothesis}</p>
+                                            <p className="text-[11px] text-white/70 leading-relaxed">Best for: {variant.suggestedAudience}</p>
+                                            <div className="p-2 border border-white/10 bg-[#0a0a0a]">
+                                                <p className="text-[11px] text-white/80 leading-relaxed">{variant.testInstructions}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <button
+                                                    onClick={() => copyToClipboard(variant.hook, `ab-hook-${i}`)}
+                                                    className="px-2 py-1 text-[10px] font-mono uppercase border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-1"
+                                                >
+                                                    {copiedId === `ab-hook-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                    Hook
+                                                </button>
+                                                <button
+                                                    onClick={() => copyToClipboard(variant.title, `ab-title-${i}`)}
+                                                    className="px-2 py-1 text-[10px] font-mono uppercase border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-1"
+                                                >
+                                                    {copiedId === `ab-title-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                    Title
+                                                </button>
+                                            </div>
                                         </div>
-                                        <p className="text-sm italic font-bold leading-snug pr-4">"{h.text}"</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm opacity-50 italic">Generating hooks...</p>
-                            )}
-                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {contentIdea.hookVariations?.length > 0 ? (
+                                    contentIdea.hookVariations.map((h, i) => (
+                                        <div key={i} className="relative group p-3 bg-white/5 border border-white/10 rounded-sm">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">{h.type}</span>
+                                                <button
+                                                    onClick={() => copyToClipboard(h.text, `hook-${i}`)}
+                                                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-colors"
+                                                >
+                                                    {copiedId === `hook-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                </button>
+                                            </div>
+                                            <p className="text-sm italic font-bold leading-snug pr-4">"{h.text}"</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm opacity-50 italic">Generating hooks...</p>
+                                )}
+                            </div>
+                        )}
                     </Section>
 
                     <Section title="SEO Metadata (Titles & Description)" icon={<Hash className="w-5 h-5" />}>

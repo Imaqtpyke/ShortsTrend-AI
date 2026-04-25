@@ -18,12 +18,17 @@ interface PersistedSession {
     critique: AppState['critique'];
     workflow: AppState['workflow'];
     searchQuery: string;
+    totalDuration: number;
     segmentMode: 'adjustable' | 'fixed';
     useCustomCharacter: boolean;
     customCharacter: AppState['customCharacter'];
+    useBrandMemory: boolean;
+    brandProfile: AppState['brandProfile'];
     selectedGenre: AppState['selectedGenre'];
+    selectedPlatform: AppState['selectedPlatform'];
     useCustomGenre: AppState['useCustomGenre'];
     customGenreString: AppState['customGenreString'];
+    selectedPersona: AppState['selectedPersona'];
     useCustomStyle: AppState['useCustomStyle'];
 
     searchMode: AppState['searchMode'];
@@ -46,12 +51,25 @@ export const persistSession = Object.assign(
                 critique: partial.critique !== undefined ? partial.critique : current.critique ?? null,
                 workflow: partial.workflow !== undefined ? partial.workflow : current.workflow ?? null,
                 searchQuery: partial.searchQuery !== undefined ? partial.searchQuery : current.searchQuery ?? '',
+                totalDuration: partial.totalDuration !== undefined ? partial.totalDuration : (current.totalDuration ?? 60),
                 segmentMode: partial.segmentMode !== undefined ? partial.segmentMode : (current.segmentMode ?? 'adjustable'),
                 useCustomCharacter: partial.useCustomCharacter !== undefined ? partial.useCustomCharacter : (current.useCustomCharacter ?? false),
                 customCharacter: partial.customCharacter !== undefined ? partial.customCharacter : (current.customCharacter ?? { name: '', description: '', type: 'both' }),
+                useBrandMemory: partial.useBrandMemory !== undefined ? partial.useBrandMemory : (current.useBrandMemory ?? false),
+                brandProfile: partial.brandProfile !== undefined ? partial.brandProfile : (current.brandProfile ?? {
+                    brandName: '',
+                    creatorVoice: '',
+                    bannedWords: '',
+                    ctaStyle: '',
+                    visualRules: '',
+                    targetAudienceDescription: '',
+                    contentPillars: ''
+                }),
                 selectedGenre: partial.selectedGenre !== undefined ? partial.selectedGenre : (current.selectedGenre ?? 'Storytelling'),
+                selectedPlatform: partial.selectedPlatform !== undefined ? partial.selectedPlatform : (current.selectedPlatform ?? 'YouTube Shorts'),
                 useCustomGenre: partial.useCustomGenre !== undefined ? partial.useCustomGenre : (current.useCustomGenre ?? false),
                 customGenreString: partial.customGenreString !== undefined ? partial.customGenreString : (current.customGenreString ?? ''),
+                selectedPersona: partial.selectedPersona !== undefined ? partial.selectedPersona : (current.selectedPersona ?? 'Narrator'),
                 useCustomStyle: partial.useCustomStyle !== undefined ? partial.useCustomStyle : (current.useCustomStyle ?? false),
 
                 searchMode: partial.searchMode !== undefined ? partial.searchMode : (current.searchMode ?? 'keyword'),
@@ -81,6 +99,29 @@ export const persistSession = Object.assign(
                     console.error("Corrupted session data, clearing...", e);
                     await localforage.removeItem(SESSION_KEY);
                 }
+            }
+            if (session.totalDuration === undefined) {
+                session.totalDuration = 60;
+            }
+            if (session.selectedPlatform === undefined) {
+                session.selectedPlatform = 'YouTube Shorts';
+            }
+            if (session.selectedPersona === undefined) {
+                session.selectedPersona = 'Narrator';
+            }
+            if (session.useBrandMemory === undefined) {
+                session.useBrandMemory = false;
+            }
+            if (session.brandProfile === undefined) {
+                session.brandProfile = {
+                    brandName: '',
+                    creatorVoice: '',
+                    bannedWords: '',
+                    ctaStyle: '',
+                    visualRules: '',
+                    targetAudienceDescription: '',
+                    contentPillars: ''
+                };
             }
             return session;
         }
