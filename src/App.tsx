@@ -7,8 +7,6 @@ import {
   Settings,
   ChevronRight,
   Loader2,
-  Music,
-  Volume2,
   Image as ImageIcon,
   MessageSquare,
   Hash,
@@ -32,25 +30,7 @@ import {
   Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  BarChart as ReBarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  LineChart,
-  Line,
-  ReferenceLine,
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis
-} from 'recharts';
-import { VISUAL_STYLES, HistoryItem, Toast, RetentionLeak } from './types';
+
 import { cn } from './lib/utils';
 import { TabButton } from './components/ui/TabButton';
 import { MobileNavButton } from './components/ui/MobileNavButton';
@@ -62,6 +42,7 @@ import { NicheDNARadar } from './components/ui/NicheDNARadar';
 import { RetentionGraph } from './components/ui/RetentionGraph';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { useAppStore, useTheme } from './store/useAppStore';
+import { PreGenModal } from './components/views/PreGenModal';
 
 // Code-split the heavy view components so only the visible tab's code is loaded
 const TrendsView = lazy(() => import('./components/views/TrendsView').then(m => ({ default: m.TrendsView })));
@@ -69,6 +50,7 @@ const GeneratorView = lazy(() => import('./components/views/GeneratorView').then
 const CritiqueView = lazy(() => import('./components/views/CritiqueView').then(m => ({ default: m.CritiqueView })));
 const WorkflowView = lazy(() => import('./components/views/WorkflowView').then(m => ({ default: m.WorkflowView })));
 const HistoryView = lazy(() => import('./components/views/HistoryView').then(m => ({ default: m.HistoryView })));
+
 
 function StarBorder({ children, className }: { children: React.ReactNode, className?: string }) {
   return (
@@ -137,6 +119,14 @@ function AnimatedGrid({ theme }: { theme: any }) {
   );
 }
 
+// Pre-computed at module level so Math.random() is called only once, preventing
+// React StrictMode double-invoke from producing different bar heights on each render.
+const _HERO_BARS = Array.from({ length: 14 }, () => ({
+  heightSeq: [10, 30 + Math.random() * 50, 15 + Math.random() * 20] as [number, number, number],
+  ySeq: [100, 80 - Math.random() * 50, 95 - Math.random() * 20] as [number, number, number],
+  duration: 2.5 + Math.random()
+}));
+
 const HeroAnimation = React.memo(() => {
   const color = "#ffffff";
   const accent = "#10b981"; // emerald-500
@@ -160,7 +150,7 @@ const HeroAnimation = React.memo(() => {
         />
 
         {/* Animated Bars (representing video retention/engagement) */}
-        {[...Array(14)].map((_, i) => (
+        {_HERO_BARS.map((bar, i) => (
           <motion.rect
             key={i}
             x={45 + i * 17}
@@ -171,11 +161,11 @@ const HeroAnimation = React.memo(() => {
             fillOpacity="0.15"
             initial={{ height: 0, y: 110 }}
             animate={{
-              height: [10, 30 + Math.random() * 50, 15 + Math.random() * 20],
-              y: [100, 80 - Math.random() * 50, 95 - Math.random() * 20]
+              height: bar.heightSeq,
+              y: bar.ySeq
             }}
             transition={{
-              duration: 2.5 + Math.random(),
+              duration: bar.duration,
               repeat: Infinity,
               repeatType: "mirror",
               ease: "easeInOut",
@@ -217,7 +207,8 @@ export default function App() {
   const {
     analysis, contentIdea, workflow, critique, isLoading, error, history, searchQuery,
     activeTab, setActiveTab, selectedTrend, toasts, historySearch, handleAnalyze, resetApp,
-    loadingMessage, isHydrated, initStore
+    loadingMessage, isHydrated, initStore, searchMode, setSearchMode, youtubeUrl, setYoutubeUrl,
+    directIdea, setDirectIdea, setShowPreGenModal
   } = useAppStore();
 
   // Bug 3 Fix: Use the shared useTheme hook instead of a duplicate inline theme object.
@@ -239,14 +230,6 @@ export default function App() {
       }, 100);
     }
   }, [activeTab, isLoading, analysis, isHydrated]);
-
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen font-sans transition-colors duration-500 relative bg-[#0a0a0a] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-500 relative overflow-x-hidden bg-[#0a0a0a] text-[#f5f5f5] selection:bg-[#f5f5f5] selection:text-[#0a0a0a]">
@@ -293,80 +276,163 @@ export default function App() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 lg:pb-8">
-        {error && (
-          <div className="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-sm font-mono text-sm">
-            {error}
-          </div>
-        )}
-
-        {!analysis && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
+        <AnimatePresence mode="wait">
+          {error && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-full max-w-3xl"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-8 overflow-hidden rounded-sm border border-red-500/30 bg-[#1a1a1a]/80 backdrop-blur-md shadow-lg shadow-red-500/5 flex"
             >
-              <HeroAnimation />
-              <h1 className="text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-bold tracking-tight mb-4 text-white">
-                Turn Viral Trends into Viral Content
-              </h1>
-              <p className="text-base md:text-lg xl:text-xl opacity-60 mb-6 md:mb-12">
-                AI-powered trend analysis and content generation for YouTube Shorts creators.
-              </p>
-
-              <StarBorder className="mb-8 shadow-lg">
-                <div className="flex flex-col sm:flex-row relative gap-2 sm:gap-0 p-1">
-                  <div className="relative w-full flex-grow">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
-                      <Search className="w-5 h-5 opacity-40" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Enter a niche (e.g. Tech, Cooking)..."
-                      value={searchQuery}
-                      onChange={(e) => useAppStore.getState().setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleAnalyze()}
-                      disabled={isLoading}
-                      className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-white disabled:opacity-50"
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleAnalyze()}
-                    disabled={isLoading}
-                    className={cn(
-                      "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring disabled:opacity-50 disabled:cursor-not-allowed",
-                      theme.bg + " text-[#0a0a0a] " + theme.hoverBg
-                    )}
-                  >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
-                    Search Niche
-                  </button>
+              <div className="w-1.5 bg-red-500 shrink-0" />
+              <div className="p-4 sm:p-5 flex items-start gap-3 sm:gap-4 w-full">
+                 <div className="p-2 bg-red-500/10 rounded-sm shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                 </div>
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <h3 className="font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest text-red-400 mb-1">System Notice</h3>
+                  <p className="text-sm text-red-100/90 leading-relaxed">{error}</p>
                 </div>
-              </StarBorder>
-
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
-                <button
-                  onClick={() => handleAnalyze('')}
-                  disabled={isLoading}
-                  className="text-xs font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity underline underline-offset-4 focus-ring px-2 py-1 rounded-sm disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  Or see general trends
-                </button>
-                {history.length > 0 && (
-                  <button
-                    onClick={() => setActiveTab('history')}
-                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity focus-ring px-2 py-1 rounded-sm"
-                  >
-                    <History className="w-3 h-3" />
-                    View History
-                  </button>
-                )}
               </div>
             </motion.div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
-        {(analysis || isLoading || activeTab === 'history') && (
+        <AnimatePresence mode="wait">
+          {!analysis && !contentIdea && !isLoading && (
+            <motion.div
+              key="hero"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex flex-col items-center justify-center py-12 md:py-24 text-center"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-3xl"
+              >
+                <HeroAnimation />
+                <h1 className="text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-bold tracking-tight mb-4 text-white">
+                  Turn Viral Trends into Viral Content
+                </h1>
+                <p className="text-base md:text-lg xl:text-xl opacity-60 mb-6 md:mb-12">
+                  AI-powered trend analysis and content generation for YouTube Shorts creators.
+                </p>
+
+                <StarBorder className="mb-8 shadow-lg">
+                  <div className="flex bg-[#0a0a0a] rounded-t-sm overflow-hidden p-1 border-b border-white/5">
+                    <button
+                        onClick={() => setSearchMode('keyword')}
+                        className={cn(
+                            "flex-1 pb-2 pt-1.5 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-colors",
+                            searchMode === 'keyword' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/80"
+                        )}>Keyword Search</button>
+                    <button
+                        onClick={() => setSearchMode('url')}
+                        className={cn(
+                            "flex-1 pb-2 pt-1.5 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-colors",
+                            searchMode === 'url' ? "bg-white/10 text-emerald-400" : "text-white/40 hover:text-white/80"
+                        )}>Paste YouTube URL</button>
+                    <button
+                        onClick={() => setSearchMode('idea')}
+                        className={cn(
+                            "flex-1 pb-2 pt-1.5 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-colors",
+                            searchMode === 'idea' ? "bg-white/10 text-blue-400" : "text-white/40 hover:text-white/80"
+                        )}>Direct Idea</button>
+                  </div>
+                  <div className="flex flex-col sm:flex-row relative gap-2 sm:gap-0 p-1">
+                    <div className="relative w-full flex-grow">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
+                        <Search className="w-5 h-5 opacity-40" />
+                      </div>
+                      {searchMode === 'keyword' && (
+                        <input
+                          type="text"
+                          placeholder="Enter a niche (e.g. Tech, Cooking)..."
+                          value={searchQuery}
+                          onChange={(e) => useAppStore.getState().setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !isLoading && isHydrated && handleAnalyze()}
+                          disabled={isLoading || !isHydrated}
+                          className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-white disabled:opacity-50"
+                        />
+                      )}
+                      {searchMode === 'url' && (
+                        <input
+                          type="text"
+                          placeholder="https://youtube.com/shorts/..."
+                          value={youtubeUrl}
+                          onChange={(e) => useAppStore.getState().setYoutubeUrl(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !isLoading && isHydrated && handleAnalyze()}
+                          disabled={isLoading || !isHydrated}
+                          className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-emerald-100 placeholder-emerald-500/30 disabled:opacity-50"
+                        />
+                      )}
+                      {searchMode === 'idea' && (
+                        <input
+                          type="text"
+                          placeholder="I want to make a video about..."
+                          value={directIdea}
+                          onChange={(e) => useAppStore.getState().setDirectIdea(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !isLoading && isHydrated && directIdea.trim() && setShowPreGenModal(true)}
+                          disabled={isLoading || !isHydrated}
+                          className="w-full pl-12 pr-4 py-4 sm:py-5 font-mono text-base sm:text-lg focus:outline-none focus:ring-0 transition-all bg-transparent relative z-10 text-blue-100 placeholder-blue-500/30 disabled:opacity-50"
+                        />
+                      )}
+                    </div>
+                    {searchMode === 'idea' ? (
+                      <button
+                        onClick={() => setShowPreGenModal(true)}
+                        disabled={isLoading || !isHydrated || !directIdea.trim()}
+                        className={cn(
+                          "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring disabled:opacity-50 disabled:cursor-not-allowed",
+                          theme.bg + " text-[#0a0a0a] " + theme.hoverBg
+                        )}
+                      >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+                        Config & Gen
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAnalyze()}
+                        disabled={isLoading || !isHydrated || (searchMode === 'url' ? !youtubeUrl.trim() : !searchQuery.trim())}
+                        className={cn(
+                          "w-full sm:w-auto py-4 sm:py-0 px-6 font-mono text-xs uppercase tracking-wider sm:tracking-widest transition-colors min-h-[44px] z-20 rounded-sm sm:m-1 focus-ring disabled:opacity-50 disabled:cursor-not-allowed",
+                          theme.bg + " text-[#0a0a0a] " + theme.hoverBg
+                        )}
+                      >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+                        Analyze
+                      </button>
+                    )}
+                  </div>
+                </StarBorder>
+
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
+                  <button
+                    onClick={() => handleAnalyze('')}
+                    disabled={isLoading}
+                    className="text-xs font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity underline underline-offset-4 focus-ring px-2 py-1 rounded-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Or see general trends
+                  </button>
+                  {history.length > 0 && (
+                    <button
+                      onClick={() => setActiveTab('history')}
+                      className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity focus-ring px-2 py-1 rounded-sm"
+                    >
+                      <History className="w-3 h-3" />
+                      View History
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {(analysis || contentIdea || isLoading || activeTab === 'history') && (
           <div ref={mainContentRef} className="flex flex-col gap-6 items-start scroll-mt-24 w-full">
             {/* Sidebar Navigation - Sticky Desktop */}
             <div className="hidden lg:flex w-full flex-wrap gap-2 pb-2 sticky top-16 z-40 transition-colors pt-4 -mt-4 bg-[#0a0a0a]">
@@ -413,61 +479,74 @@ export default function App() {
             {/* Main Content Area */}
             <div className={`w-full border transition-all duration-300 p-3 sm:p-4 md:p-8 min-h-0 md:min-h-[600px] bg-[#1a1a1a] border-white/10 shadow-lg ${theme.shadowAccent}`}>
               <Suspense fallback={
-                <div className="flex items-center justify-center py-24 gap-3 text-white/40">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="font-mono text-xs uppercase tracking-widest">Loading module...</span>
+                <div className="space-y-8 animate-pulse w-full">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6 border-white/10">
+                        <div className="space-y-2 w-full max-w-md">
+                            <div className="flex items-center gap-3 mb-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+                                <span className="font-mono text-sm tracking-widest text-emerald-500 uppercase">Connecting to AI...</span>
+                            </div>
+                            <div className="h-10 w-3/4 bg-white/5 rounded-sm" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div className="h-6 w-32 bg-white/5 rounded-sm" />
+                            <div className="space-y-4">
+                                {[1, 2, 3].map(i => <div key={i} className="h-16 w-full bg-white/5 rounded-sm" />)}
+                            </div>
+                        </div>
+                        <div className="h-64 w-full bg-white/5 rounded-sm" />
+                    </div>
                 </div>
               }>
                 <AnimatePresence mode="wait">
-                  {/* Bug 1+5 Fix: Only show the full-page loading skeleton when on the Trends tab.
-                      The Generator and Critique tabs manage their own loading states internally
-                      (spinner on their action buttons). Replacing them with a skeleton hid the
-                      UI entirely, making Roast/Improve/Regenerate appear broken with no feedback. */}
-                  {isLoading && activeTab === 'trends' ? (
-                    <motion.div
-                      key="loading"
-                      initial="hidden"
-                      animate="show"
-                      exit={{ opacity: 0 }}
-                      variants={{
-                        hidden: { opacity: 0 },
-                        show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-                      }}
-                      className="space-y-8"
-                    >
-                      <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6 border-white/10">
-                        <div className="space-y-2 w-full max-w-md">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
-                            <span className="font-mono text-sm tracking-widest text-emerald-500 uppercase">{loadingMessage || 'Loading...'}</span>
+                  {activeTab === 'trends' ? (
+                    isLoading && !analysis ? (
+                      <motion.div
+                        key="trends-loading-app"
+                        initial="hidden"
+                        animate="show"
+                        exit={{ opacity: 0 }}
+                        variants={{
+                          hidden: { opacity: 0 },
+                          show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                        }}
+                        className="space-y-8"
+                      >
+                        <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6 border-white/10">
+                          <div className="space-y-2 w-full max-w-md">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+                              <span className="font-mono text-sm tracking-widest text-emerald-500 uppercase">{loadingMessage || 'Loading...'}</span>
+                            </div>
+                            <Skeleton className="h-10 w-full" />
                           </div>
-                          <Skeleton className="h-10 w-full" />
+                        </motion.div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
+                            <Skeleton className="h-6 w-32" />
+                            <div className="grid grid-cols-1 gap-4">
+                              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+                            </div>
+                          </motion.div>
+                          <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
+                            <Skeleton className="h-6 w-32" />
+                            <Skeleton className="h-64 w-full" />
+                          </motion.div>
                         </div>
                       </motion.div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
-                          <Skeleton className="h-6 w-32" />
-                          <div className="grid grid-cols-1 gap-4">
-                            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 w-full" />)}
-                          </div>
-                        </motion.div>
-                        <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
-                          <Skeleton className="h-6 w-32" />
-                          <Skeleton className="h-64 w-full" />
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  ) : activeTab === 'trends' && (isLoading || analysis) ? (
-                    <TrendsView />
+                    ) : (
+                      <TrendsView key="trends" />
+                    )
                   ) : activeTab === 'generator' ? (
-                    <GeneratorView />
+                    <GeneratorView key="generator" />
                   ) : activeTab === 'critique' ? (
-                    <CritiqueView />
+                    <CritiqueView key="critique" />
                   ) : activeTab === 'workflow' ? (
-                    <WorkflowView />
+                    <WorkflowView key="workflow" />
                   ) : activeTab === 'history' ? (
-                    <HistoryView />
+                    <HistoryView key="history" />
                   ) : null}
                 </AnimatePresence>
               </Suspense>
@@ -523,7 +602,7 @@ export default function App() {
       <footer className="mt-12 md:mt-24 border-t pt-8 pb-28 lg:py-12 transition-colors duration-300 bg-[#0a0a0a] border-white/10 text-white/40">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center gap-4 text-center">
           <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] opacity-80 text-center leading-relaxed">
-            Powered by Gemini 2.5 Flash & Google Search
+            Powered by Gemini Flash-Lite & Google Search
           </p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-[10px] sm:text-xs uppercase tracking-wider font-mono opacity-60">
             <a href="#" className="hover:opacity-100 transition-opacity">v1.2.0</a>
@@ -535,6 +614,7 @@ export default function App() {
 
       {/* Toast Notifications */}
       <ToastContainer />
+      <PreGenModal />
     </div>
   );
 }

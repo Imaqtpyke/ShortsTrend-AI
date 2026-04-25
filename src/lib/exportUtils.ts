@@ -19,8 +19,10 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
     md += `## 🎬 Storyboard Timeline\n`;
     contentIdea.segments.forEach(seg => {
         md += `### [${seg.timestamp || formatTime(seg.startTime)}]\n`;
-        md += `**AUDIO:** ${seg.audio}\n`;
-        md += `*VISUAL: ${seg.visual}*\n\n`;
+        md += `**SCRIPT:** ${seg.script}\n`;
+        md += `*VISUAL: ${seg.visual}*\n`;
+        if (seg.motion) md += `*MOTION: ${seg.motion}*\n`;
+        md += `\n`;
     });
 
     md += `## 🎨 Design & Post-Production\n`;
@@ -30,10 +32,8 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
     md += `- **Editing FX:** ${contentIdea.editingEffects.join(', ')}\n`;
     md += `- **Pacing Context:** ${contentIdea.editingEffectsContext}\n\n`;
 
-    md += `## 🎵 Audio Environment\n`;
-    md += `- **Music Vibe:** ${contentIdea.musicStyle}\n`;
-    md += `- **Sound Elements:** ${contentIdea.soundEffects.join(', ')}\n\n`;
 
+    // Removed musicStyle and soundEffects lines
     md += `## 🔍 SEO & Upload Metadata\n`;
     if (contentIdea.seoMetadata) {
         md += `- **Title:** ${contentIdea.seoMetadata.youtubeTitle}\n`;
@@ -47,8 +47,10 @@ export function downloadAsMarkdown(contentIdea: ContentIdea, critique?: ScriptCr
         md += `*Rebuilt to maximize retention against a ${critique.viralityScore}/100 baseline score.*\n\n`;
         critique.improvedSegments.forEach(seg => {
             md += `### [${seg.timestamp || formatTime(seg.startTime)}]\n`;
-            md += `**AUDIO:** ${seg.audio}\n`;
-            md += `*VISUAL: ${seg.visual}*\n\n`;
+            md += `**SCRIPT:** ${seg.script}\n`;
+            md += `*VISUAL: ${seg.visual}*\n`;
+            if (seg.motion) md += `*MOTION: ${seg.motion}*\n`;
+            md += `\n`;
         });
     }
 

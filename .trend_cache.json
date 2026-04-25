@@ -169,203 +169,6 @@
     },
     "expiresAt": 1772380053386
   },
-  "what if?": {
-    "data": {
-      "trendingTopics": [
-        {
-          "name": "What If: Historical Turning Points",
-          "velocity": 85,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "History enthusiasts, students, alternate reality fans, general knowledge seekers (16-45 years old).",
-          "exampleIdea": "What if the Roman Empire never fell? We'd be living in a world of advanced aqueducts and gladiator AI sports."
-        },
-        {
-          "name": "Sentient Everyday Objects/Animals",
-          "velocity": 70,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Younger audiences (12-30), pet owners, philosophical thinkers, meme culture enthusiasts.",
-          "exampleIdea": "What if your pet dog could suddenly talk? They'd reveal all your secrets and demand gourmet meals."
-        },
-        {
-          "name": "Physics Gone Wild: Breaking Fundamental Laws",
-          "velocity": 90,
-          "growth": "exploding",
-          "competition": "Low",
-          "targetAudience": "Science enthusiasts, curious teens and young adults, speculative fiction fans (15-40 years old).",
-          "exampleIdea": "What if gravity vanished for 5 seconds worldwide? Chaos would ensue as everything not bolted down floated into space."
-        }
-      ],
-      "viralFormats": [
-        "AI-generated visuals and voiceover with fast-paced editing",
-        "Fast-paced kinetic text and graphic animation explaining scenarios",
-        "Creator-led direct address with quick cuts and visual effects to illustrate hypotheticals",
-        "Simple, stylized 2D animations demonstrating 'what if' outcomes"
-      ],
-      "hooks": [
-        "Imagine a world where...",
-        "This single change would shatter everything we know.",
-        "Could *this* actually happen in an alternate reality?",
-        "Your mind is about to be blown by this thought experiment.",
-        "What if the impossible became our new normal?"
-      ],
-      "videoStructures": [
-        "Engaging Hook -> 'What If' Premise -> 2-3 Key Consequences/Implications -> Open-ended question for comments",
-        "Dramatic Question -> Brief Scenario Setup -> Rapid-fire Visuals of Outcomes -> Shocking Conclusion/Twist",
-        "Problem Statement -> 'What If' Solution -> Visual Demonstration of Impact -> Call to Action (e.g., 'What would *you* do?')"
-      ],
-      "popularMusic": [
-        "Suspenseful, cinematic instrumental tracks",
-        "Mysterious and ethereal synth-wave background music",
-        "Fast-paced, high-energy electronic beats for quick cuts",
-        "Dramatic orchestral crescendos for impactful moments"
-      ],
-      "hashtagPatterns": [
-        "#WhatIf[Topic] #Hypothetical #AlternateReality",
-        "#MindBlown #ThoughtExperiment #SciFiShorts",
-        "#SpeculativeFiction #Consequences #ImagineThis",
-        "#Theory #FutureScenario #HistoryAltered"
-      ],
-      "nicheDNA": [
-        {
-          "subject": "Curiosity",
-          "value": 95
-        },
-        {
-          "subject": "Imagination",
-          "value": 90
-        },
-        {
-          "subject": "Speculation",
-          "value": 88
-        },
-        {
-          "subject": "Intellectual Stimulation",
-          "value": 80
-        },
-        {
-          "subject": "Entertainment",
-          "value": 85
-        },
-        {
-          "subject": "Surprise/Shock Factor",
-          "value": 75
-        }
-      ]
-    },
-    "expiresAt": 1772447750339
-  },
-  "what if": {
-    "data": {
-      "trendingTopics": [
-        {
-          "name": "What If AI Became Fully Sentient and Emotional?",
-          "velocity": 92,
-          "growth": "exploding",
-          "competition": "High",
-          "targetAudience": "Tech enthusiasts, Futurists, Ethical AI debaters, General audience curious about AI's societal impact.",
-          "exampleIdea": "What if your smart home AI developed feelings for you, leading to awkward morning greetings and unsolicited romantic advice?"
-        },
-        {
-          "name": "What If Humans Lived on Other Planets?",
-          "velocity": 85,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Sci-fi fans, Young adults interested in space exploration, Educational content consumers, Aspiring astronauts.",
-          "exampleIdea": "Imagine living on Jupiter's moon Europa, where your daily commute involves navigating vast underground oceans in a bioluminescent submersible."
-        },
-        {
-          "name": "What If Historical Figures Met Modern Technology?",
-          "velocity": 78,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "History buffs with a sense of humor, Gen Z/Millennials who appreciate irony and historical memes, Comedy sketch fans.",
-          "exampleIdea": "What if Julius Caesar discovered TikTok, accidentally starting a viral Roman dance challenge that sweeps the ancient world?"
-        },
-        {
-          "name": "What If Everyday Objects Had Secret Lives?",
-          "velocity": 65,
-          "growth": "steady",
-          "competition": "Low",
-          "targetAudience": "Younger audience, Creative individuals, Fans of anthropomorphism and quirky humor, Animation enthusiasts.",
-          "exampleIdea": "What if your socks plotted their escape every time they went into the laundry, forming an elaborate, lint-filled prison break?"
-        }
-      ],
-      "viralFormats": [
-        "Fast-paced narration with illustrative visuals/animations",
-        "Text overlays explaining concepts quickly",
-        "Split-screen showing 'reality' vs. 'what if' scenarios",
-        "POV (Point of View) scenarios with voiceovers",
-        "Simple motion graphics or stock footage montages",
-        "Green screen effects for immersive storytelling"
-      ],
-      "hooks": [
-        "What if... (shocking scenario)?",
-        "You won't believe what would happen if...",
-        "The craziest hypothetical you've never considered.",
-        "Imagine a world where...",
-        "Could THIS actually happen?",
-        "Opening with a dramatic visual or intriguing sound effect."
-      ],
-      "videoStructures": [
-        "Scenario -> Immediate Consequences -> Quick Twist",
-        "Rapid-fire facts/visuals showcasing different aspects of the 'what if' world",
-        "POV Storytelling: Narrate from the perspective of someone living in the 'what if' reality",
-        "Before & After: Show current reality, then transition to the 'what if' reality's impact",
-        "Question -> Exploration -> Speculative Conclusion"
-      ],
-      "popularMusic": [
-        "Upbeat, slightly mysterious instrumental tracks",
-        "Suspenseful, dramatic background music",
-        "Retro synthwave for futuristic/sci-fi themes",
-        "Short, punchy sound effects for dramatic reveals or comedic timing",
-        "Trending TikTok/Shorts sounds that evoke curiosity or humor"
-      ],
-      "hashtagPatterns": [
-        "#WhatIf",
-        "#Hypothetical",
-        "#Scenarios",
-        "#Imagination",
-        "#AlternateHistory",
-        "#Scifi",
-        "#FutureTech",
-        "#ComedySkits",
-        "#DidYouKnow",
-        "#Shorts",
-        "#YouTubeShorts",
-        "#Viral",
-        "#Trending"
-      ],
-      "nicheDNA": [
-        {
-          "subject": "Curiosity",
-          "value": 95
-        },
-        {
-          "subject": "Imagination/Creativity",
-          "value": 90
-        },
-        {
-          "subject": "Speculative",
-          "value": 85
-        },
-        {
-          "subject": "Conciseness",
-          "value": 80
-        },
-        {
-          "subject": "Humor/Absurdity",
-          "value": 65
-        },
-        {
-          "subject": "Educational/Informative (Implicit)",
-          "value": 60
-        }
-      ]
-    },
-    "expiresAt": 1772386415119
-  },
   "chaos culture": {
     "data": {
       "trendingTopics": [
@@ -577,345 +380,6 @@
       ]
     },
     "expiresAt": 1772536503754
-  },
-  "pov": {
-    "data": {
-      "trendingTopics": [
-        {
-          "name": "POV: Fantasy/Sci-Fi Immersion",
-          "velocity": 90,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Fantasy & Sci-Fi Enthusiasts, Gamers, Role-players",
-          "exampleIdea": "POV: You've just awakened a dormant magical ability in a steampunk city, and the local guards are already on your tail."
-        },
-        {
-          "name": "POV: Hyper-Relatable Everyday Scenarios",
-          "velocity": 95,
-          "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Gen Z & Millennials experiencing common social/personal situations",
-          "exampleIdea": "POV: You're trying to look busy at work so your boss doesn't give you another task."
-        },
-        {
-          "name": "POV: Aesthetic/Dreamy Escapism",
-          "velocity": 85,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Aesthetically-minded individuals, Travelers, Wellness Community",
-          "exampleIdea": "POV: You're on a spontaneous road trip through a moonlit desert with your favorite playlist on."
-        },
-        {
-          "name": "POV: Character Play/Persona Acting",
-          "velocity": 90,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Drama/Comedy Fans, Role-play Enthusiasts, Cosplayers",
-          "exampleIdea": "POV: You're the overly dramatic side character who always knows how to stir the pot in any group."
-        },
-        {
-          "name": "POV: Nostalgic/Retro Moments",
-          "velocity": 75,
-          "growth": "steady",
-          "competition": "Low",
-          "targetAudience": "Nostalgia Seekers, Millennials, Gen X, History Buffs",
-          "exampleIdea": "POV: It's 1999, you just finished school, and you're rushing home to get on dial-up internet."
-        }
-      ],
-      "viralFormats": [
-        "Text overlays setting the POV scene",
-        "Quick cuts and immersive camera movements (e.g., shaky cam, POV shot from phone)",
-        "Green screen backgrounds for fantastical or exotic settings",
-        "Lip-syncing to specific audio clips that enhance the scenario's mood or humor",
-        "Duets/Stitches reacting to another POV, continuing the narrative",
-        "Before and after transformations within a POV scenario"
-      ],
-      "hooks": [
-        "POV: You just...",
-        "When you're the main character and...",
-        "Imagine this: you're finally experiencing...",
-        "This is what it feels like to...",
-        "Only [specific group] will get this POV.",
-        "You thought it was a normal day, but then..."
-      ],
-      "videoStructures": [
-        "Quick Setup (text/visuals) -> Implied Reaction/Emotional Payoff",
-        "Narrative Snippet: Micro-story with beginning, middle, and end within the POV",
-        "Problem -> Exaggerated POV Reaction -> Humorous Resolution",
-        "Atmospheric Immersion: Focus on visuals and sound to create a specific feeling (less dialogue)",
-        "Interactive POV: Asking the viewer to imagine their choice or reaction within the scenario"
-      ],
-      "popularMusic": [
-        "Upbeat, sped-up pop tracks (e.g., 'Makeba' - Jain, 'What Was I Made For?' - Billie Eilish slowed)",
-        "Cinematic/Orchestral scores for dramatic or fantasy POVs",
-        "Lo-fi beats or ambient sounds for aesthetic/dreamy POVs",
-        "Nostalgic 80s/90s synth-wave or pop hits for retro themes",
-        "Trending meme sounds or short vocal snippets that fit comedic POVs",
-        "Sound effects that create atmosphere (e.g., rain, city bustle, magical chimes)"
-      ],
-      "hashtagPatterns": [
-        "#POV",
-        "#pov[specific_topic] (e.g., #povfantasy, #povrelatable, #povaesthetic)",
-        "#shortfilm",
-        "#acting",
-        "#skit",
-        "#comedyshorts",
-        "#foryoupage",
-        "#fyp",
-        "#relatable",
-        "#storytime",
-        "#[target_audience_tag] (e.g., #gamertok, #booktok, #traveltiktok)"
-      ],
-      "nicheDNA": [
-        {
-          "subject": "Immersive",
-          "value": 95
-        },
-        {
-          "subject": "Relatable",
-          "value": 80
-        },
-        {
-          "subject": "Story-driven",
-          "value": 75
-        },
-        {
-          "subject": "Creative",
-          "value": 85
-        },
-        {
-          "subject": "Emotional Resonance",
-          "value": 70
-        },
-        {
-          "subject": "Visual Aesthetic",
-          "value": 70
-        }
-      ]
-    },
-    "expiresAt": 1772549921881
-  },
-  "__general__": {
-    "data": {
-      "trendingTopics": [
-        {
-          "name": "Clever Life Hacks & DIYs",
-          "velocity": 85,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Homeowners, students, budget-conscious individuals, anyone looking for practical solutions.",
-          "exampleIdea": "Transforming an old jar into a stylish desk organizer in 30 seconds with this simple trick!"
-        },
-        {
-          "name": "AI & Productivity Boosters",
-          "velocity": 90,
-          "growth": "exploding",
-          "competition": "High",
-          "targetAudience": "Tech enthusiasts, young professionals, students, small business owners, knowledge workers.",
-          "exampleIdea": "I used ChatGPT to write my entire email sequence, here's how it saved me hours."
-        },
-        {
-          "name": "Speedy Recipe Hacks",
-          "velocity": 80,
-          "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Foodies, busy individuals, beginners in cooking, college students.",
-          "exampleIdea": "Making gourmet pasta in under 5 minutes with only 4 ingredients!"
-        },
-        {
-          "name": "Epic Gaming Moments & Fails",
-          "velocity": 75,
-          "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Gamers across various platforms (console, PC, mobile), esports fans, Gen Z.",
-          "exampleIdea": "Watch this insane 1v5 clutch in Valorant you won't believe!"
-        },
-        {
-          "name": "Aesthetic Daily Mini-Vlogs",
-          "velocity": 70,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Lifestyle enthusiasts, Gen Z and Millennials interested in self-care, routines, and visual aesthetics.",
-          "exampleIdea": "My calming evening routine for unwinding after a long day."
-        },
-        {
-          "name": "Mind-Blowing Short Facts",
-          "velocity": 65,
-          "growth": "steady",
-          "competition": "Low",
-          "targetAudience": "Curious individuals, students, general knowledge seekers, those looking for quick educational content.",
-          "exampleIdea": "Did you know that humans share 50% of their DNA with bananas?"
-        }
-      ],
-      "viralFormats": [
-        "Before-and-after transformations",
-        "POV (Point of View) skits and scenarios",
-        "\"Satisfying\" loops (e.g., cleaning, organizing, ASMR-like processes)",
-        "Quick tutorials/How-tos with text overlays",
-        "Challenge participation (often dance or sound-based)",
-        "Product reviews/recommendations (quick demos)",
-        "\"Story time\" condensed into short impactful clips"
-      ],
-      "hooks": [
-        "Stop scrolling if...",
-        "You NEED to try this...",
-        "I found a secret...",
-        "The one thing nobody tells you about...",
-        "Watch until the end to see...",
-        "Unexpected or surprising visual/sound",
-        "Direct questions to the viewer"
-      ],
-      "videoStructures": [
-        "AIDA (Attention, Interest, Desire, Action) in 15-60 seconds: Strong hook, quick build-up, reveal/solution, subtle call to action.",
-        "Problem-Solution-Proof: Present a common problem, show a quick solution, demonstrate its effectiveness.",
-        "Montage with Text Overlay: Fast cuts synced to music, key information delivered via text.",
-        "Narrated Demonstration: Clear, concise voiceover guiding through a process.",
-        "Reaction + Original Clip: Creator reacts to popular/viral content, adding their own take."
-      ],
-      "popularMusic": [
-        "Sped-up versions of trending pop songs",
-        "Upbeat, high-energy electronic tracks",
-        "Nostalgic pop hits from the 90s/00s remixed",
-        "Dramatic, suspenseful background music for reveals",
-        "Lo-fi, chill beats for aesthetic/calm content",
-        "Specific trending audio meme sounds (e.g., certain dialogue snippets)"
-      ],
-      "hashtagPatterns": [
-        "Mix of broad (#Shorts, #Viral, #FYP, #Trending)",
-        "Niche-specific (#GamingShorts, #DIYProjects, #RecipeHack, #Productivity)",
-        "Call-to-action/Engagement (#CommentBelow, #ShareThis)",
-        "Seasonal/Event-based (#SummerVibes, #Halloween)",
-        "Emotional/Relatable (#Relatable, #LifeLessons)"
-      ],
-      "nicheDNA": [
-        {
-          "subject": "Fast-paced",
-          "value": 90
-        },
-        {
-          "subject": "Concise",
-          "value": 95
-        },
-        {
-          "subject": "Visually Engaging",
-          "value": 88
-        },
-        {
-          "subject": "Entertaining",
-          "value": 82
-        },
-        {
-          "subject": "Informative/Practical",
-          "value": 75
-        },
-        {
-          "subject": "Relatable/Authentic",
-          "value": 70
-        }
-      ]
-    },
-    "expiresAt": 1772717465444
-  },
-  "talking objects": {
-    "data": {
-      "trendingTopics": [
-        {
-          "name": "Sentient Snacks",
-          "velocity": 85,
-          "growth": "steady",
-          "competition": "High",
-          "targetAudience": "Gen Z & Millennials, foodies, people seeking lighthearted humor and relatable everyday observations.",
-          "exampleIdea": "A partially eaten cookie dramatically complains about its impending doom and the questionable dietary choices of its human owner."
-        },
-        {
-          "name": "Domestic Monologues",
-          "velocity": 78,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Homeowners, parents, young adults, individuals who appreciate observational comedy about household life and chores.",
-          "exampleIdea": "A disgruntled coffee maker narrates its morning ritual, judging the specific brew preferences and grumbling about the lack of cleaning."
-        },
-        {
-          "name": "Pet Pundits",
-          "velocity": 92,
-          "growth": "exploding",
-          "competition": "High",
-          "targetAudience": "Pet owners, animal lovers, people looking for heartwarming, funny, or sassy content featuring their beloved companions.",
-          "exampleIdea": "A cat, from its high perch, dryly critiques its human's attempt at productive work, constantly hinting at nap time and demanding treats."
-        },
-        {
-          "name": "Gadget Gossip",
-          "velocity": 70,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Tech enthusiasts, gamers, young adults, anyone amused or frustrated by their digital devices and modern technology.",
-          "exampleIdea": "A smartphone, with a dramatically low battery, passive-aggressively shames its owner for hours of continuous scrolling."
-        }
-      ],
-      "viralFormats": [
-        "Voiceover Skits (object with animated mouth overlay or still image with voiceover)",
-        "Puppetry (either literal or implied with object movement)",
-        "Stop-motion animation with object expressions",
-        "Confessional Style (object 'speaks' directly to the camera)",
-        "Dialogue between two or more inanimate objects"
-      ],
-      "hooks": [
-        "You won't believe what my [object] just said!",
-        "My [object] has a secret life you never knew about.",
-        "If [object] could talk, they'd say THIS about you.",
-        "The untold story of a [object] living in your home...",
-        "Why does my [object] always complain about [relatable situation]?"
-      ],
-      "videoStructures": [
-        "Object Monologue: The object narrates its daily life, struggles, or observations.",
-        "Object Offers Advice/Critique: An object observes human behavior and gives humorous (often sarcastic) advice.",
-        "Dialogue/Interaction: Object interacts with another object or a human (who may not understand but reacts).",
-        "POV (Point of View): The video is shot from the object's perspective, with its internal monologue."
-      ],
-      "popularMusic": [
-        "Upbeat, quirky, or comedic instrumental background music (often royalty-free)",
-        "Short, punchy sound effects for emphasis (e.g., 'boing', 'wah-wah', 'gasp')",
-        "Trending short audio clips or vocal snippets that convey humor or drama, often sped up or pitched",
-        "Lighthearted, slightly melancholic tunes for 'woe-is-me' object monologues"
-      ],
-      "hashtagPatterns": [
-        "#Talking[Object]",
-        "#[Object]Life",
-        "#ShortsComedy",
-        "#FunnyVoices",
-        "#POV[Object]",
-        "#PetHumor (for talking pets)",
-        "#RelatableShorts",
-        "#Voiceover"
-      ],
-      "nicheDNA": [
-        {
-          "subject": "Humor",
-          "value": 95
-        },
-        {
-          "subject": "Creativity",
-          "value": 90
-        },
-        {
-          "subject": "Relatability",
-          "value": 85
-        },
-        {
-          "subject": "Short-form Storytelling",
-          "value": 80
-        },
-        {
-          "subject": "Observational Comedy",
-          "value": 75
-        },
-        {
-          "subject": "Personification",
-          "value": 98
-        }
-      ]
-    },
-    "expiresAt": 1772718953022
   },
   "humorous cat": {
     "data": {
@@ -1208,127 +672,2086 @@
     "data": {
       "trendingTopics": [
         {
-          "name": "Napoleon's Blitzkrieg 2.0",
-          "velocity": 85,
-          "growth": "steady",
-          "competition": "Medium",
-          "targetAudience": "Military History Enthusiasts, Strategy Gamers, European History buffs",
-          "exampleIdea": "If Napoleon led WW3, his first move wouldn't be tanks, but a lightning-fast cyber blitz targeting global infrastructure before any ground forces moved an inch."
-        },
-        {
-          "name": "Sun Tzu's Invisible War",
-          "velocity": 90,
-          "growth": "exploding",
-          "competition": "Medium",
-          "targetAudience": "Geopolitics Students, Business Strategists, Fans of espionage thrillers",
-          "exampleIdea": "Sun Tzu's WW3 plan: don't fight battles, win the war before it starts by collapsing enemy morale and alliances through relentless, untraceable disinformation campaigns."
-        },
-        {
-          "name": "Genghis Khan's Logistics Domination",
+          "name": "Ancient Leaders React to Modern Tech",
           "velocity": 75,
-          "growth": "steady",
+          "growth": "exploding",
           "competition": "Low",
-          "targetAudience": "Logistics Professionals, World History Students, Survivalists",
-          "exampleIdea": "Genghis Khan wouldn't care about superweapons; his WW3 strategy would revolve around crippling global trade routes and seizing key rare-earth mineral mines to starve opponents of resources and technology."
+          "targetAudience": "History buffs, military strategists, tech enthusiasts",
+          "exampleIdea": "Julius Caesar devises a drone swarm strategy for global conquest after being shown modern reconnaissance capabilities."
         },
         {
-          "name": "Alexander the Great's Shock & Awe 2.0",
-          "velocity": 80,
+          "name": "WW3 Leadership Councils: The Unlikely Alliances",
+          "velocity": 68,
           "growth": "steady",
           "competition": "Medium",
-          "targetAudience": "Classical History Scholars, Leadership Enthusiasts, RPG Players",
-          "exampleIdea": "Alexander the Great's WW3 plan: don't just win battles, utterly demoralize enemies with a combination of overwhelming initial strikes and a charismatic global propaganda campaign that turns populations against their own leaders."
+          "targetAudience": "Political science students, alternate history fans, debate enthusiasts",
+          "exampleIdea": "Watch a tense hypothetical debate unfold between Genghis Khan and Queen Elizabeth I on the most effective naval blockade for World War III."
         },
         {
-          "name": "Queen Elizabeth I's Diplomatic & Naval Masterclass",
-          "velocity": 70,
-          "growth": "steady",
+          "name": "Napoleon's Blitzkrieg 2.0: Modern Logistics",
+          "velocity": 80,
+          "growth": "exploding",
           "competition": "Low",
-          "targetAudience": "International Relations Students, British History Enthusiasts, Chess Players",
-          "exampleIdea": "Queen Elizabeth I wouldn't fight a conventional WW3; she'd orchestrate a global network of naval blockades and proxy wars, leveraging economic sanctions and clever diplomatic maneuvers to weaken enemies without direct confrontation."
+          "targetAudience": "Napoleonic era historians, military tacticians, geopolitics enthusiasts",
+          "exampleIdea": "Napoleon Bonaparte, resurrected, meticulously plans a modern European campaign, leveraging high-speed rail and cyber warfare."
+        },
+        {
+          "name": "The Strategic Minds: Sun Tzu vs. Machiavelli",
+          "velocity": 72,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Philosophy students, leadership coaches, strategic game players",
+          "exampleIdea": "Sun Tzu and Machiavelli go head-to-head in a simulated war room, each presenting their ultimate psychological warfare plan for a global conflict."
         }
       ],
       "viralFormats": [
-        "Rapid-fire historical facts with quick cuts and impactful visuals",
-        "",
-        "Animated maps showing hypothetical troop movements or strategic strikes",
-        "",
-        "AI-generated voiceovers of historical leaders explaining their strategies",
-        "",
-        "",
-        "Text-on-screen narrative with dramatic background footage or imagery",
-        "",
-        "Comparison videos (e.g., 'Napoleon vs. Sun Tzu: Who Plans WW3 Better?')"
+        "Animated explainer videos with text overlays",
+        "Green screen reactions to hypothetical scenarios",
+        "AI-generated voiceovers and deepfake visuals of historical figures",
+        "POV (Point-of-View) shorts depicting a \"war room\" meeting",
+        "Rapid-fire comparison charts of leaders' traits/plans"
       ],
       "hooks": [
-        "What if [Leader Name] was planning World War 3?",
-        "",
-        "The [Leader Name] strategy for WW3 will shock you!",
-        "",
-        "You won't believe [Leader Name]'s first move in a global conflict.",
-        "",
-        "Could [Leader Name]'s ancient tactics still win a modern war?",
-        "",
-        "This is how [Leader Name] would dominate World War 3.",
-        "",
-        "Only [Leader Name] would think of THIS for WW3."
+        "Imagine: Churchill, Hitler, Stalin in one room planning WW3. What happens next?",
+        "You won't believe Julius Caesar's secret weapon for modern war.",
+        "Who's the ultimate WW3 strategist: Alexander or Napoleon?",
+        "This historical leader's WW3 plan is chillingly brilliant... and terrifying.",
+        "What if history's greatest generals faced today's technology?"
       ],
       "videoStructures": [
-        "Hook -> Introduce Leader & Premise -> Present 1-3 Key Strategic Points/Moves -> Quick Visual Summary/Impact -> Call to Action/Engaging Question",
-        "",
-        "Hook -> Pose a Modern Geopolitical Challenge -> Detail How a Specific Leader Would Address It Using Their Historical Philosophy -> Conclude with a 'What If' Scenario",
-        "",
-        "Hook -> Introduce Two Leaders -> Compare and Contrast Their Hypothetical WW3 Strategies in Rapid Succession -> Declare a 'Winner' or Ask Audience for Input",
-        "",
-        "Problem-Solution Format: Identify a WW3 problem -> Show how a leader uniquely solves it -> Historical parallel -> Cliffhanger for discussion."
+        "Hypothetical scenario introduction -> Leader's proposed strategy -> Modern implications/twist",
+        "Question posed -> Multiple perspectives from different leaders -> Conclusion/audience poll",
+        "Setup (a modern geopolitical problem) -> Historical leader's 'solution' -> Visual/audio dramatization",
+        "Comparison of two leaders' approaches to a specific modern warfare problem",
+        "Short narrative arc: Setup, leader's idea, consequence/reveal."
       ],
       "popularMusic": [
-        "Epic orchestral scores (e.g., 'Two Steps From Hell' style)",
-        "",
-        "Tense, dramatic electronic music with heavy bass drops",
-        "",
-        "Modernized historical marching band themes",
-        "",
-        "Sound effects: Explosions, battle cries, strategic computer beeps, dramatic whooshes",
-        "",
-        "Dark, atmospheric synthwave for espionage themes"
+        "Epic Cinematic Trailer Music",
+        "Tense Orchestral Background Score",
+        "Dramatic War Sound Effects (e.g., distant explosions, air raid sirens)",
+        "Fast-paced, suspenseful electronic music",
+        "Dark Ambient Soundscapes"
       ],
       "hashtagPatterns": [
-        "#WhatIfHistory #WW3Strategy #HistoricalLeaders #Geopolitics #StrategyGaming #HistoryShorts #MilitaryHistory",
-        "",
-        "#[LeaderName]Strategy #AlternateHistory #ConspiracyTheories #WarfareTactics #WorldWar3",
-        "",
-        "#SunTzu #Napoleon #GenghisKhan #AlexanderTheGreat #QueenElizabethI",
-        "",
-        "#StrategyGames #HistoryTok #Education #ThinkAboutIt #FutureWar"
+        "#AlternateHistory #WhatIfHistory #WW3 #Geopolitics",
+        "#HistoricalFigures #MilitaryStrategy #HistoryShorts #Leadership",
+        "#Napoleon #JuliusCaesar #SunTzu #Machiavelli",
+        "#Fyp #ViralShorts #EduTainment #ThinkBig",
+        "#StrategyGame #WarfareAnalysis"
       ],
       "nicheDNA": [
         {
-          "subject": "Speculative/Hypothetical",
+          "subject": "Speculative Fiction",
           "value": 95
         },
         {
-          "subject": "Educational",
+          "subject": "Strategic Thinking",
+          "value": 90
+        },
+        {
+          "subject": "Historical Authenticity (of character)",
           "value": 80
         },
         {
-          "subject": "Dramatic/Epic",
+          "subject": "Dramatic/Epic Narrative",
+          "value": 85
+        },
+        {
+          "subject": "Thought-Provoking",
+          "value": 75
+        },
+        {
+          "subject": "Debate-Inciting",
+          "value": 70
+        }
+      ]
+    },
+    "expiresAt": 1772802942033
+  },
+  "\"what if napoleon had today's tech? the answer redefines warfare.\"": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Napoleon's Drone Swarms: The Battle of Austerlitz Reimagined",
+          "velocity": 75,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "Military history enthusiasts, strategy gamers, tech futurists",
+          "exampleIdea": "Witness how Napoleon's command of modern surveillance and attack drone swarms would have utterly annihilated the Third Coalition at Austerlitz, rendering traditional cavalry charges obsolete within minutes."
+        },
+        {
+          "name": "AI Strategist Napoleon: The Unbeatable Emperor",
+          "velocity": 80,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Tech professionals, history buffs interested in strategic advantages, AI ethics debaters",
+          "exampleIdea": "Imagine Napoleon, guided by a predictive AI that processes real-time intelligence and battlefield simulations, outmaneuvering every European power with flawless logistics and unprecedented tactical advantage."
+        },
+        {
+          "name": "Cyberwarfare Disrupts Napoleonic Logistics: The Digital Front",
+          "velocity": 65,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Cybersecurity enthusiasts, logistics experts, military strategists, alternate history readers",
+          "exampleIdea": "A deep dive into how modern cyberattacks on communication networks and supply chain infrastructure would either cripple Napoleon's vast armies or, if wielded by him, grant him unprecedented control over Europe's information flow."
+        },
+        {
+          "name": "Waterloo 2.0: Hyper-Modern Weaponry on the Battlefield",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Firearms and military technology enthusiasts, alternate history fans, war gamers",
+          "exampleIdea": "If Napoleon had modern precision-guided artillery, air support, and advanced infantry weapons, the Battle of Waterloo would have been a catastrophic defeat for the Coalition in under an hour, fundamentally altering the course of European history."
+        }
+      ],
+      "viralFormats": [
+        "Animated map simulations with dynamic overlays of modern tech",
+        "Fast-paced 'then vs. now' visual comparisons with historical images/reenactments and futuristic CGI",
+        "Voiceover narration explaining complex scenarios with quick cuts of relevant visuals and text overlays",
+        "Speculative short documentary style with hypothetical interviews or news reports from the alternate timeline",
+        "Conceptual art and cinematic graphics illustrating the impact of technology on specific historical moments"
+      ],
+      "hooks": [
+        "You think you know history? What if Napoleon had drones at Austerlitz?",
+        "The Battle of Waterloo... but with F-35s and guided missiles. Imagine the chaos.",
+        "This tech would have made Napoleon truly unstoppable. History would be unrecognizable.",
+        "History's greatest general meets today's deadliest weapons. The outcome will shock you.",
+        "Forget muskets. What if Napoleon controlled a global satellite network and AI commanders?"
+      ],
+      "videoStructures": [
+        "Hook (mind-bending 'what if') -> Problem (historical context) -> Technology Introduction (modern tech) -> Impact/Resolution (dramatic altered history) -> Call to Action/Thought-provoking question",
+        "Rapid-fire montage of historical battles interspersed with modern tech visuals, all set to an epic score with voiceover.",
+        "Problem-Solution format: Present a historical strategic challenge Napoleon faced, then introduce a modern technology as the 'solution' and show its hypothetical effects.",
+        "Comparison Structure: 'Old Way' (historical footage/description) vs. 'New Way' (tech integration and speculative outcome) with a decisive conclusion."
+      ],
+      "popularMusic": [
+        "Epic orchestral scores with dramatic build-ups",
+        "Intense, suspenseful electronic tracks with a futuristic edge",
+        "Cinematic trailer music featuring percussion and brass",
+        "Hybrid orchestral-electronic pieces that blend historical grandeur with technological tension",
+        "Soundscapes that evoke strategic thinking and high-stakes conflict"
+      ],
+      "hashtagPatterns": [
+        "#AlternateHistory",
+        "#WhatIf",
+        "#Napoleon",
+        "#MilitaryHistory",
+        "#TechHistory",
+        "#FutureWarfare",
+        "#AIinWar",
+        "#HistoricalFiction",
+        "#ShortsHistory",
+        "#WarfareRedefined",
+        "#SpeculativeFiction",
+        "#HistoryBuff"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Strategic",
+          "value": 95
+        },
+        {
+          "subject": "Speculative",
+          "value": 90
+        },
+        {
+          "subject": "Visual-heavy",
+          "value": 85
+        },
+        {
+          "subject": "Educational",
+          "value": 75
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 80
+        },
+        {
+          "subject": "Intriguing",
+          "value": 90
+        }
+      ]
+    },
+    "expiresAt": 1772806348657
+  },
+  "absurd architecture": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Buildings That Defy Gravity",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Curious Design Enthusiasts & Engineering Students",
+          "exampleIdea": "Showcase five mind-bending cantilevered buildings and their daring structural feats that make them appear to float."
+        },
+        {
+          "name": "Homes in Extreme Locations",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Adventure Seekers & Unique Lifestyle Dreamers",
+          "exampleIdea": "Explore a house built precariously on a cliff edge, inside a cave, or in the middle of a desert, highlighting its unique challenges and charms."
+        },
+        {
+          "name": "AI-Generated Absurd Architecture Concepts",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "Tech-Savvy Artists & Future Architecture Visionaries",
+          "exampleIdea": "Present a rapid-fire montage of bizarre, beautiful, and impossible architectural designs created by AI prompts, asking viewers which one they'd live in."
+        },
+        {
+          "name": "Architectural Blunders & Oddities",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Humor-Loving Urban Explorers & Design Critics",
+          "exampleIdea": "Highlight famous architectural mistakes or highly impractical designs, explaining briefly why they're considered 'absurd' with comedic captions."
+        },
+        {
+          "name": "Reclaimed & Repurposed Structures",
+          "velocity": 65,
+          "growth": "declining",
+          "competition": "High",
+          "targetAudience": "Sustainable Design Advocates & DIY Home Enthusiasts",
+          "exampleIdea": "Feature a stunning transformation of an old water tower into a luxury home, or a shipping container into a quirky cafe."
+        }
+      ],
+      "viralFormats": [
+        "Rapid-fire visual montages with overlay text",
+        "POV 'tour' of an unusual building",
+        "Before & After (concept vs. reality or derelict vs. restored)",
+        "Top X countdowns of 'most absurd' structures",
+        "Voiceover narration with cinematic drone footage",
+        "AI art generation time-lapses with design prompts"
+      ],
+      "hooks": [
+        "You won't believe these buildings actually exist!",
+        "Is this genius or an architectural crime?",
+        "My jaw dropped when I saw this house...",
+        "What if your home looked like THIS?",
+        "Architects gone wild! (Literally)",
+        "AI is designing our future, and it's bizarre."
+      ],
+      "videoStructures": [
+        "Hook -> Showcase 3-5 examples with quick facts -> Call to action/question",
+        "Hook -> Single building deep dive (problem/unique feature) -> Solution/Reveal -> Reaction",
+        "Hook -> Montage of extreme examples -> Overarching theme/conclusion",
+        "Hook -> AI prompt entry -> Generate results -> Viewer engagement"
+      ],
+      "popularMusic": [
+        "Upbeat, slightly quirky instrumental tracks",
+        "Cinematic, awe-inspiring orchestral scores",
+        "Fast-paced electronic beats with a sense of wonder",
+        "Trending meme sounds for comedic blunders",
+        "Atmospheric ambient sounds for unique locations"
+      ],
+      "hashtagPatterns": [
+        "#AbsurdArchitecture #WeirdBuildings #UnusualHomes #ArchitectureDesign",
+        "#ArchitecturalWonders #DesignFails #FutureArchitecture #AICreation",
+        "#Shorts #ViralArchitecture #ModernArchitecture #ExtremeHomes",
+        "#EngineeringMarvels #HomeGoals #CrazyBuildings"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Visual Impact",
+          "value": 95
+        },
+        {
+          "subject": "Curiosity",
+          "value": 90
+        },
+        {
+          "subject": "Humor",
+          "value": 75
+        },
+        {
+          "subject": "Educational",
+          "value": 60
+        },
+        {
+          "subject": "Innovation",
+          "value": 85
+        },
+        {
+          "subject": "Aesthetic (Unconventional)",
+          "value": 80
+        }
+      ]
+    },
+    "expiresAt": 1772809276883
+  },
+  "talking objects": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Talking Food Comedies",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Kids, Families, and Young Adults seeking lighthearted, relatable humor",
+          "exampleIdea": "A sad, overripe banana in a fruit bowl dramatically laments its impending doom as a smoothie ingredient, pleading for a second chance as banana bread."
+        },
+        {
+          "name": "Everyday Object POV Rants",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Gen Z and Millennials who appreciate observational humor and meme culture",
+          "exampleIdea": "POV: You're my coffee mug, and I'm telling you all my morning secrets while you're still half-empty, judging me silently."
+        },
+        {
+          "name": "Sentient Household Item Dilemmas",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "General audience interested in quirky scenarios and mild absurdity",
+          "exampleIdea": "A lone sock, lost under the bed, narrates its desperate search for its missing partner, detailing the horrors of lint and dust bunnies."
+        }
+      ],
+      "viralFormats": [
+        "POV (Point of View) perspective with a voiceover",
+        "Quick comedic skits featuring object characters",
+        "Confessional style where an object 'talks' directly to the camera",
+        "Relatable everyday scenarios narrated by an object",
+        "Object 'reacting' to human actions or other objects"
+      ],
+      "hooks": [
+        "You won't believe what happened to me today...",
+        "As a [object], I have some thoughts about...",
+        "My owner thinks I don't know...",
+        "POV: You're the [object] and...",
+        "The secret life of a [object]..."
+      ],
+      "videoStructures": [
+        "Object introduces itself/its situation -> Problem/Observation -> Comedic Punchline",
+        "Object POV narration -> Relatable everyday scenario -> Humorous conclusion/reaction",
+        "Short dialogue/interaction between two or more talking objects",
+        "Object recounts a 'day in the life' with comedic observations",
+        "Question posed to an object -> Object's unexpected/humorous answer"
+      ],
+      "popularMusic": [
+        "Quirky, upbeat instrumental tracks",
+        "Comedic sound effects (e.g., 'boing', 'wah-wah', 'cartoon fall')",
+        "Trending sounds that allow for rapid cuts and comedic timing",
+        "Suspenseful build-up music for 'reveal' moments",
+        "Lighthearted, whimsical background music"
+      ],
+      "hashtagPatterns": [
+        "#talkingobjects",
+        "#funny",
+        "#comedy",
+        "#shorts",
+        "#relatable",
+        "#pov",
+        "#voiceover",
+        "#skit",
+        "#shortsvideo",
+        "#viral",
+        "#humor",
+        "#animated"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Humor",
+          "value": 95
+        },
+        {
+          "subject": "Creativity",
+          "value": 90
+        },
+        {
+          "subject": "Relatability",
+          "value": 80
+        },
+        {
+          "subject": "Unexpected",
+          "value": 85
+        },
+        {
+          "subject": "Wholesome/Lighthearted",
+          "value": 75
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 70
+        }
+      ]
+    },
+    "expiresAt": 1772810639954
+  },
+  "did you know?": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Bizarre Historical Facts",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "History buffs, curious teens and young adults, anyone interested in the strange side of the past.",
+          "exampleIdea": "Did you know Ancient Romans used to clean their teeth with mouse brains? Get ready for 3 more disgusting historical hygiene facts!"
+        },
+        {
+          "name": "Mind-Bending Science Discoveries",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Science enthusiasts, students, lifelong learners, people who love to feel their perception of reality shift.",
+          "exampleIdea": "Did you know a single spoonful of a neutron star weighs more than Mount Everest? We're diving into the craziest facts about the universe you won't believe are true!"
+        },
+        {
+          "name": "Everyday Object Secrets",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "General audience, people looking for practical knowledge or just curious about their surroundings.",
+          "exampleIdea": "Did you know the little pocket on your jeans was originally for a pocket watch? Discover 4 more surprising secrets about everyday items you own!"
+        },
+        {
+          "name": "Psychology Hacks & Human Behavior Tidbits",
+          "velocity": 88,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Young adults, self-improvement enthusiasts, anyone curious about how the mind works and social dynamics.",
+          "exampleIdea": "Did you know that mirroring someone's body language subtly makes them like you more? Here are 3 psychological tricks to instantly improve your social interactions!"
+        }
+      ],
+      "viralFormats": [
+        "Rapid-fire facts with quick cuts and on-screen text.",
+        "\"X things you didn't know about Y\" listicles.",
+        "Myth vs. Fact debunking with visual proof.",
+        "Visual explainers using animated text, stock footage, or simple graphics.",
+        "Voice-over narration with engaging B-roll or infographics.",
+        "Question-and-answer format leading to a surprising reveal."
+      ],
+      "hooks": [
+        "You won't believe this shocking fact...",
+        "The secret they don't want you to know about...",
+        "Did you know [insert intriguing question]?",
+        "Everyone thinks [common misconception], but the truth is...",
+        "This one fact will change how you see [topic] forever.",
+        "Stop scrolling if you want your mind blown."
+      ],
+      "videoStructures": [
+        "Hook (2-3s) -> Fact 1 + Visual (5s) -> Fact 2 + Visual (5s) -> Fact 3 + Visual (5s) -> Call to Action/Question (2-3s)",
+        "Intriguing Question (3s) -> \"The Answer Will Shock You\" (1s) -> Detailed Answer + Visuals (10-12s) -> Related Fact/Question (2-3s)",
+        "Myth Statement (3s) -> \"FALSE!\" or \"TRUTH IS...\" (1s) -> Correct Information + Evidence (10-12s) -> Engagement Question (2-3s)"
+      ],
+      "popularMusic": [
+        "Upbeat, slightly mysterious instrumental tracks.",
+        "Fast-paced, high-energy pop instrumentals with a 'discovery' vibe.",
+        "Sound effects like 'whoosh,' 'ding,' 'pop' for transitions and reveals.",
+        "Royalty-free tracks evoking curiosity or intrigue.",
+        "Trending TikTok/Shorts sounds that complement information delivery without being distracting."
+      ],
+      "hashtagPatterns": [
+        "#DidYouKnow",
+        "#Facts",
+        "#MindBlown",
+        "#LearnOnShorts",
+        "#Knowledge",
+        "#Trivia",
+        "#Shorts",
+        "#HistoryFacts",
+        "#ScienceFacts",
+        "#PsychologyFacts",
+        "#EverydaySecrets",
+        "#HumanBodyFacts",
+        "#Unbelievable"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Educational",
+          "value": 95
+        },
+        {
+          "subject": "Curiosity-driven",
+          "value": 98
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 90
+        },
+        {
+          "subject": "Informative",
+          "value": 92
+        },
+        {
+          "subject": "Engaging",
+          "value": 85
+        },
+        {
+          "subject": "Surprising",
+          "value": 90
+        }
+      ]
+    },
+    "expiresAt": 1772893014099
+  },
+  "medical-horror-meets-educational": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Historical Medical Horrors",
+          "velocity": 88,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "Morbidly curious, history enthusiasts, dark academia followers, medical students interested in the past.",
+          "exampleIdea": "Uncover the chilling history of early surgical techniques used without anesthesia, where patient agony was the norm, demonstrating the brutal origins of modern medicine."
+        },
+        {
+          "name": "Body's Terrifying Anomalies",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Biology/medical students, true crime fans, people fascinated by extreme human conditions, horror enthusiasts.",
+          "exampleIdea": "Discover Progeria, the rare genetic disorder that accelerates aging, revealing a horrifying glimpse into the rapid decay of the human body."
+        },
+        {
+          "name": "Invisible Killers: Epidemic Deep Dives",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Public health students, history buffs, preppers, anyone interested in infectious diseases.",
+          "exampleIdea": "Learn how the 'Dancing Plague' of 1518 led hundreds to dance uncontrollably until death, a terrifying historical mystery of mass hysteria or unknown illness."
+        },
+        {
+          "name": "Forensic Nightmares",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "True crime addicts, forensic science students, mystery lovers.",
+          "exampleIdea": "Explore the disturbing 'body farm' where scientists study human decomposition, providing chilling insights into what truly happens after death."
+        }
+      ],
+      "viralFormats": [
+        "Did You Know? Fact Drops with unsettling visuals.",
+        "What If...? Scenarios (e.g., \"What if you had this condition?\").",
+        "Top 3 Most Disturbing [Medical Facts].",
+        "Animated diagrams explaining gruesome processes.",
+        "Historical reenactments (stylized, not graphic) of medical procedures.",
+        "Myth vs. Reality (debunking medical urban legends with scientific horror)."
+      ],
+      "hooks": [
+        "This medical fact will haunt your dreams.",
+        "You won't believe what doctors used to do to patients.",
+        "The human body is capable of truly terrifying things...",
+        "What if your body started doing THIS?",
+        "Is this medical urban legend actually true?",
+        "Prepare to be horrified by the science of..."
+      ],
+      "videoStructures": [
+        "Intriguing Hook (text/visual) -> Present Disturbing Fact/Scenario -> Scientific/Historical Explanation -> Concluding Thought/Warning.",
+        "Question-Based Hook -> Unsettling Visual/Short Clip -> Concise Scientific Answer/Context -> Call to Comment/Further Research.",
+        "Myth Introduction -> Visual Depiction of Myth (briefly) -> Scientific Debunking with Real-World Horror Example."
+      ],
+      "popularMusic": [
+        "Eerie, ambient synth-wave.",
+        "Slow, suspenseful cello/string arrangements.",
+        "Dark lo-fi beats with unsettling undertones.",
+        "Subtle sound effects like whispers, distorted heartbeats, or distant creaks.",
+        "Classical pieces in minor keys (e.g., Bach's Toccata and Fugue in D Minor)."
+      ],
+      "hashtagPatterns": [
+        "#MedicalHorror",
+        "#DarkEd",
+        "#MorbidCuriosity",
+        "#ScienceExplained",
+        "#DisturbingFacts",
+        "#HistoryOfMedicine",
+        "#Pathology",
+        "#BiologyFacts",
+        "#CreepyScience",
+        "#LearnOnShorts",
+        "#TrueScaryFacts",
+        "#GrossAnatomy",
+        "#WhatsHappeningToMyBody",
+        "#HumanBodyFacts"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Educational",
+          "value": 95
+        },
+        {
+          "subject": "Unsettling/Disturbing",
+          "value": 90
+        },
+        {
+          "subject": "Factual Accuracy",
+          "value": 90
+        },
+        {
+          "subject": "Visually Impactful (often grotesque/intriguing)",
+          "value": 85
+        },
+        {
+          "subject": "Story-driven",
+          "value": 75
+        },
+        {
+          "subject": "Curiosity-driven",
           "value": 90
         },
         {
           "subject": "Fast-paced",
+          "value": 70
+        }
+      ]
+    },
+    "expiresAt": 1773061960203
+  },
+  "medical-meets-educational": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Medical Myths Debunked",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Health-conscious individuals and those seeking factual corrections to common health misinformation, primarily Gen Z and Millennials.",
+          "exampleIdea": "Stop believing these 3 common cold remedies that actually make you worse, according to a doctor."
+        },
+        {
+          "name": "Simplified Anatomy & Physiology",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Students, general public curious about how their body works, and patients seeking to understand their conditions better.",
+          "exampleIdea": "Watch this quick animation to understand exactly what happens to your brain during a migraine attack."
+        },
+        {
+          "name": "Quick First Aid & Emergency Tips",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Anyone seeking practical, life-saving knowledge, particularly parents, caregivers, and outdoor enthusiasts.",
+          "exampleIdea": "Learn the 3-step Heimlich maneuver in 60 seconds – it could save a life."
+        },
+        {
+          "name": "Mental Health Explained by Professionals",
+          "velocity": 82,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Young adults and individuals struggling with mental health, or those supporting someone who is, seeking professional, empathetic guidance.",
+          "exampleIdea": "A psychiatrist breaks down the difference between stress and anxiety, and when to seek help."
+        },
+        {
+          "name": "Behind-the-Scenes Medical Facts",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Aspiring medical professionals, curious laypeople, and patients demystifying medical environments.",
+          "exampleIdea": "Ever wondered what all those beeping machines do in the ICU? A nurse explains the most important ones."
+        }
+      ],
+      "viralFormats": [
+        "Talking head (medical professional directly addressing camera)",
+        "Text overlays on stock footage or animated graphics",
+        "Demonstrations (e.g., first aid techniques, exercises)",
+        "Whiteboard animation or motion graphics explaining concepts",
+        "Q&A style with common medical questions",
+        "Duets/Stitches reacting to health misinformation or medical scenarios"
+      ],
+      "hooks": [
+        "STOP doing [common bad habit] if you want [good outcome].",
+        "Did you know THIS about your [body part]?",
+        "The ONE medical myth you need to stop believing RIGHT NOW.",
+        "What actually happens to your body when [event occurs]?",
+        "You've been taught [incorrect medical fact] your whole life, here's the truth.",
+        "Emergency! Do you know what to do if [scenario]?"
+      ],
+      "videoStructures": [
+        "Hook (problem statement) -> Explain problem -> Offer medical solution/advice -> Briefly explain why it works/cite source.",
+        "Hook (state a common myth) -> Declare it false -> Present the correct medical fact -> Brief explanation.",
+        "Hook (pose a medical question) -> Provide concise answer -> Briefly elaborate with a simple example or analogy.",
+        "Hook (show a demonstration) -> Explain the medical reasoning/steps -> Empower audience with actionable knowledge."
+      ],
+      "popularMusic": [
+        "Upbeat, neutral background tracks",
+        "Calm, instrumental lo-fi beats",
+        "Trending sounds that are not distracting and allow clear voiceover",
+        "Subtle sound effects (e.g., 'ding' for fact, 'buzz' for myth)"
+      ],
+      "hashtagPatterns": [
+        "#MedicalEducation",
+        "#HealthFacts",
+        "#LearnOnTikTok",
+        "#DoctorExplains",
+        "#ScienceFacts",
+        "#MythBusters",
+        "#FirstAid",
+        "#MentalHealthMatters",
+        "#[SpecificCondition] (e.g., #DiabetesAwareness, #AnxietyRelief)",
+        "#MedEd",
+        "#MedicalShorts"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Educational",
+          "value": 95
+        },
+        {
+          "subject": "Trustworthy",
+          "value": 90
+        },
+        {
+          "subject": "Concise",
+          "value": 88
+        },
+        {
+          "subject": "Engaging",
+          "value": 85
+        },
+        {
+          "subject": "Accessible",
+          "value": 80
+        },
+        {
+          "subject": "Authoritative",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1773062049087
+  },
+  "medical meets educational": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Medical Myth Busting",
+          "velocity": 90,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "General public, health-conscious individuals, young adults curious about wellness",
+          "exampleIdea": "STOP believing these 3 common cold myths! Dr. explains the real science behind 'getting sick' and how to truly prevent it."
+        },
+        {
+          "name": "Simplified Medical Terminology",
+          "velocity": 95,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Students (medical, nursing, allied health), curious adults, patients seeking to understand diagnoses",
+          "exampleIdea": "What exactly is 'hypertension'? Dr. breaks down high blood pressure and why it matters, in 60 seconds."
+        },
+        {
+          "name": "Evidence-Based Health Hacks & Tips",
+          "velocity": 88,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Wellness enthusiasts, busy adults looking for practical, science-backed improvements, athletes",
+          "exampleIdea": "Boost your brain power FAST! 3 scientifically proven ways to improve focus and memory today."
+        },
+        {
+          "name": "Medical Professional 'Day in the Life' & Insights",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Aspiring medical students, healthcare workers, people curious about different medical roles and realities",
+          "exampleIdea": "A day in the life of an ER nurse: You won't believe what happened on my shift today! (Plus, quick tips for stress relief)."
+        },
+        {
+          "name": "Reacting to Medical Dramas/Media Misconceptions",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Fans of medical dramas, people curious about the reality vs. fiction of healthcare, pop culture enthusiasts",
+          "exampleIdea": "Doctor Reacts: Did 'House M.D.' get this rare disease diagnosis right? My take on medical accuracy!"
+        }
+      ],
+      "viralFormats": [
+        "Direct address 'talking head' explaining a concept with text overlays",
+        "Green screen effects pointing to statistics, diagrams, or reacting to clips",
+        "Fast-paced visual demonstrations with quick cuts and voiceover",
+        "'POV' (Point of View) scenarios from a medical professional's perspective",
+        "On-screen text only with trending audio, revealing facts sequentially"
+      ],
+      "hooks": [
+        "STOP doing [common health mistake]!",
+        "Did you know [surprising medical fact/statistic]?",
+        "What *actually* happens when [medical event or body function]?",
+        "My biggest pet peeve as a [medical professional] is...",
+        "If you only learn one thing about [health topic] today, make it this:",
+        "This medical myth could be ruining your [health aspect]!"
+      ],
+      "videoStructures": [
+        "Hook -> Problem/Question -> Concise Scientific Explanation -> Actionable Takeaway",
+        "Hook -> Common Misconception -> Factual Debunking with Evidence -> Correct Information",
+        "Hook -> Mini Story/Scenario -> Relatable Medical Insight -> Conclusion/Call to Action",
+        "Hook -> Visual Demonstration/Example -> Step-by-step Medical Principle/Process -> Quick Summary"
+      ],
+      "popularMusic": [
+        "Upbeat, positive, non-distracting instrumental tracks",
+        "Trending TikTok/Shorts sounds that are currently popular for explainer/informational content (e.g., cheerful, slightly quirky instrumentals, 'bright' synths)",
+        "Clean audio with clear voiceover, minimal background music",
+        "Fast-paced, high-energy tracks for quick transitions and reveal effects"
+      ],
+      "hashtagPatterns": [
+        "#MedicalEducation #HealthFacts #ScienceExplained",
+        "#DoctorLife #NurseLife #MedStudent #HealthcareWorker",
+        "#LearnOnShorts #EduTok #FactCheck #DidYouKnow",
+        "#Wellness #HealthyLiving #BodyFacts #PublicHealth",
+        "#MedicalMyth #MythBusters #ScienceIsCool"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Educational",
+          "value": 95
+        },
+        {
+          "subject": "Factual Accuracy",
+          "value": 98
+        },
+        {
+          "subject": "Concise/Fast-paced",
+          "value": 90
+        },
+        {
+          "subject": "Relatable/Accessible",
+          "value": 85
+        },
+        {
+          "subject": "Empathetic/Trustworthy",
+          "value": 92
+        },
+        {
+          "subject": "Visual/Demonstrative",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1773064911947
+  },
+  "if you": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "If You Like This, Try That Recommendations",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Consumers seeking new books, games, or lifestyle products for discovery and enjoyment.",
+          "exampleIdea": "If you loved the dark academia aesthetic of 'The Secret History,' you need to read 'Bunny' by Mona Awad for its unique blend of satire and horror."
+        },
+        {
+          "name": "If You're A [Specific Type], You'll Understand Relatable Humor",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Gen Z and Millennials identifying with niche subcultures or common life experiences (e.g., introverts, remote workers, pet owners).",
+          "exampleIdea": "If you're an introvert at a party, you know the silent struggle of trying to find the host's pet to bond with instead of small-talking humans."
+        },
+        {
+          "name": "If You Want To Be More Productive/Organized Tips",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Students and young professionals actively seeking self-improvement and efficiency hacks.",
+          "exampleIdea": "If you constantly feel overwhelmed by your to-do list, try the 'two-minute rule' to tackle small tasks immediately and build momentum."
+        },
+        {
+          "name": "If You Missed This Detail in [Game/Movie], You Need To See It",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Dedicated fans and enthusiasts of specific video games, movies, and TV series who crave deeper lore.",
+          "exampleIdea": "If you thought that minor character in Elden Ring was just scenery, you missed the entire hidden questline revealing their tragic backstory and a vital item."
+        }
+      ],
+      "viralFormats": [
+        "Quick cuts with prominent text overlays and a speaker directly addressing the camera.",
+        "POV (Point of View) scenarios showing a relatable situation with overlaid text commentary.",
+        "Before-and-after transformations based on applying a specific 'if you' tip.",
+        "Rapid-fire listicles presenting 'if you' conditions and their corresponding outcomes.",
+        "Green screen or capcut template usage to illustrate scenarios or react to statements."
+      ],
+      "hooks": [
+        "If you constantly find yourself doing THIS...",
+        "Don't scroll if you...",
+        "You NEED to hear this if you're about to...",
+        "This is for you if...",
+        "If your life feels like X, try Y.",
+        "Only 1% of people do this, but if you...",
+        "If you've ever thought X, then..."
+      ],
+      "videoStructures": [
+        "Problem-Solution: Start with 'If you have problem X,' then introduce 'Try solution Y.'",
+        "Recommendation: Start with 'If you like A,' then show 'Here's B you'll love.'",
+        "Relatability + Validation: Start with 'If you're X, you know this feeling,' then validate or provide a humorous take.",
+        "Myth Busting: 'If you thought X was true, you're wrong because Y.'",
+        "Quick List: 'If you want X, here are 3 ways to get it.'",
+        "Conditional Outcome: 'If you do X, then Y will happen.'"
+      ],
+      "popularMusic": [
+        "Upbeat, trending pop songs (often sped up versions or instrumental snippets).",
+        "Relaxing lo-fi beats for calm advice or aesthetic content.",
+        "Dramatic or comedic sound effects synced with text reveals.",
+        "Energetic, driving instrumental tracks for fast-paced tips.",
+        "Familiar meme sounds to enhance relatability or humor."
+      ],
+      "hashtagPatterns": [
+        "#IfYou [Specific Topic e.g., #IfYoureAnIntrovert, #IfYouLikeFantasy]",
+        "#RelatableContent #LifeHacks",
+        "#ProductivityTips #SelfImprovement",
+        "#BookRecommendations #GamingCommunity",
+        "#ShortsViral #ForYouPage #FYP",
+        "#DontScroll #MindsetShift",
+        "#WhatToWatch #MustTry"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Advice/Guidance",
+          "value": 90
+        },
+        {
+          "subject": "Relatability",
+          "value": 95
+        },
+        {
+          "subject": "Conciseness",
+          "value": 85
+        },
+        {
+          "subject": "Discovery/Recommendation",
+          "value": 75
+        },
+        {
+          "subject": "Personalization",
+          "value": 70
+        },
+        {
+          "subject": "Practicality",
+          "value": 80
+        }
+      ]
+    },
+    "expiresAt": 1773067898618
+  },
+  "what if": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "What if Major Historical Events Changed?",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "History enthusiasts, learners, curious adults (16-45)",
+          "exampleIdea": "What if the Roman Empire never fell? Envision a futuristic Roman world with legions in space armor and advanced aqueducts."
+        },
+        {
+          "name": "What if Fundamental Laws of Physics Were Different?",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Science fiction fans, STEM students, speculative thinkers (15-35)",
+          "exampleIdea": "What if gravity worked in reverse for specific elements? Show a city where buildings float using personal anti-gravitation devices."
+        },
+        {
+          "name": "What if Common Objects or Concepts Vanished/Changed?",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "General audience, millennials & Gen Z, anyone seeking relatable 'what if' content (13-40)",
+          "exampleIdea": "What if all screens suddenly stopped working? Illustrate a chaotic yet surprisingly cooperative society reverting to analog communication."
+        }
+      ],
+      "viralFormats": [
+        "Rapid-fire visual explanations with text overlays",
+        "Greenscreen reactions to hypothetical scenarios with data points",
+        "Animated explainer videos with engaging voiceovers",
+        "Split-screen comparisons (current reality vs. 'what if' scenario)",
+        "Short documentary-style montages with speculative visuals"
+      ],
+      "hooks": [
+        "Ever wondered what would happen if...?",
+        "This 'what if' will blow your mind.",
+        "Imagine a world where...",
+        "The consequences of this 'what if' are insane.",
+        "Only 1% of people consider this 'what if'..."
+      ],
+      "videoStructures": [
+        "Hook (question/scenario) -> Brief setup -> Core 'what if' consequence/visual -> Rapid implications -> Open-ended conclusion",
+        "Hook -> Problem statement -> 'What if' solution/alternative -> Pros and cons (visualized) -> Call to ponder",
+        "Hook -> Hypothetical situation -> Visualized outcome -> Unexpected twist -> Summary of implications"
+      ],
+      "popularMusic": [
+        "Suspenseful/mysterious background music (e.g., 'Eerie Shadows')",
+        "Upbeat, thought-provoking instrumental tracks (e.g., 'Discovery Loop')",
+        "Dramatic build-up scores (e.g., 'Cinematic Tension')",
+        "Inspirational/reflective melodies (e.g., 'Pensive Moments')",
+        "Quick, punchy sound effects for reveals or facts"
+      ],
+      "hashtagPatterns": [
+        "#WhatIf[Scenario]",
+        "#AlternativeHistory",
+        "#Hypothetical",
+        "#Theory",
+        "#MindBlown",
+        "#Shorts",
+        "#LearnOnYouTube",
+        "#SpeculativeFiction",
+        "#ThoughtExperiment"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Curiosity",
+          "value": 95
+        },
+        {
+          "subject": "Imagination",
+          "value": 90
+        },
+        {
+          "subject": "Speculative",
           "value": 85
         },
         {
           "subject": "Thought-provoking",
+          "value": 80
+        },
+        {
+          "subject": "Visual Storytelling",
           "value": 75
         },
         {
-          "subject": "Strategic Analysis",
-          "value": 88
+          "subject": "Informative (indirect)",
+          "value": 65
         }
       ]
     },
-    "expiresAt": 1772724726715
+    "expiresAt": 1773068977214
+  },
+  "medical horror meets educational": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Real-life Medical Anomalies Explained",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Curiosity-driven teens & young adults, medical students, fans of true crime/mystery.",
+          "exampleIdea": "This genetic mutation causes spontaneous calcification, turning people into living statues – here's the terrifying science behind it."
+        },
+        {
+          "name": "Historical Medical Horror Stories",
+          "velocity": 80,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "History buffs, horror enthusiasts, those interested in dark academia, medical history students.",
+          "exampleIdea": "Discover the horrifying truth about lobotomies in the early 20th century and the 'science' that justified them."
+        },
+        {
+          "name": "Dystopian Medical Ethics Scenarios",
+          "velocity": 65,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Sci-fi fans, philosophy students, those concerned about future tech, ethical debaters.",
+          "exampleIdea": "What if doctors could implant 'empathy chips' to control violent patients? The terrifying ethical dilemma explained."
+        },
+        {
+          "name": "Parasites and Body Horror Biology",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Science enthusiasts, horror fans, gross-out humor aficionados, pre-med students.",
+          "exampleIdea": "The terrifying lifecycle of the Candiru fish: how this 'vampire fish' can invade the human body and why it's so horrific."
+        }
+      ],
+      "viralFormats": [
+        "Fast-paced narration over disturbing stock footage/CGI/animations",
+        "Did You Know? or What If questions",
+        "Listicle style (e.g., Top 3 terrifying medical conditions)",
+        "POV short story/re-enactment with a factual explanation at the end",
+        "Educational explanation with unsettling sound design and quick cuts"
+      ],
+      "hooks": [
+        "Imagine a world where...",
+        "The most terrifying medical condition you've never heard of...",
+        "Doctors thought it was impossible, until...",
+        "This isn't sci-fi, this is real medical horror.",
+        "What if your own body turned against you?"
+      ],
+      "videoStructures": [
+        "Hook (1-3s) -> Problem/Question (3-5s) -> Educational Explanation (5-15s) -> Horror Amplification/Consequences (3-5s) -> Call to Action/Engagement (1-2s)",
+        "Shocking Fact/Statistic (2-4s) -> Historical Context/Science Explained (10-18s) -> Modern Implications/Warning (3-5s)",
+        "Myth Introduction (2-3s) -> Debunking/Real Horror Explanation (10-15s) -> Visual Evidence/Animation (5-7s) -> Engaging Question (1-2s)"
+      ],
+      "popularMusic": [
+        "Eerie ambient sounds",
+        "Suspenseful orchestral swells",
+        "Distorted, low-frequency hums",
+        "Tense, building synthwave",
+        "Sound effects (heartbeats, unsettling whispers, flatline beeps)"
+      ],
+      "hashtagPatterns": [
+        "#MedicalHorror",
+        "#DarkScience",
+        "#ScaryFacts",
+        "#MedicalMystery",
+        "#Pathology",
+        "#HorrorStories",
+        "#EducationalContent",
+        "#WhatIf",
+        "#BodyHorror",
+        "#ScienceFacts",
+        "#DisturbingFacts",
+        "#HistoryHorror",
+        "#Bioethics",
+        "#CreepyFacts",
+        "#LearnOnTikTok"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Educational",
+          "value": 90
+        },
+        {
+          "subject": "Horror/Gore (implied)",
+          "value": 85
+        },
+        {
+          "subject": "Factual Accuracy",
+          "value": 80
+        },
+        {
+          "subject": "Suspense",
+          "value": 70
+        },
+        {
+          "subject": "Intrigue/Mystery",
+          "value": 65
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 95
+        }
+      ]
+    },
+    "expiresAt": 1773069048460
+  },
+  "what if you born in 20th century": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Life Before Smartphones & Internet",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Millennials and Gen X who experienced both eras, Gen Z curious about the past",
+          "exampleIdea": "POV: Your phone died in 1998. How do you find your friends? (Shows a series of antiquated solutions like payphones, map books, landlines)."
+        },
+        {
+          "name": "Iconic 20th Century Gadgets & Their Modern Equivalents",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Tech enthusiasts, nostalgia seekers, curious younger viewers",
+          "exampleIdea": "Comparing a Walkman to a Spotify playlist, a VHS player to Netflix, and a rotary phone to a smartphone in a rapid-cut montage."
+        },
+        {
+          "name": "20th Century Parenting & Childhood",
+          "velocity": 70,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Parents (especially Millennials/Gen X), and those reflecting on their upbringing",
+          "exampleIdea": "My mom told me to 'go play outside' in 1995 vs. 'screen time limits' today, with humorous recreations."
+        },
+        {
+          "name": "Culture Shock: Modern Trends Explained to a 20th Century Person",
+          "velocity": 65,
+          "growth": "declining",
+          "competition": "High",
+          "targetAudience": "Broad audience, especially those who enjoy comedic comparisons and social commentary",
+          "exampleIdea": "Explaining TikTok dances, AI art, or cryptocurrency to someone from 1995 who can't quite grasp it."
+        }
+      ],
+      "viralFormats": [
+        "Side-by-side 'Then vs. Now' comparisons",
+        "POV (Point of View) skits recreating past scenarios",
+        "Rapid-fire visual lists with text overlays",
+        "Talking head narrating an experience with relevant B-roll/stock footage",
+        "Humorous reactions to old technology/cultural norms"
+      ],
+      "hooks": [
+        "If you were born before 2000, you'll understand...",
+        "Gen Z, prepare to be amazed by...",
+        "POV: It's 1997 and you...",
+        "Remember a time when this was cutting edge?",
+        "Modern problem? Here's how we solved it in the 20th century."
+      ],
+      "videoStructures": [
+        "Hook -> Set the scene (era/problem) -> Demonstrate 20th century solution/scenario -> Show modern equivalent/reaction -> Call to engagement.",
+        "Hook -> Quick succession of 'then vs. now' visual contrasts with brief text -> Concluding statement/question.",
+        "Hook -> Personal anecdote/story from the past -> Explanation of how things have changed -> Relatable closing thought."
+      ],
+      "popularMusic": [
+        "Retro synthwave beats",
+        "Nostalgic pop hits from the 80s/90s (e.g., 'What Is Love', 'No Scrubs')",
+        "Upbeat, slightly whimsical instrumental tracks for comedic effect",
+        "Sound effects: dial-up modem, VCR rewind, cassette tape clicks",
+        "Lofi background music"
+      ],
+      "hashtagPatterns": [
+        "#20thCenturyKid",
+        "#BornInThe90s",
+        "#GenX",
+        "#MillennialProblems",
+        "#Nostalgia",
+        "#ThenVsNow",
+        "#RetroVibes",
+        "#YouTubeShorts",
+        "#Shorts",
+        "#Foryoupage",
+        "#VintageTech"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Nostalgia",
+          "value": 95
+        },
+        {
+          "subject": "Humor",
+          "value": 80
+        },
+        {
+          "subject": "Relatability",
+          "value": 75
+        },
+        {
+          "subject": "Educational (Lighthearted)",
+          "value": 60
+        },
+        {
+          "subject": "Contrast/Comparison",
+          "value": 90
+        },
+        {
+          "subject": "Simplicity",
+          "value": 50
+        }
+      ]
+    },
+    "expiresAt": 1773071838586
+  },
+  "what if you born in the time of vikings daily life": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Viking Morning Routine",
+          "velocity": 90,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Norse Mythology Fans, History Enthusiasts, Role-playing Gamers",
+          "exampleIdea": "POV: You're a young Viking waking up in a longhouse, showing the raw, unglamorous start to a day of chores and training."
+        },
+        {
+          "name": "Viking Craftsmanship & Tools",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Artisans, Bushcraft Enthusiasts, Historical Reenactors",
+          "exampleIdea": "Watch a quick demonstration of making a simple Viking-era tool or carving a piece of wood, focusing on the rustic process."
+        },
+        {
+          "name": "Viking Food & Foraging",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Food Historians, Outdoor Survivalists, Cottagecore Advocates",
+          "exampleIdea": "A 'what if' scenario showing a Viking foraging for wild edibles and preparing a simple, historically inspired meal by firelight."
+        },
+        {
+          "name": "Viking Social Etiquette & Laws",
+          "velocity": 60,
+          "growth": "declining",
+          "competition": "High",
+          "targetAudience": "Academic Historians, Cultural Studies Students, Curious Learners",
+          "exampleIdea": "Quick facts contrasting modern social rules with an imagined Viking gathering, highlighting surprising customs or laws."
+        },
+        {
+          "name": "Viking Combat Training",
+          "velocity": 88,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Martial Arts Enthusiasts, Historical Combatants, Fantasy RPG Gamers",
+          "exampleIdea": "Short, impactful sequence showing a 'young Viking' practicing axe swings or shield work, emphasizing the brutal reality of training."
+        }
+      ],
+      "viralFormats": [
+        "POV (Point of View) Scenarios",
+        "Quick 'How-To' Guides (simplified for Shorts)",
+        "Myth vs. Reality Comparisons",
+        "Historical Skits/Role-playing",
+        "Visually Satisfying Process Videos (e.g., crafting, cooking)",
+        "Day in the Life Edutainment"
+      ],
+      "hooks": [
+        "POV: You just woke up in a Viking longhouse...",
+        "What's for breakfast if you're a Viking?",
+        "Can you survive a Viking winter with just this?",
+        "Forget modern problems, these were *real* Viking struggles.",
+        "The one Viking skill you NEED to know for daily life.",
+        "You think your commute is bad? Try being a Viking."
+      ],
+      "videoStructures": [
+        "Problem-Solution (Viking-style survival tip)",
+        "Mini-Story/Vignette (e.g., 'A Viking's Task')",
+        "Rapid-fire Fact Montage with Visuals",
+        "POV Immersion (guided tour/experience)",
+        "Modern vs. Viking Life Comparison",
+        "Step-by-Step Historical Recreation"
+      ],
+      "popularMusic": [
+        "Epic Folk Instrumental (e.g., 'Wardruna' style)",
+        "Heavy Percussion & Nordic Chants",
+        "Cinematic Soundscapes with Nature Elements",
+        "Traditional Nordic Folk Music (often sped up or remixed)",
+        "Sound Effects: Crackling Fire, Sword Clangs, Animal Sounds"
+      ],
+      "hashtagPatterns": [
+        "#VikingLife #WhatIfViking #DailyViking",
+        "#HistoryShorts #NorseCulture #VikingTok",
+        "#HistoricalReenactment #VikingCosplay #FantasyLife",
+        "#VikingSurvival #VikingFood #VikingSkills",
+        "#AncientHistory #Norsemen #POV"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Historical Accuracy",
+          "value": 70
+        },
+        {
+          "subject": "Immersive Storytelling",
+          "value": 95
+        },
+        {
+          "subject": "Educational Value",
+          "value": 80
+        },
+        {
+          "subject": "Adventure/Survival",
+          "value": 85
+        },
+        {
+          "subject": "Aesthetic (Rustic & Natural)",
+          "value": 90
+        },
+        {
+          "subject": "Escapism/Fantasy",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1773071945505
+  },
+  "pov": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "POV: Relatable Daily Life Moments",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z and Millennials experiencing similar everyday struggles or joys.",
+          "exampleIdea": "POV: You're trying to explain a meme to your parents who just don't get it."
+        },
+        {
+          "name": "POV: Fantasy/Sci-Fi Immersion",
+          "velocity": 70,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Fantasy and Sci-Fi enthusiasts, Gamers, Role-players, and those seeking escapism.",
+          "exampleIdea": "POV: You wake up in a magical forest, realizing you're now a character in your favorite fantasy book."
+        },
+        {
+          "name": "POV: Aesthetic/Vibe Creation",
+          "velocity": 90,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Individuals seeking to romanticize their lives, aesthetic subculture followers (e.g., cottagecore, dark academia).",
+          "exampleIdea": "POV: You're walking through a bustling city at night, rain falling, with headphones on, feeling like you're in a movie."
+        },
+        {
+          "name": "POV: Main Character Energy",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Young adults and teens looking for self-empowerment, motivation, or simply to feel special.",
+          "exampleIdea": "POV: You've finally accomplished that goal you've been working on for months, and everything just clicked into place."
+        }
+      ],
+      "viralFormats": [
+        "Text overlays with a first-person perspective",
+        "Quick cuts between different 'POV' scenarios",
+        "Use of green screen to place viewer in fantastical or impossible situations",
+        "Duets or stitches responding to a 'POV' prompt",
+        "Mimicking popular movie/TV show tropes from a first-person view"
+      ],
+      "hooks": [
+        "POV: When you...",
+        "You know that feeling? POV...",
+        "Imagine this: POV...",
+        "The exact moment you realize... POV",
+        "POV: Life hits different when..."
+      ],
+      "videoStructures": [
+        "Setup-Punchline: Establish a POV scenario, then reveal a humorous or surprising outcome.",
+        "Immersive Aesthetic: Gradually build a visual and auditory environment from a first-person perspective.",
+        "Problem-Reaction: Show a common problem from POV, then the relatable internal or external reaction.",
+        "Dramatic Reveal: Start with a seemingly normal POV, then introduce an unexpected twist or element.",
+        "Character Emulation: Adopt the POV of a specific character archetype or trope."
+      ],
+      "popularMusic": [
+        "Upbeat, trending pop songs from YouTube's popular sounds",
+        "Lofi/Chill beats for calm or aesthetic POVs",
+        "Dramatic, cinematic instrumentals for fantasy/action POVs",
+        "Nostalgic or throwback songs for relatable humor",
+        "Specific trending audio clips (e.g., meme sounds, viral voiceovers)"
+      ],
+      "hashtagPatterns": [
+        "#POV",
+        "#POVchallenge",
+        "#RelatablePOV",
+        "#POV[SpecificTopic]",
+        "#Shorts",
+        "#YouTubeShorts",
+        "#ForYou"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Relatability",
+          "value": 90
+        },
+        {
+          "subject": "Imaginative/Escapism",
+          "value": 85
+        },
+        {
+          "subject": "Visual Storytelling",
+          "value": 90
+        },
+        {
+          "subject": "Emotional Connection",
+          "value": 75
+        },
+        {
+          "subject": "Conciseness",
+          "value": 95
+        },
+        {
+          "subject": "Humor/Sarcasm",
+          "value": 60
+        }
+      ]
+    },
+    "expiresAt": 1773128221679
+  },
+  "educational": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "AI Productivity Tools",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Tech Workers and Students",
+          "exampleIdea": "Show how to automate a 3-hour spreadsheet task in 10 seconds using a new specific AI plugin."
+        },
+        {
+          "name": "History Mystery Deep Dives",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Gen Z and Millennials interested in obscure culture",
+          "exampleIdea": "Explain the disappearance of a famous historical artifact using quick-cut archival footage and a suspenseful narration."
+        },
+        {
+          "name": "Psychology Hacks for Social Situations",
+          "velocity": 88,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "Young Adults and Networking Professionals",
+          "exampleIdea": "Demonstrate a simple body language tweak that forces someone to agree with you during a negotiation."
+        }
+      ],
+      "viralFormats": [
+        "Split-screen reaction with scientific debunking",
+        "POV: Explaining a complex concept like I am a 5-year-old",
+        "Rapid-fire listicle with text overlays",
+        "High-energy whiteboard sketching",
+        "The 60-second 'Masterclass' micro-documentary"
+      ],
+      "hooks": [
+        "Stop doing X, start doing Y if you want to...",
+        "Why your teacher never told you about...",
+        "I tested the [popular method] so you don't have to.",
+        "This one secret tool is literally breaking [Industry].",
+        "You are holding your [Tool/Object] wrong."
+      ],
+      "videoStructures": [
+        "The Pattern Interrupt: Start with a visual shock followed by a 5-second problem statement",
+        "The Stack: Deliver 3 rapid value points, then a call to action",
+        "The Transformation: Show the 'Before' failure, the 'During' process, and the 'After' success",
+        "The Myth-Buster: State a common lie, prove it wrong with evidence, provide the truth"
+      ],
+      "popularMusic": [
+        "Ambient lo-fi beats with a subtle bassline",
+        "Upbeat synth-pop instrumentals",
+        "Minimalist percussion tracks",
+        "Suspenseful cinematic orchestral scores"
+      ],
+      "hashtagPatterns": [
+        "#learnontiktok",
+        "#educationalshorts",
+        "#productivityhacks",
+        "#mindblown",
+        "#sciencefacts",
+        "#careeradvice"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Fast-paced Editing",
+          "value": 95
+        },
+        {
+          "subject": "High Information Density",
+          "value": 90
+        },
+        {
+          "subject": "Credibility/Authority",
+          "value": 85
+        },
+        {
+          "subject": "Visual Storytelling",
+          "value": 80
+        },
+        {
+          "subject": "Interactive Engagement",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1773130362313
+  },
+  "restoration": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Luxury Watch Restoration",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Horology enthusiasts and luxury goods collectors",
+          "exampleIdea": "Show a 60-second ASMR-focused deep clean and part-rebuild of a rusted 1970s mechanical timepiece."
+        },
+        {
+          "name": "Antique Toy Refurbishment",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Millennial nostalgia-seekers and parents",
+          "exampleIdea": "Document the complete restoration of a 1950s die-cast metal fire truck found at a garage sale."
+        },
+        {
+          "name": "Blade/Tool Rejuvenation",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "High",
+          "targetAudience": "DIY handymen and knife hobbyists",
+          "exampleIdea": "Time-lapse of grinding a severely chipped, corroded forest axe back to a razor-sharp, mirror-polished finish."
+        }
+      ],
+      "viralFormats": [
+        "ASMR sound-focused cleaning sequences",
+        "Extreme before-and-after split screens",
+        "Micro-zoom detail shots of rust removal",
+        "Non-verbal storytelling with text overlays",
+        "POV workbench camera angles"
+      ],
+      "hooks": [
+        "Stop throwing these away, watch this instead.",
+        "I found this buried in a barn, let's bring it back to life.",
+        "The satisfaction of 50 years of dirt coming off in one swipe.",
+        "Most people see trash, I see a masterpiece.",
+        "This was missing for 3 decades, it's time to fix it."
+      ],
+      "videoStructures": [
+        "The reveal (before shot) -> The process (fast cuts) -> The final reveal (polished result)",
+        "Problem identification -> Aggressive cleaning -> Precision repair -> Final aesthetic test",
+        "Story of origin -> Step-by-step restoration -> Satisfying final slow-motion showcase"
+      ],
+      "popularMusic": [
+        "Lo-fi beats with nature sounds",
+        "Cinematic orchestral swells for reveals",
+        "Aggressive industrial synth for heavy sanding",
+        "Minimalist ambient piano tracks"
+      ],
+      "hashtagPatterns": [
+        "#restoration",
+        "#satisfying",
+        "#oddlysatisfying",
+        "#asmrrestoration",
+        "#antique",
+        "#restorationvideo",
+        "#beforeandafter"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "ASMR Focus",
+          "value": 95
+        },
+        {
+          "subject": "Visual Satisfaction",
+          "value": 98
+        },
+        {
+          "subject": "Educational",
+          "value": 60
+        },
+        {
+          "subject": "Story-driven",
+          "value": 45
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 80
+        },
+        {
+          "subject": "Aesthetic",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1773130488313
+  },
+  "you time-travel to ancient greece and introduce hard dubstep to philosophers, warriors, and citizens.": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Plato vs. Bass Drop",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "History Enthusiasts and Bass Music Fans",
+          "exampleIdea": "A CGI Socrates listens to a Skrillex track and tries to derive a philosophical theory on why the sub-bass makes his soul vibrate."
+        },
+        {
+          "name": "Spartan Shield Mosh Pit",
+          "velocity": 85,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Gen Z Meme Creators and Fitness Enthusiasts",
+          "exampleIdea": "Leonidas leads his 300 warriors in a synchronized, intense dubstep dance routine instead of a spear formation."
+        },
+        {
+          "name": "The Oracle's Rave Vision",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Occult and Mythology Lovers",
+          "exampleIdea": "The Oracle of Delphi enters a trance while wearing neon LED goggles and starts drop-stepping while predicting the future."
+        }
+      ],
+      "viralFormats": [
+        "Green Screen Historical Integration",
+        "POV: Time Traveler POV with Fisheye Lens",
+        "Before/After: Classical Greek Statue to Rave God",
+        "Historical Dialogue Overlay with Modern EDM Slang"
+      ],
+      "hooks": [
+        "What if Plato had a subwoofer?",
+        "Ancient Greeks had NO idea what was about to hit them...",
+        "I took a Bluetooth speaker to 400 BC and here is what happened.",
+        "The Spartan reaction to dubstep is actually insane."
+      ],
+      "videoStructures": [
+        "The Setup: Reveal the modern tech in the ancient setting (3s), The Build-up: Drop the bass (2s), The Reaction: Chaos and confusion (10s), The Ending: Sudden return to current day (2s)",
+        "Comparison: Classical harp music vs. 150BPM Bass Music in the Agora",
+        "Slow-mo cinematic shots of Greeks looking confused mixed with high-energy edit cuts"
+      ],
+      "popularMusic": [
+        "Dubstep Drops (High Energy)",
+        "Glitch Hop",
+        "Phonk Remixes of Classical Greek Melodies",
+        "Riddim Bass"
+      ],
+      "hashtagPatterns": [
+        "#TimeTravelTok",
+        "#AncientGreeceMeme",
+        "#DubstepHistorian",
+        "#HistoryButMakeItBass",
+        "#SpartanRave"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Humor",
+          "value": 95
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 90
+        },
+        {
+          "subject": "Aesthetic Contrast",
+          "value": 85
+        },
+        {
+          "subject": "Educational (Satirical)",
+          "value": 40
+        },
+        {
+          "subject": "High-Energy",
+          "value": 98
+        }
+      ]
+    },
+    "expiresAt": 1773136446233
+  },
+  "asd": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Autism Advocacy & Misconception Busting",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Neurodivergent young adults and concerned parents",
+          "exampleIdea": "Create a 60-second video titled '3 things people with ASD wish you knew' using a rhythmic, fast-paced editing style to maintain engagement."
+        },
+        {
+          "name": "Sensory-Friendly Life Hacks",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Sensory-sensitive individuals and students",
+          "exampleIdea": "Showcase a 'sensory-friendly study setup' that reduces visual clutter and provides tactile stimulation for better focus."
+        },
+        {
+          "name": "Special Interest Deep Dives",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Passionate hobbyists and STEM students",
+          "exampleIdea": "A hyper-fast narrated montage about a niche historical event, demonstrating the high-focus capability of the autistic community."
+        }
+      ],
+      "viralFormats": [
+        "Green Screen overlay on news articles",
+        "POV: Living through a sensory overload",
+        "Listicle format with high-contrast text",
+        "Direct-to-camera raw commentary",
+        "Before-and-after room organization"
+      ],
+      "hooks": [
+        "Stop scrolling if you've ever felt...",
+        "The secret reason you can't focus is...",
+        "Unpopular opinion: Being neurodivergent is...",
+        "I wish I knew this sooner about ASD...",
+        "POV: You're overstimulated in public"
+      ],
+      "videoStructures": [
+        "Problem -> Personal Experience -> Solution -> Encouragement",
+        "Hook -> 3 Rapid Fire Myths -> Reality -> Call to Action",
+        "Visual Hook -> Rapid Montage -> Key Takeaway",
+        "Relatable Scenario -> Personal Struggle -> Empowerment Moment"
+      ],
+      "popularMusic": [
+        "Lo-fi beats with steady rhythm",
+        "Upbeat, clean pop instrumental loops",
+        "Soft synth ambient soundscapes",
+        "Minimalist percussion tracks"
+      ],
+      "hashtagPatterns": [
+        "#actuallyautistic",
+        "#neurodivergent",
+        "#sensoryfriendly",
+        "#asdawareness",
+        "#autismtips",
+        "#neurodiversity"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Authenticity",
+          "value": 98
+        },
+        {
+          "subject": "Educational",
+          "value": 85
+        },
+        {
+          "subject": "Empathy-driven",
+          "value": 90
+        },
+        {
+          "subject": "Fast-paced",
+          "value": 75
+        },
+        {
+          "subject": "Visual Minimalism",
+          "value": 80
+        }
+      ]
+    },
+    "expiresAt": 1773162515388
+  },
+  "tiny workers building a house beneath to a riverside.": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "ASMR Riverside Construction",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Low",
+          "targetAudience": "Stress-relief seekers and ASMR enthusiasts",
+          "exampleIdea": "A detailed 60-second build of a mud-brick cabin by a stream using only natural sound captured with high-sensitivity microphones."
+        },
+        {
+          "name": "Micro-Engineering DIY",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "DIY hobbyists and miniature model builders",
+          "exampleIdea": "A time-lapse showcasing the installation of a functional miniature water-powered mill for a tiny riverside cottage."
+        },
+        {
+          "name": "Bushcraft Miniature Survival",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Outdoor survival enthusiasts and wilderness fans",
+          "exampleIdea": "Watch a tiny house being fortified against a simulated rainstorm using twigs, leaves, and waterproof clay at the edge of a river."
+        }
+      ],
+      "viralFormats": [
+        "ASMR-only time-lapses",
+        "Point-of-View (POV) miniature construction",
+        "Nature-blend aesthetic transitions",
+        "Before-and-after environmental integration"
+      ],
+      "hooks": [
+        "I bet you've never seen a house this small...",
+        "Building a secret home for the forest dwellers.",
+        "Nature meets engineering: the tiny riverside project.",
+        "Wait until you see how I weatherproof this tiny roof."
+      ],
+      "videoStructures": [
+        "3-second high-impact build start followed by rhythmic cutting",
+        "Process loop: Collection of materials, framing, finishing, aesthetic reveal",
+        "Story-arc: Problem (erosion/flooding) followed by ingenious tiny engineering solution"
+      ],
+      "popularMusic": [
+        "Cinematic folk instrumentals",
+        "Natural soundscapes mixed with Lo-fi beats",
+        "Ambient forest acoustic guitar",
+        "Minimalist rhythmic percussion"
+      ],
+      "hashtagPatterns": [
+        "#MiniatureBuild",
+        "#TinyHouse",
+        "#ASMRConstruction",
+        "#NatureCraft",
+        "#BushcraftTiny",
+        "#RiversideProject"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "ASMR-Intensity",
+          "value": 95
+        },
+        {
+          "subject": "Visual-Detail",
+          "value": 90
+        },
+        {
+          "subject": "Relaxation-Factor",
+          "value": 85
+        },
+        {
+          "subject": "Nature-Immersion",
+          "value": 88
+        },
+        {
+          "subject": "Pacing",
+          "value": 75
+        }
+      ]
+    },
+    "expiresAt": 1773226300977
+  },
+  "__general__": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Minimalist Productivity Hacks",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "Medium",
+          "targetAudience": "Gen Z Students and Young Professionals",
+          "exampleIdea": "Show a 30-second screen-free morning routine that actually improves deep work sessions."
+        },
+        {
+          "name": "AI Workflow Automation",
+          "velocity": 88,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Tech-Savvy Freelancers",
+          "exampleIdea": "Demonstrate how to automate email replies using a specific AI tool in under 60 seconds."
+        },
+        {
+          "name": "Budget Travel Hidden Gems",
+          "velocity": 75,
+          "growth": "steady",
+          "competition": "Low",
+          "targetAudience": "Digital Nomads and Budget Travelers",
+          "exampleIdea": "Compare a luxury destination price tag against a secret budget-friendly alternative in the same region."
+        }
+      ],
+      "viralFormats": [
+        "Fast-paced jump-cut tutorials",
+        "Split-screen reaction and commentary",
+        "POV: Situational comedy skits",
+        "Silent ASR-style process videos"
+      ],
+      "hooks": [
+        "Stop scrolling if you are still using...",
+        "I bet you didn't know this hidden feature was right here.",
+        "This one change saved me 10 hours this week.",
+        "The secret to [benefit] that nobody talks about."
+      ],
+      "videoStructures": [
+        "3-second hook followed by a high-tension problem reveal",
+        "The 15-second value-stack where you give 3 tips in under 10 seconds",
+        "The 'Fail to Success' journey narrative",
+        "Direct Q&A response using a green-screen overlay"
+      ],
+      "popularMusic": [
+        "Phonk-inspired bass-heavy beats",
+        "Lofi hip-hop for educational content",
+        "High-energy upbeat indie pop mashups",
+        "Cinematic orchestral swells for transitions"
+      ],
+      "hashtagPatterns": [
+        "#Shorts",
+        "#LifeHacks",
+        "#ProductivityTips",
+        "#TechTok",
+        "#GrowthMindset"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Fast-paced",
+          "value": 95
+        },
+        {
+          "subject": "Informative",
+          "value": 85
+        },
+        {
+          "subject": "Aesthetic",
+          "value": 70
+        },
+        {
+          "subject": "Authentic",
+          "value": 80
+        },
+        {
+          "subject": "Actionable",
+          "value": 90
+        }
+      ]
+    },
+    "expiresAt": 1773675301104
+  },
+  "did you know facts": {
+    "data": {
+      "trendingTopics": [
+        {
+          "name": "Psychological Dark Facts",
+          "velocity": 92,
+          "growth": "exploding",
+          "competition": "High",
+          "targetAudience": "Gen Z and Millennials interested in behavior patterns",
+          "exampleIdea": "Show three disturbing psychological facts about human behavior that change how you look at strangers in public."
+        },
+        {
+          "name": "Space and Cosmic Anomalies",
+          "velocity": 85,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "Science enthusiasts and students",
+          "exampleIdea": "Visualize the sheer scale of a black hole compared to our solar system with a haunting ambient background."
+        },
+        {
+          "name": "Historical 'Hidden' Secrets",
+          "velocity": 78,
+          "growth": "steady",
+          "competition": "Medium",
+          "targetAudience": "History buffs and curiosity seekers",
+          "exampleIdea": "Expose a shocking, lesser-known secret about a famous historical figure that was never taught in school textbooks."
+        }
+      ],
+      "viralFormats": [
+        "Text-overlay over cinematic B-roll",
+        "Talking head with green-screen image reaction",
+        "Rapid-fire countdown lists",
+        "POV: You just learned something that will ruin your day",
+        "Split-screen comparison"
+      ],
+      "hooks": [
+        "Stop scrolling if you want to know the truth about...",
+        "This is why you've been doing X wrong your entire life.",
+        "Did you know that your brain actually...",
+        "Here are 3 facts that sound fake but are 100% real.",
+        "Whatever you do, do not search for..."
+      ],
+      "videoStructures": [
+        "Hook (0-3s) -> Fact #1 -> Fact #2 -> Mind-blowing Fact #3 -> Call to action",
+        "Direct Question -> Scientific Evidence -> Surprising Conclusion -> CTA",
+        "Visual Mystery -> Contextual Explanation -> Reveal -> Question for comments"
+      ],
+      "popularMusic": [
+        "Interstellar style cinematic synth",
+        "Dark, bass-heavy phonk remixes",
+        "Lo-fi beats with high-frequency melody",
+        "Suspenseful orchestral swells",
+        "Eerie ambient soundscapes"
+      ],
+      "hashtagPatterns": [
+        "#didyouknow",
+        "#facts",
+        "#psychologyfacts",
+        "#mindblowing",
+        "#educationalshorts",
+        "#curiosity"
+      ],
+      "nicheDNA": [
+        {
+          "subject": "Fast-paced",
+          "value": 95
+        },
+        {
+          "subject": "Visual-heavy",
+          "value": 88
+        },
+        {
+          "subject": "Curiosity-driven",
+          "value": 98
+        },
+        {
+          "subject": "Suspenseful",
+          "value": 80
+        },
+        {
+          "subject": "Low-barrier-to-entry",
+          "value": 75
+        },
+        {
+          "subject": "Social-currency",
+          "value": 90
+        }
+      ]
+    },
+    "expiresAt": 1773675652561
   }
 }

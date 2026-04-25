@@ -254,7 +254,7 @@ export function CritiqueView() {
                             {critique.improvedSegments.map((improvedSeg, i) => {
                                 const originalSeg = contentIdea.segments.find(s => s.index === improvedSeg.index)
                                     || contentIdea.segments[i]
-                                    || { index: i, startTime: improvedSeg.startTime, endTime: improvedSeg.endTime, audio: 'No original mapped', visual: '', timestamp: '' };
+                                    || { index: i, startTime: improvedSeg.startTime, endTime: improvedSeg.endTime, script: 'No original mapped', visual: '', timestamp: '' };
 
                                 return (
                                     <div key={i} className="flex flex-col md:flex-row border border-white/10 overflow-hidden bg-[#1a1a1a]">
@@ -269,7 +269,7 @@ export function CritiqueView() {
                                                 </div>
                                             </div>
                                             <div className="p-4 font-mono text-xs leading-relaxed text-white/60">
-                                                {originalSeg.audio}
+                                                {originalSeg.script}
                                             </div>
                                         </div>
 
@@ -284,7 +284,7 @@ export function CritiqueView() {
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => copyToClipboard(improvedSeg.audio, `improved-${i}`)}
+                                                        onClick={() => copyToClipboard(improvedSeg.script, `improved-${i}`)}
                                                         className="p-1 rounded transition-colors hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
                                                     >
                                                         {copiedId === `improved-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -292,13 +292,28 @@ export function CritiqueView() {
                                                 </div>
                                             </div>
                                             <div className="p-4 font-mono text-xs leading-relaxed text-purple-300 font-bold shadow-inner">
-                                                {improvedSeg.audio}
+                                                {improvedSeg.script}
                                             </div>
                                             {/* Improved Visual Prompt inline */}
                                             {improvedSeg.visual && (
                                                 <div className="px-4 pb-4">
                                                     <span className="text-[9px] font-mono uppercase text-purple-400/60 block mb-1">Visual</span>
                                                     <p className="font-mono text-[10px] italic text-purple-300/60 leading-relaxed">{improvedSeg.visual}</p>
+                                                </div>
+                                            )}
+                                            {/* Improved Motion Prompt inline */}
+                                            {visualGenerationType === 'image-to-video' && improvedSeg.motion && (
+                                                <div className="px-4 pb-4 border-t border-purple-500/10 pt-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <span className="text-[9px] font-mono uppercase text-purple-400/60 block mb-1">Motion</span>
+                                                        <button
+                                                            onClick={() => copyToClipboard(improvedSeg.motion as string, `improved-motion-${i}`)}
+                                                            className="p-1 rounded transition-colors hover:bg-purple-500/20 text-purple-400 border border-transparent hover:border-purple-500/30"
+                                                        >
+                                                            {copiedId === `improved-motion-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                        </button>
+                                                    </div>
+                                                    <p className="font-mono text-[10px] italic text-purple-300 leading-relaxed">{improvedSeg.motion}</p>
                                                 </div>
                                             )}
                                         </div>

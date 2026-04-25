@@ -1,34 +1,243 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Wand2, ArrowLeft, ImageIcon, Video, RefreshCw, Copy, Check, Clock, Zap, Hash, Layers, AlertTriangle, Download } from 'lucide-react';
+import { Clock, Copy, Plus, X, Play, Image as ImageIcon, Check, Video, AlertTriangle, Wand2, RefreshCw, Layers, Hash, Lightbulb, User, Zap, MessageSquare, Loader2, ArrowLeft, Download, Settings } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Section } from '../ui/Section';
 import { useAppStore, useTheme } from '../../store/useAppStore';
 import { FloatingScrollButton } from '../ui/FloatingScrollButton';
-import { VISUAL_STYLES } from '../../types';
 import { downloadAsMarkdown } from '../../lib/exportUtils';
+import { TimelineEditorModal } from './TimelineEditorModal';
+import { TimelineSegment } from '../../types';
+
+// B6 PERFORMANCE FIX: Memoized row with granular selectors to prevent global re-renders
+// when editing a single segment's text.
+const TimelineSegmentRow = React.memo(({ segment, index }: { segment: TimelineSegment; index: number }) => {
+    // Select only what we need for this specific row
+    const updateSegmentScript = useAppStore(state => state.updateSegmentScript);
+    const toggleSegmentCopyState = useAppStore(state => state.toggleSegmentCopyState);
+    const copyToClipboard = useAppStore(state => state.copyToClipboard);
+    const copiedId = useAppStore(state => state.copiedId);
+    const visualGenerationType = useAppStore(state => state.visualGenerationType);
+    const theme = useTheme();
+
+    const formatTime = (secs: number) => {
+        if (secs == null || isNaN(secs)) return "00:00";
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = Math.floor(secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
+
+    const wordCount = segment.script.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const segDuration = segment.endTime - segment.startTime;
+    const maxWords = Math.floor(segDuration * 2.7);
+    const isOverLimit = wordCount > maxWords;
+
+    const handleCopy = (text: string, id: string, field: 'copiedScript' | 'copiedVisual' | 'copiedMotion') => {
+        copyToClipboard(text, id);
+        toggleSegmentCopyState(index, field, true);
+    };
+
+    const toggleIcon = (field: 'copiedScript' | 'copiedVisual' | 'copiedMotion') => {
+        return segment[field] ? (
+            <button
+                onClick={(e) => { e.stopPropagation(); toggleSegmentCopyState(index, field, false); }}
+                className="w-5 h-5 flex items-center justify-center rounded-sm bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+                title="Uncheck"
+            >
+                <Check className="w-3 h-3" />
+            </button>
+        ) : null;
+    };
+
+    return (
+        <div className={cn(
+            "group relative flex flex-col",
+            visualGenerationType === 'image' ? "md:flex-row" : "lg:flex-row",
+            "border transition-all shadow-sm bg-[#1a1a1a] border-white/10 hover:border-emerald-500"
+        )}>
+            {/* Timeline Dot */}
+            <div className={cn(
+                "absolute -left-[23px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border z-10 transition-colors",
+                `border-white/20 bg-[#0a0a0a] ${theme.groupHoverBg} ${theme.groupHoverBorder}`
+            )} />
+
+            {/* Timestamp */}
+            <div className="md:w-24 flex-shrink-0 p-3 border-b md:border-b-0 md:border-r flex flex-col items-center justify-center font-mono text-[10px] font-bold bg-[#0a0a0a] border-white/10 text-white/40">
+                <span>{segment.timestamp || formatTime(segment.startTime)}</span>
+                {isOverLimit && (
+                    <span title={`Word limit exceeded: ${wordCount}/${maxWords}`}>
+                        <AlertTriangle className="w-3 h-3 text-orange-400 mt-1" />
+                    </span>
+                )}
+            </div>
+
+            {/* Audio (Script) */}
+            <div className={cn(
+                "flex-1 p-4 border-b relative min-w-0 border-white/10 transition-opacity duration-300",
+                visualGenerationType === 'image' ? "md:border-b-0 md:border-r" : "lg:border-b-0 lg:border-r",
+                segment.copiedScript ? "opacity-50 grayscale hover:opacity-100 hover:grayscale-0" : ""
+            )}>
+                <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono uppercase opacity-60">Script</span>
+                        <span className={cn("text-[9px] font-mono", isOverLimit ? "text-orange-400" : "text-white/30")}>
+                            {wordCount}/{maxWords}w
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 relative z-20">
+                        {toggleIcon('copiedScript')}
+                        <button
+                            onClick={() => handleCopy(segment.script, `script-${index}`, 'copiedScript')}
+                            aria-label="Copy script"
+                            className="p-1.5 rounded transition-colors hover:bg-white/10 border border-transparent hover:border-white/10"
+                        >
+                            {copiedId === `script-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                    </div>
+                </div>
+                <textarea
+                    value={segment.script}
+                    onChange={(e) => updateSegmentScript(index, e.target.value)}
+                    className={cn(
+                        "text-sm leading-relaxed w-full min-h-[80px] bg-transparent border p-2 text-white resize-y rounded-sm transition-all outline-none",
+                        "border-transparent focus:border-emerald-500/50 focus:bg-white/5",
+                        segment.copiedScript ? "line-through opacity-70" : ""
+                    )}
+                />
+            </div>
+
+            {/* Visual Prompt */}
+            <div className={cn(
+                "flex-1 p-4 min-w-0 flex flex-col justify-between transition-opacity duration-300",
+                visualGenerationType === 'image-to-video' ? "lg:border-r border-b lg:border-b-0 border-white/10" : "",
+                theme.bgOpacity + " " + theme.textAccent,
+                segment.copiedVisual ? "opacity-50 grayscale hover:opacity-100 hover:grayscale-0" : ""
+            )}>
+                <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono uppercase opacity-60">Visual Prompt</span>
+                        {segment.cutType && (
+                            <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-full bg-white/10 text-white/70 backdrop-blur-sm border border-white/5">
+                                {segment.cutType.replace('_', ' ')}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 relative z-20">
+                        {toggleIcon('copiedVisual')}
+                        <button
+                            onClick={() => handleCopy(segment.visual, `visual-${index}`, 'copiedVisual')}
+                            className={cn(
+                                "p-1 rounded transition-colors",
+                                segment.copiedVisual ? "bg-white/10 opacity-100" : "opacity-0 group-hover:opacity-100",
+                                theme.hoverBgAccent
+                            )}
+                        >
+                            {copiedId === `visual-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                    </div>
+                </div>
+                <p className={cn("text-sm leading-relaxed italic transition-all", segment.copiedVisual ? "line-through opacity-70" : "opacity-90")}>"{segment.visual}"</p>
+            </div>
+
+            {/* Advanced Output: Motion & Animation Containers */}
+            {visualGenerationType === 'image-to-video' && (
+                <div className="flex-1 flex flex-col md:flex-row border-t border-white/10">
+                    {segment.motion && (
+                        <div className={cn(
+                            "flex-1 p-4 min-w-0 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-white/10 text-white transition-opacity duration-300",
+                            segment.copiedMotion ? "opacity-50 grayscale hover:opacity-100 hover:grayscale-0" : ""
+                        )}>
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="text-[10px] font-mono uppercase opacity-60">Motion Prompt</span>
+                                <div className="flex items-center gap-2 relative z-20">
+                                    {toggleIcon('copiedMotion')}
+                                    <button
+                                        onClick={() => handleCopy(segment.motion as string, `motion-${index}`, 'copiedMotion')}
+                                        className={cn(
+                                            "p-1 rounded transition-colors",
+                                            segment.copiedMotion ? "bg-white/10 opacity-100" : "opacity-0 group-hover:opacity-100",
+                                            theme.hoverBgAccent
+                                        )}
+                                    >
+                                        {copiedId === `motion-${index}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-1 flex items-start gap-2">
+                                <Video className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                                <p className={cn("text-sm italic leading-relaxed text-emerald-400 transition-all", segment.copiedMotion ? "line-through opacity-70" : "")}>
+                                    {segment.motion}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            )}
+        </div>
+    );
+});
 
 export function GeneratorView() {
-    const {
-        contentIdea,
-        selectedTrend,
-        setActiveTab,
-        handleGenerate,
-        copiedId,
-        copyToClipboard,
-        copyAllForProduction,
-        handleCritique,
-        selectedVisualStyle,
-        visualGenerationType,
-        isLoading,
-        setVisualStyle,
-        setVisualGenerationType,
-        analysis,
-        critique,
-        updateSegmentAudio
-    } = useAppStore();
+    // Selectors to minimize re-renders of the shell
+    const contentIdea = useAppStore(state => state.contentIdea);
+    const selectedTrend = useAppStore(state => state.selectedTrend);
+    const setActiveTab = useAppStore(state => state.setActiveTab);
+    const handleGenerate = useAppStore(state => state.handleGenerate);
+    const copiedId = useAppStore(state => state.copiedId);
+    const copyToClipboard = useAppStore(state => state.copyToClipboard);
+    const copyAllForProduction = useAppStore(state => state.copyAllForProduction);
+    const handleCritique = useAppStore(state => state.handleCritique);
+    const isLoading = useAppStore(state => state.isLoading);
+    const loadingMessage = useAppStore(state => state.loadingMessage);
+    const analysis = useAppStore(state => state.analysis);
+    const critique = useAppStore(state => state.critique);
+    const setShowTimelineEditorModal = useAppStore(state => state.setShowTimelineEditorModal);
+    const setShowPreGenModal = useAppStore(state => state.setShowPreGenModal);
+    const uncheckAllSegments = useAppStore(state => state.uncheckAllSegments);
+    const directIdea = useAppStore(state => state.directIdea); // B7 FIX: needed as fallback when selectedTrend is null (Direct Idea flow)
+    
+    // We still need the whole theme object as it's used in many places
     const theme = useTheme();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+    if (isLoading && (!contentIdea || !contentIdea.segments || !Array.isArray(contentIdea.segments))) {
+        return (
+            <motion.div
+                key="generator-loading"
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0 }}
+                variants={{
+                    hidden: { opacity: 0 },
+                    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                }}
+                className="space-y-8"
+            >
+                <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6 border-white/10">
+                    <div className="space-y-2 w-full max-w-md">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Wand2 className="w-5 h-5 animate-pulse text-emerald-500" />
+                            <span className="font-mono text-sm tracking-widest text-emerald-500 uppercase">{loadingMessage || 'Generating Storyboard...'}</span>
+                        </div>
+                        <div className="h-10 w-3/4 bg-white/5 animate-pulse rounded-sm" />
+                    </div>
+                </motion.div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
+                        <div className="h-6 w-32 bg-white/5 animate-pulse rounded-sm" />
+                        <div className="grid grid-cols-1 gap-4">
+                            {[1, 2, 3, 4].map(i => <div key={i} className="h-20 w-full bg-white/5 animate-pulse rounded-sm" />)}
+                        </div>
+                    </motion.div>
+                    <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} className="space-y-4">
+                        <div className="h-6 w-32 bg-white/5 animate-pulse rounded-sm" />
+                        <div className="h-64 w-full bg-white/5 animate-pulse rounded-sm" />
+                    </motion.div>
+                </div>
+            </motion.div>
+        );
+    }
 
     if (!contentIdea || !contentIdea.segments || !Array.isArray(contentIdea.segments)) {
         const steps = [
@@ -45,7 +254,6 @@ export function GeneratorView() {
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-xl mx-auto py-16 space-y-10"
             >
-                {/* Header */}
                 <div className="text-center space-y-3">
                     <div className="w-16 h-16 mx-auto border-2 rounded-full flex items-center justify-center mb-4 border-emerald-500/40 text-emerald-400">
                         <Wand2 className="w-8 h-8" />
@@ -56,7 +264,6 @@ export function GeneratorView() {
                     </p>
                 </div>
 
-                {/* Progress Steps */}
                 <div className="space-y-4">
                     {steps.map((step) => (
                         <div
@@ -84,7 +291,6 @@ export function GeneratorView() {
                     ))}
                 </div>
 
-                {/* Return Action */}
                 <div className="pt-6">
                     <button
                         onClick={() => setActiveTab('trends')}
@@ -126,7 +332,16 @@ export function GeneratorView() {
                 </div>
                 <div className="flex flex-wrap w-full md:w-auto gap-2 justify-end">
                     <button
-                        onClick={() => handleGenerate(selectedTrend!)}
+                        onClick={() => setShowPreGenModal(true)}
+                        className={cn(
+                            "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] border border-white/10 hover:bg-white/5",
+                        )}
+                    >
+                        <Settings className="w-4 h-4" />
+                        <span>Edit Config</span>
+                    </button>
+                    <button
+                        onClick={() => handleGenerate(selectedTrend ?? directIdea ?? '')}
                         disabled={isLoading}
                         className={cn(
                             "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] border border-white/10 hover:bg-white/5",
@@ -135,6 +350,15 @@ export function GeneratorView() {
                     >
                         <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                         <span>Regenerate</span>
+                    </button>
+                    <button
+                        onClick={() => setShowTimelineEditorModal(true)}
+                        className={cn(
+                            "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 font-mono text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-md active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] border border-white/10 hover:bg-white/5 bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                        )}
+                    >
+                        <Layers className="w-4 h-4" />
+                        <span>Timeline Editor</span>
                     </button>
                     <button
                         onClick={() => downloadAsMarkdown(contentIdea, critique)}
@@ -158,93 +382,28 @@ export function GeneratorView() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {/* Left Column: Storyboard Timeline */}
-                <div className="lg:col-span-7 space-y-8 flex flex-col relative">
-                    <Section title="Production Timeline" icon={<Clock className="w-5 h-5" />}>
+                <div className="xl:col-span-8 space-y-8 flex flex-col relative">
+                    <Section 
+                        title="Production Timeline" 
+                        icon={<Clock className="w-5 h-5" />}
+                        action={
+                            <button
+                                onClick={uncheckAllSegments}
+                                className="flex items-center gap-1.5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors rounded-sm bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10"
+                            >
+                                <RefreshCw className="w-3 h-3" />
+                                <span>Uncheck All</span>
+                            </button>
+                        }
+                    >
                         <div ref={scrollContainerRef} className="relative max-h-[600px] overflow-y-auto pr-2 flex-1 sm:pr-4 mx-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                             <div className="relative space-y-4 pl-4 sm:pl-8">
-                                {/* Vertical Timeline Line */}
                                 <div className="absolute left-[15px] top-2 bottom-2 w-[2px] opacity-10 bg-white" />
-
-                                {contentIdea.segments?.map((seg, i) => {
-                                    const wordCount = seg.audio.trim().split(/\s+/).filter(w => w.length > 0).length;
-                                    const segDuration = seg.endTime - seg.startTime;
-                                    const maxWords = Math.floor(segDuration * 2.7);
-                                    const isOverLimit = wordCount > maxWords;
-
-                                    return (
-                                        <div key={i} className={cn(
-                                            "group relative flex flex-col md:flex-row border transition-all shadow-sm",
-                                            "bg-[#1a1a1a] border-white/10 hover:border-emerald-500"
-                                        )}>
-                                            {/* Timeline Dot */}
-                                            <div className={cn(
-                                                "absolute -left-[23px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border z-10 transition-colors",
-                                                `border-white/20 bg-[#0a0a0a] ${theme.groupHoverBg} ${theme.groupHoverBorder}`
-                                            )} />
-
-                                            {/* Timestamp */}
-                                            <div className="md:w-20 flex-shrink-0 p-3 border-b md:border-b-0 md:border-r flex flex-col items-center justify-center font-mono text-[10px] font-bold bg-[#0a0a0a] border-white/10 text-white/40">
-                                                <span>{seg.timestamp || formatTime(seg.startTime)}</span>
-                                                {isOverLimit && (
-                                                    <span title={`Word limit exceeded: ${wordCount}/${maxWords}`}>
-                                                        <AlertTriangle className="w-3 h-3 text-orange-400 mt-1" />
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Audio (Script) */}
-                                            <div className="flex-1 p-4 border-b md:border-b-0 md:border-r relative min-w-0 border-white/10">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-mono uppercase opacity-60">Audio (Voiceover Script)</span>
-                                                        <span className={cn("text-[9px] font-mono", isOverLimit ? "text-orange-400" : "text-white/30")}>
-                                                            {wordCount}/{maxWords}w
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => copyToClipboard(seg.audio, `audio-${i}`)}
-                                                            aria-label="Copy audio"
-                                                            className="p-1.5 rounded transition-colors hover:bg-white/10 border border-transparent hover:border-white/10"
-                                                        >
-                                                            {copiedId === `audio-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <textarea
-                                                    value={seg.audio}
-                                                    onChange={(e) => updateSegmentAudio(i, e.target.value)}
-                                                    className={cn(
-                                                        "text-sm leading-relaxed w-full min-h-[80px] bg-transparent border p-2 text-white resize-y rounded-sm transition-colors outline-none",
-                                                        "border-transparent focus:border-emerald-500/50 focus:bg-white/5"
-                                                    )}
-                                                />
-                                            </div>
-
-                                            {/* Visual Prompt */}
-                                            <div className={cn(
-                                                "flex-1 p-4 min-w-0",
-                                                theme.bgOpacity + " " + theme.textAccent
-                                            )}>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <span className="text-[10px] font-mono uppercase opacity-60">Visual Prompt</span>
-                                                    <button
-                                                        onClick={() => copyToClipboard(seg.visual, `visual-${i}`)}
-                                                        className={cn(
-                                                            "p-1 rounded transition-colors opacity-0 group-hover:opacity-100",
-                                                            theme.hoverBgAccent
-                                                        )}
-                                                    >
-                                                        {copiedId === `visual-${i}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                                    </button>
-                                                </div>
-                                                <p className="text-sm leading-relaxed italic opacity-90">"{seg.visual}"</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {contentIdea.segments?.map((seg, i) => (
+                                    <TimelineSegmentRow key={seg.id} index={i} segment={seg} />
+                                ))}
                             </div>
                         </div>
                     </Section>
@@ -252,7 +411,7 @@ export function GeneratorView() {
                 </div>
 
                 {/* Right Column: Details */}
-                <div className="lg:col-span-5 space-y-6 sm:space-y-8 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto custom-scrollbar pr-0 lg:pr-2 pb-0">
+                <div className="xl:col-span-4 space-y-6 sm:space-y-8 xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto custom-scrollbar pr-0 xl:pr-2 pb-0">
                     <Section title="Viral Hook Variations" icon={<Zap className="w-5 h-5" />}>
                         <div className="space-y-4">
                             {contentIdea.hookVariations?.length > 0 ? (
@@ -325,20 +484,6 @@ export function GeneratorView() {
                         )}
                     </Section>
 
-                    <Section title="Audio Design" icon={<Volume2 className="w-5 h-5" />} collapsible defaultCollapsed>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-sm">
-                                <Music className={cn("w-4 h-4", theme.textAccent)} />
-                                <span className="font-bold">Music:</span> {contentIdea.musicStyle}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {contentIdea.soundEffects.map((s, i) => (
-                                    <span key={i} className="px-2 py-1 border text-[10px] uppercase font-mono border-white/10 bg-[#0a0a0a]">{s}</span>
-                                ))}
-                            </div>
-                        </div>
-                    </Section>
-
                     <Section title="Editing & Post" icon={<Layers className="w-5 h-5" />} collapsible defaultCollapsed>
                         <div className="space-y-3">
                             {contentIdea.editingEffects.map((effect, i) => (
@@ -370,16 +515,18 @@ export function GeneratorView() {
                             onClick={handleCritique}
                             disabled={isLoading}
                             className={cn(
-                                "w-full flex items-center justify-center gap-3 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-all shadow-lg active:translate-y-1 active:shadow-none",
+                                "w-full flex items-center justify-center gap-3 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-all shadow-lg active:translate-y-1 active:shadow-none disabled:opacity-80 disabled:cursor-not-allowed",
                                 theme.bg + " text-[#0a0a0a] " + theme.hoverBg
                             )}
                         >
-                            <Zap className="w-5 h-5" />
-                            Roast My Script
+                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
+                            {isLoading ? (loadingMessage || "Loading...") : "Roast My Script"}
                         </button>
                     </div>
                 </div>
             </div>
+
+            <TimelineEditorModal />
         </motion.div>
     );
 }

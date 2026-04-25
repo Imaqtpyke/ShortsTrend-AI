@@ -7,13 +7,15 @@ interface SectionProps {
     title: string;
     children: React.ReactNode;
     icon?: React.ReactNode;
+    /** Action element rendered on the right side of the header */
+    action?: React.ReactNode;
     /** If true, the section can be collapsed by clicking the header */
     collapsible?: boolean;
     /** Initial collapsed state when collapsible=true (default: false = expanded) */
     defaultCollapsed?: boolean;
 }
 
-export function Section({ title, children, icon, collapsible = false, defaultCollapsed = false }: SectionProps) {
+export function Section({ title, children, icon, action, collapsible = false, defaultCollapsed = false }: SectionProps) {
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
     return (
@@ -25,9 +27,14 @@ export function Section({ title, children, icon, collapsible = false, defaultCol
                 role={collapsible ? 'button' : undefined}
                 tabIndex={collapsible ? 0 : undefined}
                 aria-expanded={collapsible ? !collapsed : undefined}
-                onClick={collapsible ? () => setCollapsed(prev => !prev) : undefined}
+                onClick={collapsible ? (e) => {
+                    // Prevent collapse if clicking the action
+                    if ((e.target as HTMLElement).closest('.section-action')) return;
+                    setCollapsed(prev => !prev);
+                } : undefined}
                 onKeyDown={collapsible ? (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
+                        if ((e.target as HTMLElement).closest('.section-action')) return;
                         e.preventDefault();
                         setCollapsed(prev => !prev);
                     }
@@ -39,6 +46,11 @@ export function Section({ title, children, icon, collapsible = false, defaultCol
             >
                 {icon}
                 <h3 className="font-mono text-xs md:text-sm font-bold uppercase tracking-widest truncate flex-1">{title}</h3>
+                {action && (
+                    <div className="section-action flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {action}
+                    </div>
+                )}
                 {collapsible && (
                     <motion.span
                         animate={{ rotate: collapsed ? -90 : 0 }}

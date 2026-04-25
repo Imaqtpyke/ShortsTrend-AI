@@ -1,3 +1,35 @@
+export type ContentGenre =
+  | 'Storytelling'
+  | 'POV'
+  | 'Action'
+  | 'Timelapse'
+  | 'Horror'
+  | 'Comedy'
+  | 'Documentary'
+  | 'Educational'
+  | 'Cinematic'
+  | 'Motivational'
+  | 'Tutorial'
+  | 'Vlog'
+  | 'Gaming'
+  | 'Fitness'
+  | 'Travel'
+  | 'Food'
+  | 'Fashion'
+  | 'Mystery'
+  | 'ASMR'
+  | 'Interview'
+  | 'Restoration';
+
+export const CONTENT_GENRES: ContentGenre[] = [
+  'Storytelling',
+  'POV',
+  'Action',
+  'Documentary',
+  'Motivational',
+  'Restoration'
+];
+
 export interface TrendingTopic {
   name: string;
   velocity: number; // 0-100 score
@@ -36,12 +68,18 @@ export interface ScriptSegment {
  * Replaces the old ScriptSegment+imagePrompts pair.
  */
 export interface TimelineSegment {
+  id: string;          // Stable unique ID for DND and list keys
   index: number;
   startTime: number;   // seconds from start (e.g. 0, 4, 8...)
   endTime: number;     // seconds from start (e.g. 4, 8, 12...)
   timestamp: string;   // MM:SS format
-  audio: string;       // spoken script for this segment
+  script: string;      // narration / voiceover script for this segment
   visual: string;      // image/video generation prompt (incl. --ar 9:16)
+  motion?: string;     // AI generated motion instructions for video types
+  cutType?: 'hard_cut' | 'soft_transition' | 'hold_zoom' | 'impact' | 'zoom_shift' | 'smash_cut';
+  copiedScript?: boolean; // UI state: user marked script as copied
+  copiedVisual?: boolean; // UI state: user marked visual as copied
+  copiedMotion?: boolean; // UI state: user marked motion as copied
 }
 
 export interface ProductionTimeline {
@@ -49,15 +87,11 @@ export interface ProductionTimeline {
   hook: string;
   segments: TimelineSegment[];
   metadata: {
-    music: string;
-    sfx: string[];
     tags: string[];
   }
 }
 
 export interface ContentIdea extends ProductionTimeline {
-  musicStyle: string;
-  soundEffects: string[];
   hashtags: string[];
   visualStyle: string;
   hookVariations: { type: string; text: string }[];
@@ -89,20 +123,8 @@ export const VISUAL_STYLES = [
   "Anime / Studio Ghibli",
   "3D Pixar / Disney Style",
   "Cyberpunk / Neon",
-  "Dark Fantasy",
   "Minimalist Vector Art",
   "Vintage 90s VHS",
-  "Vaporwave / Retro",
-  "Watercolor Art",
-  "Claymation / Stop Motion",
-  "Comic Book / Pop Art",
-  "Low Poly 3D",
-  "3D Render",
-  "Oil Painting",
-  "Sketch",
-  "Pixel Art",
-  "Glitch",
-  "Surrealism",
 ];
 
 export interface HistoryItem {
@@ -136,8 +158,6 @@ export interface ScriptCritique {
   improvedHook?: string;
   improvedCaption?: string;
   improvedHashtags?: string[];
-  improvedMusicStyle?: string;
-  improvedSoundEffects?: string[];
   improvedEditingEffects?: string[];
   improvedFontStyle?: string;
   improvedEditingEffectsContext?: string;
@@ -151,15 +171,28 @@ export interface AppState {
   isLoading: boolean;
   error: string | null;
   selectedVisualStyle: string;
-  visualGenerationType: 'image' | 'video';
+  visualGenerationType: 'image' | 'video' | 'image-to-video';
   segmentLength: number;
   customSegmentLength: number | null;
+  segmentMode: 'adjustable' | 'fixed';
   history: HistoryItem[];
   searchQuery: string;
   currentAnalyzedQuery: string;
   // Custom Character System
   useCustomCharacter: boolean;
   customCharacter: CustomCharacter;
+  // Genre System
+  selectedGenre: ContentGenre;
+  useCustomGenre: boolean;
+  customGenreString: string;
+  // Custom Style Feature State
+  useCustomStyle: boolean;
+  // Direct Idea Feature State
+  searchMode: 'keyword' | 'url' | 'idea';
+  directIdea: string;
+  showPreGenModal: boolean;
+  showTimelineEditorModal: boolean;
+  pendingTrend: string;
 }
 
 export type ToastType = 'success' | 'error' | 'info';

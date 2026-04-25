@@ -3,29 +3,28 @@ import { TrendAnalysis, ContentIdea, ProductionWorkflow, ScriptCritique, CustomC
 // B5 FIX: Never hardcode localhost. In production this must be the deployed server URL.
 // Set VITE_API_BASE_URL in your deployment environment (Vercel, Netlify, etc.).
 // Falls back to localhost:3001 for local development only.
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL ?? "http://localhost:3001/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001/api";
 
 // B2 FIX: Client-side retries are DISABLED (retries = 0 default).
 // The server already retries up to 3 times internally for each Gemini call.
 // Having BOTH client and server retry independently caused a worst-case of
 // 27 Gemini API calls per single user action (3 client × 3 server × 3 Gemini).
 // The server is the single source of retry truth. The client propagates errors immediately.
-async function fetchFromBackend<T>(endpoint: string, body: any, retries = 0, delay = 1000): Promise<T> {
+async function fetchFromBackend<T>(endpoint: string, body: any, options?: { signal?: AbortSignal }, retries = 0, delay = 1000): Promise<T> {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: options?.signal
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       if (response.status === 429) {
-        throw new Error(errorData.error || "API overload. Please wait a minute, the Google model is busy.");
+        throw new Error(errorData.error || "AI Rate Limit Reached: The AI brain is currently cooling down from too many requests. Please wait about 30-60 seconds before trying again.");
       }
-      // BUG FIX #7: Don't retry on non-retryable client errors (4xx).
-      // A 400 means the request itself is malformed — retrying will always fail.
-      // Only 429 (rate limit) and 5xx (server errors) are worth retrying.
+      
       const isClientError = response.status >= 400 && response.status < 500;
       const err = new Error(errorData.error || `HTTP error! status: ${response.status}`);
       (err as any).status = response.status;
@@ -35,11 +34,12 @@ async function fetchFromBackend<T>(endpoint: string, body: any, retries = 0, del
 
     return await response.json();
   } catch (error: any) {
+    if (error.name === 'AbortError') throw error;
     // BUG FIX #7 cont: Skip retry for client errors (4xx) — retrying won't help.
     if (retries > 0 && !error.message?.includes('API overload') && !error.isClientError) {
       console.warn(`API call to ${endpoint} failed, retrying in ${delay}ms...`, error);
       await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchFromBackend<T>(endpoint, body, retries - 1, delay * 2);
+      return fetchFromBackend<T>(endpoint, body, options, retries - 1, delay * 2);
     }
     throw error;
   }
@@ -51,42 +51,53 @@ async function fetchFromBackend<T>(endpoint: string, body: any, retries = 0, del
 export async function critiqueScript(
   script: string,
   hook: string,
-  character?: CustomCharacter
+  character?: CustomCharacter,
+  options?: { signal?: AbortSignal }
 ): Promise<ScriptCritique> {
-  return fetchFromBackend<ScriptCritique>("/critique", { script, hook, character });
+  return fetchFromBackend<ScriptCritique>("/critique", { script, hook, character }, options);
 }
 
 export async function generateImprovement(
   script: string,
   critique: string,
   visualStyle: string,
-  visualGenerationType: 'image' | 'video',
+  visualGenerationType: 'image' | 'video' | 'image-to-video',
   segmentLength?: number,
   totalDuration = 60,
   character?: CustomCharacter,
-  expectedSegments?: number
+  expectedSegments?: number,
+  options?: { signal?: AbortSignal }
 ): Promise<Partial<ScriptCritique>> {
   return fetchFromBackend<Partial<ScriptCritique>>("/improve", {
     script, critique, visualStyle, visualGenerationType, segmentLength, totalDuration, character, expectedSegments
-  });
+  }, options);
 }
 
-export async function analyzeTrends(niche?: string, bypassCache?: boolean): Promise<TrendAnalysis> {
-  return fetchFromBackend<TrendAnalysis>("/analyze", { niche, bypassCache });
+export async function analyzeTrends(niche?: string, bypassCache?: boolean, options?: { signal?: AbortSignal }): Promise<TrendAnalysis> {
+  return fetchFromBackend<TrendAnalysis>("/analyze", { niche, bypassCache }, options);
+}
+
+export async function analyzeUrl(url: string, options?: { signal?: AbortSignal }): Promise<TrendAnalysis> {
+  return fetchFromBackend<TrendAnalysis>("/analyze-url", { url }, options);
 }
 
 export async function generateContentIdea(
   trend: string,
   visualStyle: string,
-  visualGenerationType: 'image' | 'video',
+  visualGenerationType: 'image' | 'video' | 'image-to-video',
   segmentLength?: number,
   totalDuration = 60,
   character?: CustomCharacter,
-  onProgress?: (partial: Partial<ContentIdea>) => void
+  genre?: string,
+  customGenre?: string,
+  variationId?: string,
+
+  onProgress?: (partial: Partial<ContentIdea>) => void,
+  options?: { signal?: AbortSignal }
 ): Promise<ContentIdea> {
   const result = await fetchFromBackend<ContentIdea>("/generate", {
-    trend, visualStyle, visualGenerationType, segmentLength, totalDuration, character
-  });
+    trend, visualStyle, visualGenerationType, segmentLength, totalDuration, character, genre, customGenre, variationId
+  }, options);
 
   if (onProgress) {
     onProgress(result);
@@ -95,6 +106,6 @@ export async function generateContentIdea(
   return result;
 }
 
-export async function getWorkflow(): Promise<ProductionWorkflow> {
-  return fetchFromBackend<ProductionWorkflow>("/workflow", {});
+export async function getWorkflow(options?: { signal?: AbortSignal }): Promise<ProductionWorkflow> {
+  return fetchFromBackend<ProductionWorkflow>("/workflow", {}, options);
 }

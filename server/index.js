@@ -2,13 +2,31 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
+import { YoutubeTranscript } from 'youtube-transcript';
+import compression from 'compression';
 import { rateLimit } from 'express-rate-limit'; // Rate limiting to protect API credits
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import os from 'os';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
+// ─── Startup Assertions ───────────────────────────────────────────────────────
+// Fail fast: crash at boot rather than serving broken requests at runtime.
+if (!process.env.GEMINI_API_KEY) {
+    console.error('[FATAL] GEMINI_API_KEY is not set. Set it in your .env file or deployment secrets.');
+    process.exit(1);
+}
+if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGIN) {
+    console.warn('[WARN] ALLOWED_ORIGIN is not set in production. CORS will block all cross-origin requests.');
+}
 
 const app = express();
+app.use(compression());
 
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
 // Protect your Gemini API credits from bot spam or accidental infinite loops.
@@ -31,10 +49,13 @@ const expensiveLimiter = rateLimit({
     message: { error: "Generation limit reached. Script generation is expensive; please wait 10 minutes before creating more." }
 });
 
+// CORS must come before generalLimiter so OPTIONS preflight requests
+// are not counted against the IP rate-limit quota.
+// In production, ALLOWED_ORIGIN must be set; falls back to localhost:3000 in dev only.
+const allowedOrigin = process.env.ALLOWED_ORIGIN ||
+    (process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : undefined);
+app.use(cors({ origin: allowedOrigin }));
 app.use(generalLimiter);
-// CORS: Restrict to the frontend origin. Set ALLOWED_ORIGIN in your deployment env.
-// Falls back to localhost:3000 for local development only.
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000' }));
 app.use(express.json({ limit: '16kb' })); // Prevent oversized payloads
 
 // Health check — used for uptime monitoring (no credentials required)
@@ -43,6 +64,8 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now()
 // Applied to expensive endpoints below
 app.post('/api/generate', expensiveLimiter);
 app.post('/api/improve', expensiveLimiter);
+app.post('/api/critique', expensiveLimiter);    // Calls Gemini on every request
+app.post('/api/analyze-url', expensiveLimiter); // Calls Gemini + YouTube transcript API
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -70,6 +93,7 @@ function sanitizeInput(raw) {
         .slice(0, MAX_INPUT_LENGTH)               // Hard length cap
         .replace(/[<>]/g, '')                      // Strip HTML tags
         .replace(/```[\s\S]*?```/g, '')            // Remove code blocks
+        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '') // S3 FIX: Strip Unicode Bidi Controls
         .replace(/\bignore\b.{0,80}\bprevious\b/gi, '[FILTERED]')  // Prompt injection
         .replace(/\bsystem\s*prompt\b/gi, '[FILTERED]')
         .replace(/\bpretend\b.{0,60}\byou are\b/gi, '[FILTERED]')
@@ -84,6 +108,7 @@ function sanitizeScriptInput(raw) {
     return raw
         .slice(0, MAX_SCRIPT_LENGTH)
         .replace(/[<>]/g, '')
+        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '') // S3 FIX: Strip Unicode Bidi Controls
         .replace(/\bignore\b.{0,80}\bprevious\b/gi, '[FILTERED]')
         .replace(/\bsystem\s*prompt\b/gi, '[FILTERED]')
         .replace(/\bpretend\b.{0,60}\byou are\b/gi, '[FILTERED]')
@@ -92,51 +117,57 @@ function sanitizeScriptInput(raw) {
 }
 
 const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
-const CACHE_FILE = path.join(process.cwd(), '.trend_cache.json');
+// S4 FIX: Store cache in system temp directory instead of the app's working directory
+const CACHE_FILE = path.join(os.tmpdir(), '.shortstrend_cache.json');
 
-function loadDiskCache() {
+// ─── In-Memory Trend Cache ────────────────────────────────────────────────────
+// Loaded from disk once at startup; written back asynchronously (fire-and-forget)
+// so cache reads/writes never block the Node.js event loop.
+let memoryCache = {};
+
+(async () => {
     try {
         if (fs.existsSync(CACHE_FILE)) {
-            const data = fs.readFileSync(CACHE_FILE, 'utf8');
-            return JSON.parse(data);
+            const data = await fs.promises.readFile(CACHE_FILE, 'utf8');
+            memoryCache = JSON.parse(data);
+            console.log('[Cache] Trend cache loaded from disk.');
         }
     } catch (e) {
-        console.error("Failed to load trend cache from disk", e);
+        console.error('[Cache] Failed to load trend cache from disk:', e.message);
+        memoryCache = {};
     }
-    return {};
-}
+})();
 
-function saveDiskCache(cacheObj) {
+async function saveDiskCacheAsync() {
     try {
-        fs.writeFileSync(CACHE_FILE, JSON.stringify(cacheObj, null, 2));
+        await fs.promises.writeFile(CACHE_FILE, JSON.stringify(memoryCache, null, 2));
     } catch (e) {
-        console.error("Failed to write trend cache to disk", e);
+        console.error('[Cache] Failed to write trend cache to disk:', e.message);
     }
 }
 
 function getCachedAnalysis(key) {
-    const cacheObj = loadDiskCache();
-    const entry = cacheObj[key];
+    const entry = memoryCache[key];
     if (!entry) return null;
     if (Date.now() > entry.expiresAt) {
-        delete cacheObj[key];
-        saveDiskCache(cacheObj);
+        delete memoryCache[key];
+        saveDiskCacheAsync(); // fire-and-forget
         return null;
     }
     return entry.data;
 }
 
 function setCachedAnalysis(key, data) {
-    const cacheObj = loadDiskCache();
-    cacheObj[key] = { data, expiresAt: Date.now() + CACHE_TTL_MS };
-    saveDiskCache(cacheObj);
+    memoryCache[key] = { data, expiresAt: Date.now() + CACHE_TTL_MS };
+    saveDiskCacheAsync(); // fire-and-forget
 }
 
 // ─── Multi-Model Fallback Strategy ────────────────────────────────────────────
 // If the primary model is rate-limited or unavailable, automatically fallback
 // through the cascade until a model succeeds.
 const MODEL_CASCADE = [
-    'gemini-2.5-flash',
+    'gemini-3.1-flash-lite-preview',
+    'gemini-2.5-flash-lite', // Fallback: stable Gemini 2.5 Flash-Lite
 ];
 
 // Retryable HTTP status codes
@@ -168,7 +199,122 @@ async function generateWithFallback(requestConfig) {
     if (lastError && (lastError.status === 429 || lastError.code === 429)) {
         throw { status: 429, message: "API overload. Please wait a minute, the Google model is busy." };
     }
-    throw lastError;
+    throw lastError ?? new Error('All cascade models failed. Please try again shortly.');
+}
+
+// ─── Auto-Split Sync: Break Multi-Beat Segments ──────────────────────────────
+// When the AI generates a segment like "The door opens, revealing a hallway, and
+// something moves", this splits it into 3 sub-segments at punctuation boundaries.
+// Each sub-segment gets a cutType tag for downstream editing tools.
+
+const WORDS_PER_SECOND = 2.7;
+// Hard cap on post-split segments to prevent runaway expansion from bloating responses.
+const MAX_AUTO_SPLIT_SEGMENTS = 120;
+
+function getCutType(fragment) {
+    const trimmed = fragment.trim();
+    const lastChar = trimmed.slice(-1);
+    const cutTypes = {
+        '.': 'hard_cut',
+        '!': 'impact',
+        '?': 'zoom_shift',
+        ',': 'soft_transition',
+        ';': 'soft_transition',
+    };
+    if (trimmed.endsWith('...') || trimmed.endsWith('…')) return 'hold_zoom';
+    if (trimmed.endsWith('—') || trimmed.endsWith('–')) return 'smash_cut';
+    return cutTypes[lastChar] || 'hard_cut';
+}
+
+function splitSegmentAtBeats(segment) {
+    const script = (segment.script || '').trim();
+    if (!script) return [segment];
+
+    // Split at sentence-ending / clause-ending punctuation, keeping the punctuation
+    const fragments = script
+        .split(/(?<=[.!?…,;—–])\s+/)
+        .filter(f => f.trim().length > 0);
+
+    const segDuration = (segment.endTime || 0) - (segment.startTime || 0);
+    const depth = segment._splitDepth || 0;
+
+    // Aggressive Split: If a segment is >2.5s, force a split even if no punctuation.
+    // If it has punctuation, use it. Otherwise, force a cut at the halfway mark.
+    // Cap recursion depth to prevent infinite loops.
+    if (fragments.length <= 1) {
+        if (segDuration > 2.5 && depth < 3) {
+            const midpoint = Math.floor(script.length / 2);
+            const firstHalf = script.slice(0, midpoint);
+            const secondHalf = script.slice(midpoint);
+            // Re-run with artificial fragments
+            return splitSegmentAtBeats({ 
+                ...segment, 
+                script: `${firstHalf}... ${secondHalf}`,
+                _splitDepth: depth + 1
+            });
+        }
+        return [{ ...segment, cutType: getCutType(script) }];
+    }
+    
+    // Don't split if already atomic (handled above) or the segment is too short to be worth it
+    if (segDuration < 1.2) {
+        return [{ ...segment, cutType: getCutType(script) }];
+    }
+
+    // Calculate total word count for proportional timing
+    const totalWords = fragments.reduce((sum, f) => sum + f.trim().split(/\s+/).length, 0);
+    if (totalWords === 0) return [{ ...segment, cutType: getCutType(script) }];
+
+    const subSegments = [];
+    let currentTime = segment.startTime;
+
+    for (let fi = 0; fi < fragments.length; fi++) {
+        const frag = fragments[fi].trim();
+        const wordCount = frag.split(/\s+/).length;
+        // Proportional duration based on word count share of the segment
+        const proportion = wordCount / totalWords;
+        const duration = Math.max(1, Number((segDuration * proportion).toFixed(2)));
+        const endTime = fi < fragments.length - 1
+            ? Number((currentTime + duration).toFixed(2))
+            : segment.endTime; // Last fragment absorbs any rounding remainder
+
+        const formatTime = (secs) => {
+            const m = Math.floor(secs / 60).toString().padStart(2, '0');
+            const s = Math.floor(secs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        };
+
+        // Build visual prompt: for the first fragment, keep the original visual.
+        // For subsequent fragments, append a camera instruction based on cutType.
+        let visual = segment.visual || '';
+        const cutType = getCutType(frag);
+        if (fi > 0) {
+            const angleHints = {
+                'soft_transition': ', different camera angle, same scene',
+                'hard_cut': ', new dramatic composition',
+                'impact': ', extreme close-up, flash lighting',
+                'zoom_shift': ', push-in perspective shift',
+                'hold_zoom': ', slow zoom, lingering atmospheric shot',
+                'smash_cut': ', abrupt contrasting angle'
+            };
+            visual = visual.replace(/\s*--ar 9:16\s*$/, '') + (angleHints[cutType] || '') + ' --ar 9:16';
+        }
+
+        subSegments.push({
+            script: frag,
+            visual,
+            startTime: currentTime,
+            endTime: endTime,
+            timestamp: formatTime(currentTime),
+            cutType,
+            ...(segment.motion ? { motion: segment.motion } : {}),
+            ...(segment.animation ? { animation: segment.animation } : {})
+        });
+
+        currentTime = endTime;
+    }
+
+    return subSegments;
 }
 
 
@@ -197,7 +343,6 @@ Character Personality/Tone: ${charDesc}
         }
 
         const response = await generateWithFallback({
-            model: "gemini-2.5-flash",
             contents: `Analyze this YouTube Shorts script and hook for virality.
       
       Hook: "${hook}"
@@ -240,7 +385,10 @@ ${characterBlock}
         });
 
         if (!response.text) throw new Error("No response text from Gemini API");
-        res.json(JSON.parse(response.text));
+        let critiqueData;
+        try { critiqueData = JSON.parse(response.text); }
+        catch { throw new Error("Gemini returned malformed JSON. Please try again."); }
+        res.json(critiqueData);
     } catch (error) {
         console.error("Critique error:", error);
         res.status(error.status || 500).json({ error: safeError(error) });
@@ -269,7 +417,6 @@ app.post('/api/analyze', async (req, res) => {
             : "Search for and analyze the current top YouTube Shorts trends for this week. Focus on trending topics, viral formats, hooks, structures, music, and hashtags. For each topic, strictly define the competition level, precise target audience, and provide a single robust example video idea.";
 
         const response = await generateWithFallback({
-            model: "gemini-2.5-flash",
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -315,11 +462,128 @@ app.post('/api/analyze', async (req, res) => {
         });
 
         if (!response.text) throw new Error("No response text from Gemini API");
-        const result = JSON.parse(response.text);
+        let result;
+        try { result = JSON.parse(response.text); }
+        catch { throw new Error("Gemini returned malformed JSON. Please try again."); }
         setCachedAnalysis(cacheKey, result);
-        res.json(result);
+        // Ensure returning after response to prevent double-sends in complex flows
+        return res.json(result);
     } catch (error) {
         console.error("Analyze error:", error);
+        res.status(error.status || 500).json({ error: safeError(error) });
+    }
+});
+
+app.post('/api/analyze-url', async (req, res) => {
+    try {
+        const { url } = req.body;
+        if (!url) return res.status(400).json({ error: 'URL is required.' });
+
+        // Extract video ID from URL
+        let videoId;
+        try {
+            const urlObj = new URL(url);
+            if (urlObj.hostname.includes('youtube.com')) {
+                videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/')[2];
+            } else if (urlObj.hostname.includes('youtu.be')) {
+                videoId = urlObj.pathname.slice(1);
+            }
+        } catch (e) { /* ignore invalid url parsing here, transcript will throw */ }
+
+        // YouTube video IDs are always exactly 11 alphanumeric chars, dashes, or underscores.
+        if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+            return res.status(400).json({ error: 'Invalid YouTube URL. Please provide a valid youtube.com or youtu.be link.' });
+        }
+
+        console.log("Fetching transcript for video ID:", videoId);
+        let transcriptText = "";
+        try {
+            const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+            if (!transcript || transcript.length === 0) {
+                return res.status(400).json({ error: 'This video has no transcript. It may be a music video or have closed captions disabled.' });
+            }
+            transcriptText = transcript.map(t => t.text).join(' ');
+        } catch (e) {
+            console.error("Transcript fetch failed:", e.message);
+            return res.status(400).json({ error: 'Could not fetch transcript for this video. It might not have closed captions enabled.' });
+        }
+
+        // L4 FIX: Limit transcript before string injection, avoid inline comments in prompt
+        const truncatedTranscript = transcriptText.slice(0, 15000); // limit to roughly 20-30 mins of speech
+        const response = await generateWithFallback({
+            contents: `Analyze this viral YouTube video transcript: 
+"${truncatedTranscript}"
+
+Extract the specific niche formula from this video as if it were a general trend. Do not mention that this comes from a specific video, present it as a proven niche trend.
+
+Output exactly this JSON format:
+{
+  "trendingTopics": [
+    {
+      "name": "Topic directly from video",
+      "velocity": 95,
+      "growth": "exploding",
+      "competition": "High",
+      "targetAudience": "Audience of this video",
+      "exampleIdea": "Title idea inspired by this video"
+    }
+  ],
+  "viralFormats": ["Format used in the video"],
+  "hooks": ["The exact hook or style used in the start of the video"],
+  "videoStructures": ["How the video script is structured"],
+  "popularMusic": ["Appropriate intense/trending music style for this"],
+  "hashtagPatterns": ["#RelevantHashtag"],
+  "nicheDNA": [
+    { "subject": "Pacing", "value": 90 },
+    { "subject": "Visual Changes", "value": 85 },
+    { "subject": "Storytelling", "value": 80 }
+  ]
+}`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        trendingTopics: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    velocity: { type: Type.NUMBER },
+                                    growth: { type: Type.STRING, enum: ["exploding", "steady", "declining"] },
+                                    competition: { type: Type.STRING, enum: ["Low", "Medium", "High"] },
+                                    targetAudience: { type: Type.STRING },
+                                    exampleIdea: { type: Type.STRING },
+                                },
+                            },
+                        },
+                        viralFormats: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        hooks: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        videoStructures: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        popularMusic: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        hashtagPatterns: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        nicheDNA: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: { subject: { type: Type.STRING }, value: { type: Type.NUMBER } },
+                            },
+                        },
+                    },
+                    required: ["trendingTopics", "viralFormats", "hooks", "videoStructures", "popularMusic", "hashtagPatterns", "nicheDNA"],
+                },
+            },
+        });
+
+        if (!response.text) throw new Error("No response text from Gemini API");
+        let parsed;
+        try { parsed = JSON.parse(response.text); }
+        catch { throw new Error("Gemini returned malformed JSON. Please try again."); }
+        res.json(parsed);
+
+    } catch (error) {
+        console.error("URL Analysis error:", error);
         res.status(error.status || 500).json({ error: safeError(error) });
     }
 });
@@ -350,10 +614,12 @@ app.post('/api/generate', async (req, res) => {
             totalDuration = Math.floor(totalDuration);
         }
 
-        const ALLOWED_GEN_TYPES = ['image', 'video'];
+        const ALLOWED_GEN_TYPES = ['image', 'video', 'image-to-video'];
         if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
-            return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
+            return res.status(400).json({ error: 'visualGenerationType must be "image", "video", or "image-to-video".' });
         }
+
+
 
         // ── Timing Math (server-side) ─────────────────────────────────────────
         // segmentLength defined  → fixed mode: exact segmentCount enforced
@@ -373,22 +639,30 @@ app.post('/api/generate', async (req, res) => {
                     segmentLength <= 8 ? '\n- MEDIUM SEGMENTS (5-8s): Use short impactful statements.' :
                         '\n- LONGER SEGMENTS (≥10s): Slightly more explanation allowed but still no padding.';
 
+            const scriptRule = `- maxWordsPerSegment = ${maxWordsPerSegment} words (2.7 words/second speech pacing)\n- Each \"script\" field MUST NOT exceed ${maxWordsPerSegment} words${shortSegmentNote}`;
+
             timingRules = `
 TIMING RULES (MANDATORY — DO NOT DEVIATE):
 - segmentLength = ${segmentLength}s per segment
 - totalDuration = ${totalDuration}s total
 - segmentCount = ${segmentCount} — you MUST generate EXACTLY ${segmentCount} segments
-- maxWordsPerSegment = ${maxWordsPerSegment} words (2.7 words/second speech pacing)
-- Each "audio" field MUST NOT exceed ${maxWordsPerSegment} words${shortSegmentNote}`;
+${scriptRule}`;
         } else {
+            // When no segmentLength is specified, use High-Retention mode.
+            // For IMAGE type, enforce a 3s max frame duration since a static image
+            // longer than 3s causes viewer drop-off on short-form platforms.
+            const imageNote = visualGenerationType === 'image'
+                ? '\n- IMAGE MODE: Each segment represents ONE still-frame image. Max visual duration = 3s. Generate MORE segments (20–25) to maintain variety.'
+                : '';
+
             timingRules = `
-TIMING RULES (HIGH-RETENTION MODE):
+TIMING RULES (ULTRA HIGH-RETENTION MODE):
 - totalDuration = 60s
-- You MUST break this 60-second video into 15–30 distinct segments (The 2-4 Second Refresh Rule).
-- Every sentence, major comma, or change in emotional "beat" must have its own segment.
-- NEVER group more than 4 seconds of audio under one visual.
-- The Hook (0-5 seconds): Change visual every 1.5 seconds. The hook MUST be visually aggressive and fast-paced.
-- Extreme Granularity: Treat every pause as a cut point. If a sentence is 5 seconds long, split it into two segments.`;
+- You MUST break this 60-second video into 35–45 distinct segments (Dynamic Cinematic Cut Rule).
+- Every sentence, major comma, or switch in subject must have its own segment.
+- NEVER group more than 2.5 seconds of script under one visual.
+- The Hook (0-5 seconds): Change visual every 1.2 seconds.
+- Extreme Granularity: Ensure the visual pace is relentless. Every emotional beat gets a new shot.${imageNote}`;
         }
 
         // ── Character Block ──────────────────────────────────────────────────
@@ -396,19 +670,60 @@ TIMING RULES (HIGH-RETENTION MODE):
         if (req.body.character && req.body.character.name) {
             const charName = sanitizeInput(req.body.character.name);
             const charDesc = sanitizeScriptInput(req.body.character.description || '');
-            const charType = ['image', 'video', 'both'].includes(req.body.character.type) ? req.body.character.type : 'both';
+            const charType = ['image', 'video', 'image-to-video', 'both'].includes(req.body.character.type) ? req.body.character.type : 'both';
             if (charName && charDesc) {
                 characterBlock = `
 
-CUSTOM CHARACTER REQUIREMENT (MANDATORY):
-Feature "${charName}" throughout the ENTIRE output. Character: ${charDesc}
-Applies to: ${charType === 'both' ? 'audio AND visual prompts' : charType === 'video' ? 'video visuals only' : 'image visuals only'}
-- ${charType !== 'video' ? `Every visual prompt must prominently feature ${charName}.` : ''}
+CUSTOM CHARACTER REQUIREMENT (FIXED REFERENCE SHEET):
+You MUST maintain absolute visual consistency for character "${charName}".
+Character Description: ${charDesc}
+Applies to: ${charType === 'both' ? 'script AND visual prompts' : charType === 'video' || charType === 'image-to-video' ? 'video visuals only' : 'image visuals only'}
+
+STRICT CONSISTENCY RULES:
+- FIXED IDENTITY: Maintain the exact same facial features, body proportions, skin tone, hair color/style, and eye color in EVERY visual.
+- NO DEVIATION: The character must look identical across all segments regardless of camera angle, lighting, or scene context.
+- DISTINGUISHING MARKS: Any scars, tattoos, or jewelry must be rendered in every shot where relevant.
+- ${charType !== 'video' && charType !== 'image-to-video' ? `Every visual prompt must prominently feature ${charName}.` : ''}
 - ${charType !== 'image' ? `Every video prompt must show ${charName} in action/motion.` : ''}`;
             }
         }
 
+        // ── Genre Block ──────────────────────────────────────────────────────
+        const GENRE_INSTRUCTIONS = {
+            'Storytelling': `Script: Narrative arc with emotional build — character-focused scenes.\nVisual: Warm, intimate framing; human subjects in natural environments.\nPacing: Steady; avoid rapid cuts in first 15 seconds. Let moments breathe.\nCamera: Slow dolly / push-in movements. Hold close-ups on faces.\nVoice: Warm, conversational, first-person storytelling tone.`,
+            'POV': `Script: Direct address or relatable first-person scenarios. "You know when..." or "pov: you are..."\nVisual: First-person perspective shots. The viewer feels like they are physically in the scene.\nPacing: Engaging and personal, matching the emotional tone of the scenario.\nCamera: Eye-level, handheld movement mimicking human sight. Subjects look directly into the lens.\nVoice: Conversational, intimate, relatable, speaking directly to "you".`,
+            'Action': `Script: Short, punchy, high-energy sentences with urgency and momentum.\nVisual: Dynamic wide-angle shots, motion blur, dramatic perspectives.\nPacing: Rapid-fire cuts every 1.5–2s. Hook MUST be explosive.\nCamera: Whip pans, POV shots, shaky-cam for intensity.\nVoice: Fast, intense, adrenaline-driven delivery.`,
+            'Timelapse': `Script: Minimal narration. Emphasize passage of time and transformation.\nVisual: Environmental changes — sky movement, crowds, construction, seasons.\nPacing: Meditative but dynamic. Each segment = a distinct time shift.\nCamera: Static wide-frame or slow tracking shots to reveal change.\nVoice: Calm, thoughtful, nature-documentary cadence.`,
+            'Horror': `Script: Suspenseful, dread-building sentences. Sparse dialogue with long pauses.\nVisual: Dark, high-contrast, dramatic shadow lighting. Focus on ominous details.\nPacing: Slow build with sudden intense moments. Sound design matters.\nCamera: Low angles, extreme close-ups of unsettling details, slow push-ins.\nVoice: Hushed, eerie, whispering tone that builds to urgency.`,
+            'Comedy': `Script: Witty, snappy dialogue with comedic timing and punchlines.\nVisual: Expressive visuals, exaggerated reactions, bright fun colors.\nPacing: Dynamic — quick beats for jokes, brief pauses before punchlines.\nCamera: Wide shots for physical comedy, close-ups for reaction moments.\nVoice: Upbeat, playful, personality-driven delivery.`,
+            'Documentary': `Script: Factual, informative narration with supporting evidence and stats.\nVisual: Real-world footage aesthetic, archival style, crisp journalism visuals.\nPacing: Deliberate and measured. Each fact gets its own segment.\nCamera: B-roll cutaways, interview-style framing, objective perspectives.\nVoice: Authoritative, neutral, trust-building documentary tone.`,
+            'Educational': `Script: Clear step-by-step explanations. Use numbered lists or sequences.\nVisual: Diagram-style visuals, explainer graphics, clean product shots.\nPacing: Methodical — give each concept room to register before moving on.\nCamera: Overhead or straight-on angles for clarity. Avoids distraction.\nVoice: Friendly teacher tone — approachable, clear, encouraging.`,
+            'Cinematic': `Script: Poetic, evocative language. Less is more — let visuals tell the story.\nVisual: Epic wide shots, golden hour lighting, stunning landscapes.\nPacing: Slow and intentional. Each frame is a painting.\nCamera: Crane shots, slow-motion, widescreen cinematic compositions.\nVoice: Deep, resonant, cinematic narrator quality.`,
+            'Motivational': `Script: Powerful affirmations and calls-to-action. Begin with a bold statement.\nVisual: Aspirational scenes — success, achievement, determination, triumph.\nPacing: Building energy — start steady, end with high-energy rapid cuts.\nCamera: Low angles (hero shots), upward movements showing growth.\nVoice: Passionate, inspiring, authoritative — speaks directly to the viewer.`,
+            'Tutorial': `Script: Clear numbered steps. Start with the end result to hook, then break down the process.\nVisual: Close-up product/tool shots, screen recordings, before/after splits.\nPacing: Steady and deliberate. Each step = one segment.\nCamera: Overhead or straight-on for demonstrations. Zoom in on key actions.\nVoice: Calm, patient, instructional — speak as if helping a friend.`,
+            'Vlog': `Script: Casual, first-person narration. Conversational and authentic.\nVisual: Real-life candid moments, selfie angles, B-roll of environments.\nPacing: Relaxed but engaging. Jump cuts keep energy up.\nCamera: Handheld selfie POV and wide environmental shots alternating.\nVoice: Natural, unscripted feel — personal and relatable.`,
+            'Gaming': `Script: High-energy commentary with reactions and hype moments.\nVisual: Dynamic gameplay footage, reaction face-cam inserts, score/stat overlays.\nPacing: Rapid cuts synced to game events. Hook = the most hype moment.\nCamera: Screen-capture style with picture-in-picture face reaction.\nVoice: Energetic, hype, reactive — like a live stream highlight.`,
+            'Fitness': `Script: Motivating, command-style cues. Short and punchy between reps.\nVisual: Athletic bodies in motion, gym environments, dramatic lighting on form.\nPacing: Fast during exercise segments, brief pauses for breathing emphasis.\nCamera: Low angles for power shots, side profile for form demonstration.\nVoice: Commanding, energetic, push-through-it tone.`,
+            'Travel': `Script: Wanderlust-inspiring narration. Paint vivid pictures of places.\nVisual: Sweeping landscapes, local culture, food markets, iconic landmarks.\nPacing: Medium — let scenic shots breathe while keeping momentum.\nCamera: Drone aerials, wide establishing shots, intimate street-level footage.\nVoice: Adventurous, curious, awestruck — invite the viewer to join.`,
+            'Food': `Script: Sensory-rich language. Describe taste, texture, and smell through words.\nVisual: Extreme close-ups of food, steam rising, cheese pulls, satisfying pours.\nPacing: Slow and indulgent for hero moments, quicker for prep sequences.\nCamera: Overhead flat-lay, macro close-ups, 45° angle beauty shots.\nVoice: Warm, indulgent, passionate about ingredients and flavor.`,
+            'Fashion': `Script: Confident, trend-aware narration. Short punchy statements about style.\nVisual: Clean editorial lighting, outfit transitions, detail close-ups on textures.\nPacing: Rhythmic — cuts synced to music beat. Quick outfit reveal transitions.\nCamera: Full-body to close-up alternation. Mirror selfie aesthetic when appropriate.\nVoice: Confident, aspirational, style-authority tone.`,
+            'Mystery': `Script: Intriguing questions and revelations. Withhold information to build suspense.\nVisual: Atmospheric environments, clue reveals, dramatic shadow play.\nPacing: Slow tension build with sudden reveal moments.\nCamera: Zoom-ins on clues, dramatic close-ups, ominous wide shots.\nVoice: Hushed, conspiratorial, "I need to tell you something" energy.`,
+            'ASMR': `Script: Minimal dialogue. Focus on sensory descriptions and gentle narration.\nVisual: Extreme close-ups of textures, objects, and tactile actions.\nPacing: Very slow and deliberate. Every movement is intentional.\nCamera: Macro close-up shots. Intimacy is key — feels like it\'s just for you.\nVoice: Ultra-soft whisper, slow cadence, trigger-word awareness.`,
+            'Restoration': `Script: Focus on the transformation process. Minimal talking during work, emphasize the before and after.\nVisual: Side-by-side or sequential before/after reveals. Extreme close-ups on rust removal, polishing, or delicate repairs.\nPacing: Methodical during the process, accelerating toward the final satisfying reveal.\nCamera: Static overhead workbench angles, smooth macro panning over textures.\nVoice: Calm, appreciative, focusing on craftsmanship and satisfaction.`,
+        };
+        
+        let genreBlock = '';
+        if (req.body.customGenre) {
+            const safeCustomGenre = sanitizeInput(req.body.customGenre);
+            genreBlock = `\nCONTENT GENRE RULES (Custom): Follow these specific framing, narrative, and stylistic rules for the ENTIRE output:\n${safeCustomGenre}`;
+        } else {
+            const rawGenre = sanitizeInput(req.body.genre || 'Storytelling');
+            const genre = GENRE_INSTRUCTIONS[rawGenre] ? rawGenre : 'Storytelling';
+            genreBlock = `\nCONTENT GENRE: ${genre}\nFollow these genre-specific directives for the ENTIRE output:\n${GENRE_INSTRUCTIONS[genre]}`;
+        }
+
         const expectedSegments = segmentLength ? segmentCount : 0;
+        const variationBlock = req.body.variationId ? `\n\n━━━ REGENERATION VARIANCE ━━━\nCreate a highly distinct creative variation of this concept. DO NOT simply repeat the previous output. New hooks, new visual angles, distinct narrative pacing.\nVariation Seed: ${sanitizeInput(req.body.variationId)}\n━━━━━━━━━━━━━━━━━━━━━━━` : '';
 
         let result = null;
         let attempts = 0;
@@ -418,33 +733,73 @@ Applies to: ${charType === 'both' ? 'audio AND visual prompts' : charType === 'v
             attempts++;
             try {
                 const response = await generateWithFallback({
-                    model: "gemini-2.5-flash",
                     contents: `ROLE: You are a High-Retention Short-Form Video Director for TikTok, Reels, and YouTube Shorts.
-Goal: Convert a content idea into a perfectly synced, high-energy production timeline.
+Goal: Convert a content idea into a perfectly synced, high-energy production timeline.${variationBlock}
 
 Niche: "${trend}"
-Visual Style: "${visualStyle}"
 Visual Generation Type: ${visualGenerationType === 'video' ? 'VIDEO (cinematic motion descriptions)' : 'IMAGE (still-frame composition)'}
 
 ${timingRules}
+${genreBlock}
+
+━━━ VISUAL DNA REFERENCE SHEET (MANDATORY — lock this across EVERY segment) ━━━
+Visual Style: "${visualStyle}"
+This style string is your CONSTITUTION. Every visual prompt must begin by silently grounding itself in this style's materials, lens, lighting quality, and texture language. The viewer must feel the same tactile world in frame 1 and frame 45.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ SUBJECT PERMANENCE (ALWAYS ON — no exceptions) ━━━
+At the very first segment, define your CORE SUBJECT (the main character, creature, or object central to this niche). Then:
+- Every subsequent visual prompt MUST carry the EXACT same description of that subject: same materials, same textures, same colors, same distinguishing marks.
+- If the subject is a human: identical skin tone, hair style, clothing color/texture, facial features.
+- If the subject is an object or creature: identical shape, material, surface finish, and size relationship to environment.
+- ZERO deviation allowed — different camera angle, lighting, or scene context does NOT change the subject's core description.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CRITICAL PRODUCTION INSTRUCTIONS:
 1. THE 3-SECOND REFRESH: Viewers scroll away if a visual stays static for more than 3 seconds.
 2. THE HOOK (0-5s): Visually aggressive, fast-paced (visual change every ~1.5s).
 3. EXTREME GRANULARITY: Every sentence fragment or emotional "beat" must have its own timestamp and unique visual.
-4. VISUAL DENSITY: Focus on clear, high-resolution snapshots of specific actions ("Beat-Based" logic) rather than long, vague atmospheric descriptions.
-5. NO RANGES: Only use the start timestamp for each segment.
+4. NO RANGES: Only use the start timestamp for each segment.
+
+━━━ MANDATORY 5-PART VISUAL PROMPT STRUCTURE ━━━
+EVERY "visual" field MUST be built from ALL 5 parts, in this order:
+  PART 1 — SHOT TYPE: One of [extreme close-up | close-up | medium shot | wide shot | overhead | low-angle | POV | tracking shot | tilt-shift].
+  PART 2 — SUBJECT DETAIL: The main subject with precise textures, surface finish, colors, and distinguishing marks (minimum 8 words).
+  PART 3 — ENVIRONMENT: Specific background elements, materials, spatial context — never generic (minimum 6 words).
+  PART 4 — LIGHTING & LENS: Light quality/direction, shadow character, color grade tone, and lens style (minimum 6 words).
+  PART 5 — ASPECT: Always terminate with --ar 9:16.
+Example of a CORRECT visual: "Extreme close-up of a tiny clay worker with a blue linen shirt, visible thumbprint texture on clay shoulders and forehead, perched on a mossy river stone with water-smoothed pebbles in background, soft diffused morning sunlight casting warm amber shadows, tilt-shift macro lens --ar 9:16"
+Example of an INCORRECT visual: "A clay figure building a house --ar 9:16"  ← REJECTED, too vague.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ MOTION FIELD (MANDATORY FOR EVERY SEGMENT) ━━━
+Provide a "motion" value for EVERY segment — even image mode benefits from describing the implied or animated motion.
+Format: [Subject or Camera] + [Action verb] + [Direction/Quality] + [Speed/Intensity].
+Examples of CORRECT motion:
+  • "Slow cinematic push-in toward the clay face, revealing thumbprint texture on forehead"
+  • "Rhythmic vertical hammer motion synced to the script beat"
+  • "Camera pans slowly left across the muddy riverbank construction site"
+  • "Subtle blink animation on the clay worker's face, held for 1.5 seconds"
+NEVER write generic values like "camera pan" or "zoom" without direction, subject, and purpose.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ASPECT RATIO: Append "--ar 9:16" to the END of EVERY visual prompt.
 ${characterBlock}
+
+━━━ POST-PRODUCTION REQUIREMENTS ━━━
+Generate the following with PRODUCTION-LEVEL specificity (not generic 1-word answers):
+- editingEffects: List 4–6 NAMED effects with descriptive adjectives, e.g. ["J-cuts on every script beat transition", "Motion blur on fast-action cuts", "Color grade: warm earthy tones with lifted shadows", "Soft vignette on wide environmental shots", "Stop-motion frame jitter overlay for tactile feel"]. Match the visual style's physical/aesthetic quality.
+- fontStyle: Include the font FAMILY NAME, weight, color, and shadow spec, e.g. "Clean minimalist sans-serif (e.g. Inter Regular), white, 2px drop shadow at 60% opacity".
+- editingEffectsContext: Write 2–3 sentences as a DIRECTOR'S NOTE that describes HOW the editing should feel — referencing the visual style's physical/tactile qualities. Must be specific enough for an editor to use as a brief.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Also generate:
 - 3 hook variations (Curiosity / Direct-Aggressive / Contrarian psychological triggers)
 - SEO title, description, and pinned comment idea
 - Hashtags (10-15)
-- Music style and sound effects
-- Editing effects, font style, and editing context
-- Coaching tips for the creator`,
+- Coaching tips for the creator
+
+⚠️ FINAL SEGMENT COUNT LOCK: Before you finish, count your segments array. In dynamic mode you MUST output between 35 and 45 segments. If you have fewer than 35, split more script beats and add more visual cuts until you reach the minimum. Do NOT submit fewer than 35 segments.`,
                     config: {
                         responseMimeType: "application/json",
                         responseSchema: {
@@ -459,24 +814,21 @@ Also generate:
                                             index: { type: Type.NUMBER, description: "Zero-based segment index" },
                                             startTime: { type: Type.NUMBER, description: "Segment start in seconds" },
                                             timestamp: { type: Type.STRING, description: "Start point in MM:SS format" },
-                                            audio: { type: Type.STRING, description: "A short, punchy sentence fragment" },
-                                            visual: { type: Type.STRING, description: "Detailed, high-action prompt with --ar 9:16" }
+                                            script: { type: Type.STRING, description: "A short, punchy sentence fragment for narration" },
+                                            visual: { type: Type.STRING, description: "5-part visual prompt: shot type + subject detail + environment + lighting/lens + --ar 9:16. Minimum 25 words." },
+                                            motion: { type: Type.STRING, description: "Mandatory: [Subject or Camera] + [Action verb] + [Direction/Quality] + [Speed/Intensity]. E.g. 'Slow push-in toward the clay face revealing thumbprint texture'" }
                                         },
-                                        required: ["index", "startTime", "timestamp", "audio", "visual"]
+                                        required: ["index", "startTime", "timestamp", "script", "visual", "motion"]
                                     },
                                     description: "Storyboard timeline — one entry per segment"
                                 },
                                 metadata: {
                                     type: Type.OBJECT,
                                     properties: {
-                                        music: { type: Type.STRING },
-                                        sfx: { type: Type.ARRAY, items: { type: Type.STRING } },
                                         tags: { type: Type.ARRAY, items: { type: Type.STRING } }
                                     },
-                                    required: ["music", "sfx", "tags"]
+                                    required: ["tags"]
                                 },
-                                musicStyle: { type: Type.STRING },
-                                soundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
                                 visualStyle: { type: Type.STRING },
                                 hookVariations: {
                                     type: Type.ARRAY,
@@ -504,7 +856,7 @@ Also generate:
                                 fontStyle: { type: Type.STRING },
                                 editingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["title", "segments", "metadata", "musicStyle", "soundEffects", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
+                            required: ["title", "segments", "metadata", "visualStyle", "hookVariations", "seoMetadata", "hashtags", "coachingTips", "editingEffects", "fontStyle", "editingEffectsContext"]
                         }
                     }
                 });
@@ -518,8 +870,10 @@ Also generate:
                         throw new Error(`Validation failed: Expected exactly ${expectedSegments} segments, got ${parsed.segments.length}.`);
                     }
                 } else {
-                    if (parsed.segments.length < 15 || parsed.segments.length > 30) {
-                        throw new Error(`Validation failed: High-retention mode expected 15–30 segments, got ${parsed.segments.length}.`);
+                    // Loosened range: accept 10–60 segments to avoid repeated hard failures.
+                    // The auto-split pass after this will expand segments further if needed.
+                    if (parsed.segments.length < 10 || parsed.segments.length > 60) {
+                        throw new Error(`Validation failed: Expected 10–60 segments for high-density mode, got ${parsed.segments.length}.`);
                     }
                 }
 
@@ -542,7 +896,7 @@ Also generate:
         if (result.segments && result.segments.length > 0) {
             const count = result.segments.length;
             result.segments = result.segments.map((seg, i) => {
-                let start;
+                let start = 0; // Default to 0 — prevents NaN:NaN timestamps if both parse paths fail
                 if (segmentLength) {
                     start = i * segmentLength;
                 } else {
@@ -592,24 +946,38 @@ Also generate:
                     startTime: start,
                     endTime: end,
                     timestamp: formatTime(start),
-                    audio: seg.audio || '',
-                    visual
+                    script: seg.script || '',
+                    visual,
+                    ...(seg.motion ? { motion: seg.motion } : {})
                 };
             });
+
+            // ── Auto-Split at Punctuation Beats ──────────────────────────────
+            // Only in dynamic (non-fixed) mode: split multi-clause segments at
+            // commas, periods, etc. for frame-perfect visual sync.
+            if (!segmentLength) {
+                const expanded = [];
+                for (const seg of result.segments) {
+                    expanded.push(...splitSegmentAtBeats(seg));
+                }
+                // L1 FIX: Cap to prevent runaway expansion from bloating JSON responses.
+                const capped = expanded.slice(0, MAX_AUTO_SPLIT_SEGMENTS);
+                if (capped.length < expanded.length) {
+                    console.warn(`[AutoSplit] Capped at ${MAX_AUTO_SPLIT_SEGMENTS} (was ${expanded.length}) segments.`);
+                }
+                result.segments = capped.map((seg, i) => ({ ...seg, index: i }));
+                console.log(`[AutoSplit] ${count} segments → ${result.segments.length} after beat-splitting`);
+            }
         }
 
         // Ensure metadata exists for frontend mapping if LLM missed it
         if (!result.metadata) {
             result.metadata = {
-                music: result.musicStyle || 'Trending Phonk',
-                sfx: result.soundEffects || ['Whoosh', 'Glitch'],
                 tags: result.hashtags || ['#shorts', '#viral']
             };
         }
 
         // Also map metadata back to root fields for backward compatibility if needed
-        result.musicStyle = result.metadata.music;
-        result.soundEffects = result.metadata.sfx;
         result.hashtags = result.metadata.tags;
 
         res.json(result);
@@ -648,9 +1016,9 @@ app.post('/api/improve', async (req, res) => {
             totalDuration = Math.floor(totalDuration);
         }
 
-        const ALLOWED_GEN_TYPES = ['image', 'video'];
+        const ALLOWED_GEN_TYPES = ['image', 'video', 'image-to-video'];
         if (visualGenerationType !== undefined && !ALLOWED_GEN_TYPES.includes(visualGenerationType)) {
-            return res.status(400).json({ error: 'visualGenerationType must be "image" or "video".' });
+            return res.status(400).json({ error: 'visualGenerationType must be "image", "video", or "image-to-video".' });
         }
 
         // ── Extract Original Timeline Segment Count ───────────────────────────
@@ -667,21 +1035,21 @@ app.post('/api/improve', async (req, res) => {
 
         const maxWordsPerSegment = segmentLength ? Math.floor(segmentLength * 2.7) : 21;
         const timingConstraint = segmentLength
-            ? `Each segment is exactly ${segmentLength}s. Max audio words per segment: ${maxWordsPerSegment} (2.7 wps).`
-            : `Preserve original segment durations. Keep audio concise and punchy.`;
+            ? `Each segment is exactly ${segmentLength}s. Max script words per segment: ${maxWordsPerSegment} (2.7 wps).`
+            : `Preserve original segment durations. Keep script concise and punchy.`;
 
         // ── Character Block ──────────────────────────────────────────────────
         let characterImproveBlock = '';
         if (req.body.character && req.body.character.name) {
             const charName = sanitizeInput(req.body.character.name);
             const charDesc = sanitizeScriptInput(req.body.character.description || '');
-            const charType = ['image', 'video', 'both'].includes(req.body.character.type) ? req.body.character.type : 'both';
+            const charType = ['image', 'video', 'image-to-video', 'both'].includes(req.body.character.type) ? req.body.character.type : 'both';
             if (charName && charDesc) {
                 characterImproveBlock = `
 
 CUSTOM CHARACTER REQUIREMENT (MANDATORY):
 Deepen "${charName}"'s presence 10x. Character: ${charDesc}
-- ${charType !== 'video' ? `All visual prompts must feature ${charName} prominently.` : ''}
+- ${charType !== 'video' && charType !== 'image-to-video' ? `All visual prompts must feature ${charName} prominently.` : ''}
 - ${charType !== 'image' ? `All video prompts must show ${charName} in action.` : ''}`;
             }
         }
@@ -694,7 +1062,6 @@ Deepen "${charName}"'s presence 10x. Character: ${charDesc}
             attempts++;
             try {
                 const response = await generateWithFallback({
-                    model: "gemini-2.5-flash",
                     contents: `Based on this critique, generate a 10x stronger viral storyboard.
 
 ORIGINAL SCRIPT:
@@ -705,24 +1072,53 @@ ${critique}
 ${characterImproveBlock}
 
 STRUCTURAL PRESERVATION (MANDATORY):
-- Return EXACTLY ${expectedSegments} segments in improvedTimeline — no merging, splitting, or deleting.
+- Return EXACTLY ${expectedSegments} segments — no merging, splitting, or deleting.
 - Preserve each segment's index exactly (0 through ${expectedSegments - 1}).
 - Timing: ${timingConstraint}
 
-VISUAL INTENSITY — every "visual" prompt MUST:
-- Have strong subject focus, clear emotional trigger, dynamic/high-contrast lighting
-- Append "--ar 9:16" at the end
-- Match the "${visualStyle}" style strictly
-- Type: ${visualGenerationType === 'video' ? 'VIDEO generation (cinematic motion descriptions)' : 'IMAGE generation (still-frame composition)'}
+━━━ VISUAL DNA REFERENCE SHEET (lock across EVERY segment) ━━━
+Visual Style: "${visualStyle}"
+Every visual prompt must silently ground itself in this style's materials, lens, lighting quality, and texture language.
+- Type: ${visualGenerationType === 'video' || visualGenerationType === 'image-to-video' ? 'VIDEO generation (cinematic motion descriptions)' : 'IMAGE generation (still-frame composition)'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ SUBJECT PERMANENCE (ALWAYS ON) ━━━
+Carry the EXACT same description of the core subject across every improved visual: same materials, textures, colors, and distinguishing marks. ZERO deviation allowed regardless of camera angle or scene context.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ MANDATORY 5-PART VISUAL PROMPT STRUCTURE ━━━
+Each "visual" MUST include ALL 5 parts in order:
+  PART 1 — SHOT TYPE: [extreme close-up | close-up | medium shot | wide shot | overhead | low-angle | POV | tracking shot | tilt-shift]
+  PART 2 — SUBJECT DETAIL: Precise textures, surface finish, colors, distinguishing marks (min 8 words)
+  PART 3 — ENVIRONMENT: Specific background/spatial context — never generic (min 6 words)
+  PART 4 — LIGHTING & LENS: Light quality, shadow character, color grade, lens style (min 6 words)
+  PART 5 — ASPECT: Always end with --ar 9:16
+Example CORRECT: "Extreme close-up of a tiny clay worker with a blue linen shirt, visible thumbprint texture on clay shoulders and forehead, perched on a mossy river stone with water-smoothed pebbles, soft diffused morning sunlight casting warm amber shadows, tilt-shift macro lens --ar 9:16"
+Example REJECTED: "A clay figure building a house --ar 9:16" ← too vague.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ MOTION FIELD (MANDATORY FOR EVERY SEGMENT) ━━━
+Format: [Subject or Camera] + [Action verb] + [Direction/Quality] + [Speed/Intensity].
+Correct examples:
+  • "Slow cinematic push-in toward the clay face, revealing thumbprint texture on forehead"
+  • "Rhythmic vertical hammer motion synced to the script beat"
+  • "Camera pans slowly left across the muddy riverbank construction site"
+NEVER write generic values like "camera pan" or "zoom" without direction, subject, and purpose.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 10X UPGRADE RULES:
 1. Hook (index 0): Punchy pattern-interrupt — NO generic openings
-2. Every audio line must provoke curiosity, shock, or relatable frustration
+2. Every script line must provoke curiosity, shock, or relatable frustration
 3. Cut ALL filler words. Short punchy active-voice sentences
 4. Replace vague statements with hyper-specific micro-details
-5. Make every visual prompt dramatic, cinematic, hyper-detailed
 
-Also provide: improved hook (1 line max), caption, hashtags, music style, sound effects, editing effects, font style, editing context.`,
+━━━ POST-PRODUCTION REQUIREMENTS ━━━
+- improvedEditingEffects: List 4–6 named effects with adjectives, e.g. ["J-cuts on every script beat", "Motion blur on fast-action cuts", "Color grade: warm earthy tones with lifted shadows", "Soft vignette on wide shots"]. Match the visual style.
+- improvedFontStyle: Font FAMILY NAME + weight + color + shadow spec, e.g. "Clean minimalist sans-serif (Inter Regular), white, 2px drop shadow at 60% opacity".
+- improvedEditingEffectsContext: 2–3 sentences as a DIRECTOR'S NOTE describing the editing feel, referencing the visual style's physical/tactile qualities.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Also provide: improved hook (1 line max), caption, hashtags.`,
                     config: {
                         responseMimeType: "application/json",
                         responseSchema: {
@@ -736,22 +1132,21 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
                                             index: { type: Type.NUMBER },
                                             startTime: { type: Type.NUMBER },
                                             timestamp: { type: Type.STRING },
-                                            audio: { type: Type.STRING },
-                                            visual: { type: Type.STRING }
+                                            script: { type: Type.STRING },
+                                            visual: { type: Type.STRING, description: "5-part visual prompt: shot type + subject detail + environment + lighting/lens + --ar 9:16. Minimum 25 words." },
+                                            motion: { type: Type.STRING, description: "Mandatory: [Subject or Camera] + [Action verb] + [Direction/Quality] + [Speed/Intensity]." }
                                         },
-                                        required: ["index", "startTime", "timestamp", "audio", "visual"]
+                                        required: ["index", "startTime", "timestamp", "script", "visual", "motion"]
                                     }
                                 },
                                 improvedHook: { type: Type.STRING, description: "First 1 line maximum" },
                                 improvedCaption: { type: Type.STRING },
                                 improvedHashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                improvedMusicStyle: { type: Type.STRING },
-                                improvedSoundEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
                                 improvedEditingEffects: { type: Type.ARRAY, items: { type: Type.STRING } },
                                 improvedFontStyle: { type: Type.STRING },
                                 improvedEditingEffectsContext: { type: Type.STRING }
                             },
-                            required: ["improvedSegments", "improvedHook", "improvedCaption", "improvedHashtags", "improvedMusicStyle", "improvedSoundEffects", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"]
+                            required: ["improvedSegments", "improvedHook", "improvedCaption", "improvedHashtags", "improvedEditingEffects", "improvedFontStyle", "improvedEditingEffectsContext"]
                         }
                     }
                 });
@@ -776,7 +1171,7 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
         // ── Re-enforce Timestamps Mathematically ─────────────────────────────
         if (result && result.improvedSegments && result.improvedSegments.length === expectedSegments) {
             result.improvedSegments = result.improvedSegments.map((seg, i) => {
-                let start;
+                let start = 0; // Default to 0 — prevents NaN:NaN timestamps if both parse paths fail
                 if (segmentLength) {
                     start = i * segmentLength;
                 } else {
@@ -824,10 +1219,26 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
                     startTime: start,
                     endTime: end,
                     timestamp: formatTime(start),
-                    audio: seg.audio || '',
-                    visual
+                    script: seg.script || '',
+                    visual,
+                    ...(seg.motion ? { motion: seg.motion } : {})
                 };
             });
+
+            // ── Auto-Split at Punctuation Beats ──────────────────────────────
+            if (!segmentLength) {
+                const expanded = [];
+                for (const seg of result.improvedSegments) {
+                    expanded.push(...splitSegmentAtBeats(seg));
+                }
+                // L1 FIX: Cap to prevent runaway expansion.
+                const capped = expanded.slice(0, MAX_AUTO_SPLIT_SEGMENTS);
+                if (capped.length < expanded.length) {
+                    console.warn(`[AutoSplit Improve] Capped at ${MAX_AUTO_SPLIT_SEGMENTS} (was ${expanded.length}) segments.`);
+                }
+                result.improvedSegments = capped.map((seg, i) => ({ ...seg, index: i }));
+                console.log(`[AutoSplit Improve] ${expectedSegments} → ${result.improvedSegments.length} after beat-splitting`);
+            }
         }
 
         res.json(result);
@@ -841,7 +1252,6 @@ Also provide: improved hook (1 line max), caption, hashtags, music style, sound 
 app.post('/api/workflow', async (req, res) => {
     try {
         const response = await generateWithFallback({
-            model: "gemini-2.5-flash",
             contents: "Provide a step-by-step workflow for creating high-quality YouTube Shorts, including recommended software and optimization tips.",
             config: {
                 responseMimeType: "application/json",
@@ -867,11 +1277,21 @@ app.post('/api/workflow', async (req, res) => {
         });
 
         if (!response.text) throw new Error("No response text from Gemini API");
-        res.json(JSON.parse(response.text));
+        let workflowData;
+        try { workflowData = JSON.parse(response.text); }
+        catch { throw new Error("Gemini returned malformed JSON. Please try again."); }
+        res.json(workflowData);
     } catch (error) {
         console.error("Workflow error:", error);
         res.status(error.status || 500).json({ error: safeError(error) });
     }
+});
+
+// ─── 404 Catch-All ───────────────────────────────────────────────────────────
+// Must be registered after all other routes. Returns JSON (not HTML default)
+// so the client always gets a consistent error format.
+app.use((_req, res) => {
+    res.status(404).json({ error: 'Endpoint not found.' });
 });
 
 const PORT = process.env.PORT || 3001;

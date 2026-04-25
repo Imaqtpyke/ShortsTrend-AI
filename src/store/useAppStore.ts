@@ -1,19 +1,25 @@
 import { create } from 'zustand';
-import { AppState, ContentIdea, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES } from '../types';
-import { analyzeTrends, generateContentIdea, critiqueScript, generateImprovement } from '../services/geminiService';
+import { AppState, ContentIdea, ContentGenre, CustomCharacter, HistoryItem, Toast, VISUAL_STYLES, TrendAnalysis, ScriptCritique, ProductionWorkflow, TimelineSegment } from '../types';
+import { analyzeTrends, analyzeUrl, generateContentIdea, critiqueScript, generateImprovement } from '../services/geminiService';
 import localforage from 'localforage';
+import { persistSession, clearSession } from '../lib/storage';
 
-localforage.config({
-    name: 'ShortsTrendAI',
-    storeName: 'app_state'
-});
+export type TabType = 'trends' | 'generator' | 'critique' | 'workflow' | 'history';
+
+// Helper to ensure segments have stable IDs for DND and keys
+const assignIds = (segments: any[]): TimelineSegment[] => {
+    return segments.map((seg, i) => ({
+        ...seg,
+        id: seg.id || `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 11)}`,
+    }));
+};
 
 interface AppStore extends AppState {
     // UI State
     isHydrated: boolean;
     initStore: () => Promise<void>;
-    activeTab: 'trends' | 'generator' | 'workflow' | 'history' | 'critique';
-    setActiveTab: (tab: 'trends' | 'generator' | 'workflow' | 'history' | 'critique') => void;
+    activeTab: TabType;
+    setActiveTab: (tab: TabType) => void;
 
     // Feature State
     selectedTrend: string | null;
@@ -41,19 +47,44 @@ interface AppStore extends AppState {
     // Generation Settings
     setSearchQuery: (query: string) => void;
     setVisualStyle: (style: string) => void;
-    setVisualGenerationType: (type: 'image' | 'video') => void;
+    setVisualGenerationType: (type: 'image' | 'video' | 'image-to-video') => void;
     setSegmentLength: (length: number) => void;
     setCustomSegmentLength: (length: number | null) => void;
-    segmentMode: 'adjustable' | 'fixed';
+
     setSegmentMode: (mode: 'adjustable' | 'fixed') => void;
     // Custom Character
     setUseCustomCharacter: (enabled: boolean) => void;
     setCustomCharacter: (character: CustomCharacter) => void;
+    // Genre
+    setGenre: (genre: ContentGenre) => void;
+    setUseCustomGenre: (enabled: boolean) => void;
+    setCustomGenreString: (str: string) => void;
+    
+
+    // Custom Style Toggle
+    setUseCustomStyle: (enabled: boolean) => void;
+
+    // Track state for URL/Idea modes
+    searchMode: 'keyword' | 'url' | 'idea';
+    setSearchMode: (val: 'keyword' | 'url' | 'idea') => void;
+    youtubeUrl: string;
+    setYoutubeUrl: (val: string) => void;
+    directIdea: string;
+    setDirectIdea: (val: string) => void;
+    showPreGenModal: boolean;
+    setShowPreGenModal: (val: boolean) => void;
+    showTimelineEditorModal: boolean;
+    setShowTimelineEditorModal: (val: boolean) => void;
+    pendingTrend: string;
+    setPendingTrend: (val: string) => void;
 
     // Phase 5: UX Improvements
     loadingMessage: string;
     setLoadingMessage: (msg: string) => void;
-    updateSegmentAudio: (index: number, newAudio: string) => void;
+    updateSegmentScript: (index: number, newScript: string) => void;
+    updateTimelineSegments: (newSegments: TimelineSegment[]) => void;
+    toggleSegmentCopyState: (index: number, field: 'copiedScript' | 'copiedVisual' | 'copiedMotion', value: boolean) => void;
+    uncheckAllSegments: () => void;
 
     // Actions
     resetApp: () => void;
@@ -68,44 +99,13 @@ interface AppStore extends AppState {
 }
 
 // ─── Persistence Helpers ───────────────────────────────────────────────────────
-const SESSION_KEY = 'shorts_trend_session';
+// NOTE: The original persistSession and SESSION_KEY logic was removed here
+// as per the provided diff, implying a refactor to '../lib/storage'.
 
-interface PersistedSession {
-    analysis: AppState['analysis'];
-    contentIdea: AppState['contentIdea'];
-    critique: AppState['critique'];
-    workflow: AppState['workflow'];
-    searchQuery: string;
-    segmentMode: 'adjustable' | 'fixed';
-    useCustomCharacter: boolean;
-    customCharacter: CustomCharacter;
-    savedAt: number;
-}
-
-const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-async function persistSession(partial: Partial<PersistedSession>) {
-    try {
-        const raw = await localforage.getItem<string>(SESSION_KEY);
-        let current: Partial<PersistedSession> = {};
-        if (raw) current = JSON.parse(raw);
-
-        const next: PersistedSession = {
-            analysis: partial.analysis !== undefined ? partial.analysis : current.analysis ?? null,
-            contentIdea: partial.contentIdea !== undefined ? partial.contentIdea : current.contentIdea ?? null,
-            critique: partial.critique !== undefined ? partial.critique : current.critique ?? null,
-            workflow: partial.workflow !== undefined ? partial.workflow : current.workflow ?? null,
-            searchQuery: partial.searchQuery !== undefined ? partial.searchQuery : current.searchQuery ?? '',
-            segmentMode: partial.segmentMode !== undefined ? partial.segmentMode : (current.segmentMode ?? 'adjustable'),
-            useCustomCharacter: partial.useCustomCharacter !== undefined ? partial.useCustomCharacter : (current.useCustomCharacter ?? false),
-            customCharacter: partial.customCharacter !== undefined ? partial.customCharacter : (current.customCharacter ?? { name: '', description: '', type: 'both' }),
-            savedAt: Date.now(),
-        };
-        await localforage.setItem(SESSION_KEY, JSON.stringify(next));
-    } catch {
-        console.error("Failed to persist session to localforage");
-    }
-}
+let analyzeAbortController: AbortController | null = null;
+let generateAbortController: AbortController | null = null;
+let critiqueAbortController: AbortController | null = null;
+let improveAbortController: AbortController | null = null;
 
 export const useAppStore = create<AppStore>((set, get) => ({
     // Initial AppState
@@ -120,7 +120,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     visualGenerationType: 'image',
     segmentLength: 6,
     customSegmentLength: null,
-    segmentMode: 'fixed',
+    segmentMode: 'adjustable',
     history: [],
     searchQuery: '',
     currentAnalyzedQuery: '',
@@ -128,10 +128,21 @@ export const useAppStore = create<AppStore>((set, get) => ({
     // Custom Character initial state
     useCustomCharacter: false,
     customCharacter: { name: '', description: '', type: 'both' as const },
+    selectedGenre: 'Storytelling' as ContentGenre,
+    useCustomGenre: false,
+    customGenreString: '',
+    useCustomStyle: false,
+    setUseCustomStyle: (use) => set({ useCustomStyle: use }),
+
 
     // Initial UI/Feature State
+    showTimelineEditorModal: false,
+    setShowTimelineEditorModal: (val) => set({ showTimelineEditorModal: val }),
     activeTab: 'trends',
-    setActiveTab: (tab) => set({ activeTab: tab }),
+    setActiveTab: (tab) => {
+        set({ activeTab: tab });
+        persistSession({ activeTab: tab });
+    },
     selectedTrend: null,
     setSelectedTrend: (trend) => set({ selectedTrend: trend }),
     trendFilter: 'all',
@@ -145,16 +156,35 @@ export const useAppStore = create<AppStore>((set, get) => ({
     confirmClearHistory: false,
     setConfirmClearHistory: (confirm) => set({ confirmClearHistory: confirm }),
 
+    // Analysis & Generation Modes
+    searchMode: 'keyword',
+    setSearchMode: (val) => {
+        set({ searchMode: val });
+        persistSession({ searchMode: val });
+    },
+    youtubeUrl: '',
+    setYoutubeUrl: (val) => {
+        set({ youtubeUrl: val });
+        persistSession({ youtubeUrl: val });
+    },
+    directIdea: '',
+    setDirectIdea: (val) => {
+        set({ directIdea: val });
+        persistSession({ directIdea: val });
+    },
+    showPreGenModal: false,
+    setShowPreGenModal: (val) => set({ showPreGenModal: val }),
+    pendingTrend: '',
+    setPendingTrend: (val) => set({ pendingTrend: val }),
+
     // Toasts
     toasts: [],
     addToast: (message, type = 'success') => {
-        const id = Math.random().toString(36).substr(2, 9);
-        set(state => ({ toasts: [...state.toasts, { id, message, type }] }));
-        // BUG FIX #1: Store the timer ID so it can be cleared if the toast is manually
-        // removed before the timeout fires, preventing a setState-after-unmount leak.
-        const timerId = setTimeout(() => get().removeToast(id), 3000);
-        // Attach timer to the toast so removeToast can cancel it
-        set(state => ({ toasts: state.toasts.map(t => t.id === id ? { ...t, _timerId: timerId } : t) }));
+        const id = Math.random().toString(36).slice(2, 11);
+        // L5 FIX: Create timer first so _timerId is included in the single set() call,
+        // eliminating the double-set() race window where _timerId wasn't yet attached.
+        const timerId = setTimeout(() => get().removeToast(id), type === 'error' ? 8000 : 3000);
+        set(state => ({ toasts: [...state.toasts, { id, message, type, _timerId: timerId }] }));
     },
     removeToast: (id) => {
         const toast = get().toasts.find(t => t.id === id) as any;
@@ -177,7 +207,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     copyAllForProduction: () => {
         const { contentIdea, copyToClipboard } = get();
         if (!contentIdea) return;
-        const { title, hook, segments, hookVariations, seoMetadata, hashtags, musicStyle, soundEffects, visualStyle, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
+        const { title, hook, segments, hookVariations, seoMetadata, hashtags, visualStyle, editingEffects, fontStyle, editingEffectsContext } = contentIdea;
 
         const formatTime = (secs: number) => {
             const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -185,13 +215,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
             return `${m}:${s}`;
         };
 
-        const text = `TITLE: ${title}\n${hook ? `PRIMARY HOOK: ${hook}\n` : ''}\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSTORYBOARD TIMELINE:\n${segments.map(seg => `[${seg.timestamp || formatTime(seg.startTime)}]\nAUDIO: ${seg.audio}\nVISUAL: ${seg.visual}`).join('\n\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nAUDIO:\nMusic: ${musicStyle}\nSFX: ${soundEffects.join(', ')}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
+        const text = `TITLE: ${title}\n${hook ? `PRIMARY HOOK: ${hook}\n` : ''}\nHOOKS:\n${hookVariations?.map(h => `- [${h.type}]: ${h.text}`).join('\n') || 'None'}\n\nSTORYBOARD TIMELINE:\n${segments.map(seg => `[${seg.timestamp || formatTime(seg.startTime)}]\nSCRIPT: ${seg.script}\nVISUAL: ${seg.visual}${seg.motion ? `\nMOTION: ${seg.motion}` : ''}`).join('\n\n')}\n\nVISUAL STYLE: ${visualStyle}\n\nPOST-PRODUCTION & EFFECTS:\nFont Style: ${fontStyle}\nEditing Effects: ${editingEffects.join(', ')}\nContext: ${editingEffectsContext}\n\nSEO METADATA:\nTitle: ${seoMetadata?.youtubeTitle}\nDescription: ${seoMetadata?.youtubeDescription}\nPinned Comment: ${seoMetadata?.pinnedCommentIdea}\n${hashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`.trim();
 
         copyToClipboard(text, 'all');
     },
 
     // Generation Settings Setters
-    setSearchQuery: (query) => set({ searchQuery: query }),
+    setSearchQuery: (query) => {
+        set({ searchQuery: query });
+        persistSession({ searchQuery: query });
+    },
     setVisualStyle: (style) => set({ selectedVisualStyle: style }),
     setVisualGenerationType: (type) => set({ visualGenerationType: type }),
     setSegmentLength: (length) => set({ segmentLength: length }),
@@ -208,34 +241,117 @@ export const useAppStore = create<AppStore>((set, get) => ({
         set({ customCharacter: character });
         persistSession({ customCharacter: character });
     },
+    setGenre: (genre) => {
+        set({ selectedGenre: genre });
+        persistSession({ selectedGenre: genre });
+    },
+    setUseCustomGenre: (enabled) => {
+        set({ useCustomGenre: enabled });
+        persistSession({ useCustomGenre: enabled });
+    },
+    setCustomGenreString: (str) => {
+        set({ customGenreString: str });
+        persistSession({ customGenreString: str });
+    },
+
 
     // Phase 5: Progressive Loading & Interactive UI
     loadingMessage: '',
     setLoadingMessage: (msg: string) => set({ loadingMessage: msg }),
 
-    updateSegmentAudio: (index: number, newAudio: string) => set(state => {
+    updateSegmentScript: (index: number, newScript: string) => set(state => {
         if (!state.contentIdea) return state;
+        
+        const WORDS_PER_SECOND = 2.7;
         const newSegments = [...state.contentIdea.segments];
-        newSegments[index] = { ...newSegments[index], audio: newAudio };
-        return { contentIdea: { ...state.contentIdea, segments: newSegments } };
+        
+        // 1. Update the target segment script
+        const currentSegment = { ...newSegments[index], script: newScript };
+        
+        // 2. Calculate its new duration based on word count
+        const wordCount = newScript.trim().split(/\s+/).filter(Boolean).length;
+        const calculatedDuration = Math.max(2, Math.min(30, Number((wordCount / WORDS_PER_SECOND).toFixed(1))));
+        
+        // 3. Update the segment and its timing if it's the first one, or use previous end time
+        // B6 FIX: Ensure index > 0 to strictly avoid reading newSegments[-1]
+        let currentStartTime = (index === 0 || !newSegments[index - 1]) ? 0 : newSegments[index - 1].endTime;
+        
+        // 4. Re-calculate this segment and all subsequent segments to keep them contiguous
+        for (let i = index; i < newSegments.length; i++) {
+            const seg = i === index ? currentSegment : { ...newSegments[i] };
+            
+            // For the edited segment, we use the calculated duration. 
+            // For subsequent ones, we keep their existing duration (delta) unless we want full ripple.
+            // Actually, we should recalculate the START/END for ALL subsequent segments to bridge the gap.
+            const duration = i === index 
+                ? calculatedDuration 
+                : Number((newSegments[i].endTime - newSegments[i].startTime).toFixed(1));
+            
+            const formatTimeLocal = (secs: number) => {
+                const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                const s = Math.floor(secs % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+
+            newSegments[i] = {
+                ...seg,
+                startTime: currentStartTime,
+                endTime: Number((currentStartTime + duration).toFixed(1)),
+                timestamp: formatTimeLocal(currentStartTime)
+            };
+            currentStartTime = newSegments[i].endTime;
+        }
+
+        const updatedIdea = { ...state.contentIdea, segments: newSegments };
+        persistSession({ contentIdea: updatedIdea });
+        return { contentIdea: updatedIdea };
     }),
+
+    updateTimelineSegments: (newSegments: TimelineSegment[]) => {
+        const state = get();
+        if (!state.contentIdea) return;
+        const updatedIdea = { ...state.contentIdea, segments: newSegments };
+        set({ contentIdea: updatedIdea });
+        persistSession({ contentIdea: updatedIdea });
+    },
+
+    toggleSegmentCopyState: (index: number, field: 'copiedScript' | 'copiedVisual' | 'copiedMotion', value: boolean) => {
+        set(state => {
+            if (!state.contentIdea) return state;
+            const newSegments = [...state.contentIdea.segments];
+            newSegments[index] = { ...newSegments[index], [field]: value };
+            const updatedIdea = { ...state.contentIdea, segments: newSegments };
+            persistSession({ contentIdea: updatedIdea });
+            return { contentIdea: updatedIdea };
+        });
+    },
+
+    uncheckAllSegments: () => {
+        set(state => {
+            if (!state.contentIdea) return state;
+            const newSegments = state.contentIdea.segments.map(seg => ({
+                ...seg,
+                copiedScript: false,
+                copiedVisual: false,
+                copiedMotion: false
+            }));
+            const updatedIdea = { ...state.contentIdea, segments: newSegments };
+            persistSession({ contentIdea: updatedIdea });
+            return { contentIdea: updatedIdea };
+        });
+    },
 
     // Actions
     initStore: async () => {
         try {
             const historyRaw = await localforage.getItem<string>('shorts_trend_history');
-            const history = historyRaw ? JSON.parse(historyRaw) : [];
-
-            const rawSession = await localforage.getItem<string>(SESSION_KEY);
-            let session: Partial<PersistedSession> = {};
-            if (rawSession) {
-                const parsed: PersistedSession = JSON.parse(rawSession);
-                if (Date.now() - parsed.savedAt <= SESSION_MAX_AGE_MS) {
-                    session = parsed;
-                } else {
-                    await localforage.removeItem(SESSION_KEY);
-                }
+            let history = [];
+            if (historyRaw) {
+                try { history = JSON.parse(historyRaw); } 
+                catch (e) { console.warn("Corrupted history data dropped."); }
             }
+
+            const session = await persistSession.load();
 
             // ── Migration Guard ───────────────────────────────────────────────────
             // Drop old-schema contentIdea (missing required .segments or incomplete)
@@ -261,9 +377,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 workflow: session.workflow ?? null,
                 critique,
                 searchQuery: session.searchQuery ?? '',
+                currentAnalyzedQuery: session.searchQuery ?? '',
                 segmentMode: session.segmentMode ?? 'adjustable',
                 useCustomCharacter: session.useCustomCharacter ?? false,
                 customCharacter: session.customCharacter ?? { name: '', description: '', type: 'both' },
+                selectedGenre: session.selectedGenre ?? 'Storytelling',
+                useCustomGenre: session.useCustomGenre ?? false,
+                customGenreString: session.customGenreString ?? '',
+                useCustomStyle: session.useCustomStyle ?? false,
+
+                searchMode: session.searchMode ?? 'keyword',
+                directIdea: session.directIdea ?? '',
+                youtubeUrl: session.youtubeUrl ?? '',
+                activeTab: session.activeTab ?? (contentIdea ? 'generator' : 'trends'), // B3 FIX: Restore tab or default to generator if idea exists
                 isHydrated: true
             });
         } catch (e) {
@@ -273,7 +399,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
 
     resetApp: () => {
-        try { localforage.removeItem(SESSION_KEY); } catch { }
+        try { clearSession(); } catch { }
         set({
             analysis: null,
             contentIdea: null,
@@ -281,19 +407,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
             workflow: null,
             searchQuery: '',
             currentAnalyzedQuery: '',
-            activeTab: 'trends'
+            activeTab: 'trends',
+            searchMode: 'keyword',
+            youtubeUrl: '',
+            directIdea: '',
+            showPreGenModal: false
         });
     },
 
     handleAnalyze: async (queryOverride?: string, bypassCache = false) => {
+        if (analyzeAbortController) {
+            analyzeAbortController.abort();
+        }
+        analyzeAbortController = new AbortController();
+
         const state = get();
         const query = queryOverride !== undefined ? queryOverride : state.searchQuery;
-        set({ isLoading: true, error: null, loadingMessage: "Analyzing niche topics... This might take a few moments." });
+        set({ isLoading: true, error: null, analysis: null, loadingMessage: state.searchMode === 'url' ? "Analyzing YouTube Video Niche DNA..." : "Analyzing niche topics... This might take a few moments." });
 
         try {
-            const analysis = await analyzeTrends(query || undefined, bypassCache);
+            const analysis = state.searchMode === 'url'
+                ? await analyzeUrl(state.youtubeUrl, { signal: analyzeAbortController.signal })
+                : await analyzeTrends(query || undefined, bypassCache, { signal: analyzeAbortController.signal });
+
             const newHistoryItem: HistoryItem = {
-                id: Math.random().toString(36).substr(2, 9),
+                id: Math.random().toString(36).slice(2, 11),
                 query: query || 'General Trends',
                 timestamp: Date.now(),
                 analysis,
@@ -309,8 +447,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 currentAnalyzedQuery: query || '',
                 activeTab: 'trends'
             });
-            persistSession({ analysis, searchQuery: query || '' });
+            persistSession({ analysis, searchQuery: query || '', searchMode: state.searchMode, youtubeUrl: state.youtubeUrl, directIdea: state.directIdea });
         } catch (err: any) {
+            if (err.name === 'AbortError') return; // Ignore manually aborted requests
             console.error(err);
             // BUG FIX #3: Surface the actual API error message instead of a generic string.
             set({ isLoading: false, error: err?.message || 'Failed to analyze trends. Please try again.' });
@@ -318,11 +457,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
 
     handleGenerate: async (trend: string) => {
+        if (generateAbortController) {
+            generateAbortController.abort();
+        }
+        generateAbortController = new AbortController();
+
         // B3 FIX: Prevent concurrent generate calls from racing each other.
         // Each call gets a unique requestId. If the user triggers a new generate
         // before the previous one completes, the stale response is silently discarded.
         const requestId = get()._generateRequestId + 1;
-        set({ _generateRequestId: requestId, selectedTrend: trend, isLoading: true, error: null, loadingMessage: "Analyzing virality potential for " + trend + "..." });
+        set({ _generateRequestId: requestId, selectedTrend: trend, isLoading: true, error: null, activeTab: 'generator', loadingMessage: "Analyzing virality potential for " + trend + "..." });
 
         const state = get();
         const timers: NodeJS.Timeout[] = [];
@@ -332,10 +476,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 if (get().isLoading) set({ loadingMessage: "Generating visual storyboard and scene setups..." });
             }, 3000));
             timers.push(setTimeout(() => {
-                if (get().isLoading) set({ loadingMessage: "Writing the storyboard audio segments..." });
+                if (get().isLoading) set({ loadingMessage: "Writing the storyboard script segments..." });
             }, 6000));
 
-            const finalSegmentLength = state.segmentMode === 'fixed'
+            const finalSegmentLength = state.segmentMode === 'adjustable'
                 ? undefined
                 : (state.customSegmentLength || state.segmentLength);
 
@@ -348,6 +492,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 finalSegmentLength,
                 60, // totalDuration always 60s
                 character,
+                state.selectedGenre,
+                state.useCustomGenre ? state.customGenreString : undefined,
+                Math.random().toString(36).substring(2, 10), // Random variation ID to force regeneration differences
+
                 (partial) => {
                     // B3 FIX: Only update state if this request is still the current one.
                     if (get()._generateRequestId !== requestId) return;
@@ -355,9 +503,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
                     const partialIdea: ContentIdea = {
                         title: partial.title || "Drafting Idea...",
                         hook: partial.hook || "",
-                        segments: partial.segments || [],
-                        musicStyle: partial.musicStyle || "Processing...",
-                        soundEffects: partial.soundEffects || [],
+                        segments: assignIds(partial.segments || []),
                         visualStyle: partial.visualStyle || state.selectedVisualStyle,
                         hookVariations: partial.hookVariations || [],
                         seoMetadata: partial.seoMetadata || { youtubeTitle: "...", youtubeDescription: "...", pinnedCommentIdea: "..." },
@@ -367,11 +513,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
                         fontStyle: partial.fontStyle || "...",
                         editingEffectsContext: partial.editingEffectsContext || "",
                         segmentLength: finalSegmentLength,
-                        metadata: partial.metadata || { music: "", sfx: [], tags: [] }
+                        metadata: partial.metadata || { tags: [] }
                     };
 
-                    set({ contentIdea: partialIdea, activeTab: 'generator', critique: null });
-                }
+                    set({ contentIdea: partialIdea, critique: null });
+                },
+                { signal: generateAbortController.signal }
             );
 
             const idea = await ideaPromise;
@@ -379,7 +526,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             // B3 FIX: Final guard — if a newer request started during the await, abort.
             if (get()._generateRequestId !== requestId) return;
 
-            const builtIdea = { ...idea, segmentLength: finalSegmentLength };
+            const builtIdea = { ...idea, segments: assignIds(idea.segments), segmentLength: finalSegmentLength };
 
             const hardcodedWorkflow = {
                 software: {
@@ -390,7 +537,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 },
                 steps: [
                     "Export the `.md` script from the Generator to track lines.",
-                    "Generate voiceover audio first to establish pacing.",
+                    "Generate voiceover from the script to establish pacing.",
                     "Generate visuals exactly matching the timeline timestamps.",
                     "Compile in your editor, adding music and SFX."
                 ],
@@ -402,25 +549,30 @@ export const useAppStore = create<AppStore>((set, get) => ({
             };
 
             set({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null, isLoading: false, completedSteps: [], activeTab: 'generator' });
-            persistSession({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null });
+            persistSession({ contentIdea: builtIdea, workflow: hardcodedWorkflow, critique: null, activeTab: 'generator' });
         } catch (err: any) {
             // B3 FIX: Only surface the error if this is still the active request.
             if (get()._generateRequestId !== requestId) return;
             console.error(err);
-            set({ isLoading: false, error: err?.message || 'Failed to generate content. Please try again.' });
+            const errorMsg = err?.message || 'Failed to generate content. Please try again.';
+            set({ isLoading: false, error: errorMsg });
+            get().addToast(errorMsg, 'error');
         } finally {
             timers.forEach(clearTimeout);
-            // B3 FIX: Only clear isLoading if we are still the active request.
-            if (get()._generateRequestId === requestId) {
-                set({ isLoading: false });
-            }
+            // NOTE: isLoading is already set to false in both try (success) and catch (error) paths above.
+            // We intentionally do NOT set isLoading here to avoid a redundant Zustand flush
+            // that causes AnimatePresence mode='wait' to re-evaluate and briefly flash the wrong tab.
         }
     },
 
     handleCritique: async () => {
-        const requestId = get()._generateRequestId + 1;
         const state = get();
         if (!state.contentIdea) return;
+        // B5 FIX: Abort before capturing requestId so no stale result can overwrite
+        // state after the new critique request starts.
+        if (critiqueAbortController) critiqueAbortController.abort();
+        critiqueAbortController = new AbortController();
+        const requestId = get()._generateRequestId + 1;
         set({ _generateRequestId: requestId, isLoading: true, error: null, loadingMessage: "Running script against viral retention frameworks..." });
 
         const timers: NodeJS.Timeout[] = [];
@@ -436,17 +588,18 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 return `${m}:${s}`;
             };
             const scriptText = state.contentIdea.segments.map(seg => {
-                return `[${seg.timestamp || formatTimeLocal(seg.startTime)}] ${seg.audio}`;
+                return `[${seg.timestamp || formatTimeLocal(seg.startTime)}] ${seg.script}`;
             }).join('\n');
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
             const firstHook = state.contentIdea.hook || state.contentIdea.hookVariations[0]?.text || '';
-            const critique = await critiqueScript(scriptText, firstHook, character);
+            const critique = await critiqueScript(scriptText, firstHook, character, { signal: critiqueAbortController.signal });
 
             if (get()._generateRequestId !== requestId) return;
 
             set({ critique, isLoading: false, activeTab: 'critique' });
             persistSession({ critique });
         } catch (err: any) {
+            if (err.name === 'AbortError') return;
             if (get()._generateRequestId !== requestId) return;
             console.error(err);
             set({ isLoading: false, error: err?.message || 'Failed to critique script. Please try again.' });
@@ -466,6 +619,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
         set({ _generateRequestId: requestId, isLoading: true, error: null, loadingMessage: "Rewriting script to fix weaknesses..." });
 
         const timers: NodeJS.Timeout[] = [];
+        if (improveAbortController) improveAbortController.abort();
+        improveAbortController = new AbortController();
 
         try {
             timers.push(setTimeout(() => {
@@ -479,10 +634,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
             };
 
             const scriptText = state.contentIdea.segments.map(seg =>
-                `[${seg.timestamp || formatTime(seg.startTime)}] ${seg.audio}`
+                `[${seg.timestamp || formatTime(seg.startTime)}] ${seg.script}`
             ).join('\n');
             const critiqueText = `Score: ${state.critique.viralityScore}. Feedback: ${state.critique.overallFeedback}`;
-            const builtSegmentLength = state.segmentMode === 'fixed'
+            const builtSegmentLength = state.segmentMode === 'adjustable'
                 ? undefined
                 : (state.contentIdea.segmentLength || state.segmentLength);
             const character = state.useCustomCharacter ? state.customCharacter : undefined;
@@ -490,21 +645,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
             const improvement = await generateImprovement(
                 scriptText, critiqueText,
                 state.selectedVisualStyle, state.visualGenerationType,
-                builtSegmentLength, 60, character, expectedSegments
+                builtSegmentLength, 60, character, expectedSegments,
+                { signal: improveAbortController.signal }
             );
 
-            const improvedScriptText = improvement.improvedSegments!.map(seg =>
-                `[${seg.timestamp || formatTime(seg.startTime)}] ${seg.audio}`
+            // B4 FIX: Safety check for improvedSegments
+            if (!improvement.improvedSegments || !Array.isArray(improvement.improvedSegments)) {
+                throw new Error("AI failed to generate structural script improvements. Please try again.");
+            }
+
+            const improvedSegments = assignIds(improvement.improvedSegments);
+
+            const improvedScriptText = improvedSegments.map(seg =>
+                `[${seg.timestamp || formatTime(seg.startTime)}] ${seg.script}`
             ).join('\n');
             const newCritique = await critiqueScript(
                 improvedScriptText,
                 improvement.improvedHook || state.contentIdea.hook || state.contentIdea.hookVariations[0]?.text || '',
-                character
+                character,
+                { signal: improveAbortController.signal }
             );
 
             const finalCritique = {
                 ...newCritique,
-                ...improvement
+                ...improvement,
+                improvedSegments // Use the one with IDs
             };
 
             if (get()._generateRequestId !== requestId) return;
@@ -513,6 +678,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             persistSession({ critique: finalCritique });
             get().addToast('AI has generated and critiqued an improved version of your script!', 'success');
         } catch (err: any) {
+            if (err.name === 'AbortError') return;
             if (get()._generateRequestId !== requestId) return;
             console.error(err);
             set({ isLoading: false, error: err?.message || 'Failed to generate improvement. Please try again.' });
@@ -539,24 +705,24 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 ? { ...state.contentIdea.seoMetadata, youtubeDescription: state.critique.improvedCaption }
                 : state.contentIdea.seoMetadata,
             hashtags: state.critique.improvedHashtags || state.contentIdea.hashtags,
-            musicStyle: state.critique.improvedMusicStyle || state.contentIdea.musicStyle,
-            soundEffects: state.critique.improvedSoundEffects || state.contentIdea.soundEffects,
             editingEffects: state.critique.improvedEditingEffects || state.contentIdea.editingEffects,
             fontStyle: state.critique.improvedFontStyle || state.contentIdea.fontStyle,
             editingEffectsContext: state.critique.improvedEditingEffectsContext || state.contentIdea.editingEffectsContext
         };
-        set({ contentIdea: updated, activeTab: 'generator' });
-        persistSession({ contentIdea: updated });
+        set({ contentIdea: updated, activeTab: 'generator', critique: null });
+        persistSession({ contentIdea: updated, activeTab: 'generator', critique: null });
         get().addToast('Improved script and visual prompts applied!', 'success');
     },
 
     loadFromHistory: (item: HistoryItem) => {
+        const query = item.query === 'General Trends' ? '' : item.query;
         set({
             analysis: item.analysis,
-            searchQuery: item.query === 'General Trends' ? '' : item.query,
+            searchQuery: query,
+            currentAnalyzedQuery: query,
             activeTab: 'trends'
         });
-        persistSession({ analysis: item.analysis, searchQuery: item.query === 'General Trends' ? '' : item.query });
+        persistSession({ analysis: item.analysis, searchQuery: query });
     },
 
     clearHistory: async () => {
